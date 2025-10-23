@@ -3,6 +3,7 @@ import cors from 'cors';
 import { config } from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import fs from 'fs';
 // Load environment variables from root .env file
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -59,6 +60,21 @@ function startServer() {
   // Routes
   app.use('/api/paypal', paypalRoutes);
   app.use('/api/webhooks', webhookRoutes);
+
+  // Serve frontend static files if the build output exists (for deployments that use a single web service)
+  try {
+    const staticPath = join(rootDir, 'dist');
+    if (fs.existsSync(staticPath)) {
+      console.log('Serving static frontend from', staticPath);
+      app.use(express.static(staticPath));
+      // For SPA client-side routing, fallback to index.html
+      app.get('*', (req, res) => {
+        res.sendFile(join(staticPath, 'index.html'));
+      });
+    }
+  } catch (err) {
+    console.warn('Error checking/serving static files:', err && err.message);
+  }
 
   // Error handling
   app.use((err, req, res, next) => {
