@@ -16,8 +16,8 @@ export default defineConfig({
     host: true,
     allowedHosts: [
       'localhost',
-      'sknbridgetrade-frontend.onrender.com',
-      'sknbridgetrade-server.onrender.com'
+      'skn.onrender.com',
+      'skn-2.onrender.com'
     ],
     cors: true
     ,
