@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Render blueprint for deploying frontend (static site) and backend (web service)
 # Frontend: build with `npm run build` and publish the `dist` folder
 # Backend: start with `npm start` which runs `node server/index.js`
@@ -22,3 +23,29 @@ services:
     buildCommand: "npm install && npm run build"
     publishPath: "dist"
     branch: main
+=======
+# Render blueprint for deploying frontend (static site) and backend (web service)
+# Frontend: build with `npm run build` and publish the `dist` folder
+# Backend: start with `npm start` which runs `node server/index.js`
+
+services:
+  - type: web_service
+    name: sknbridgetrade-server
+    env: node
+    plan: free
+    region: oregon
+    repo: .
+    buildCommand: "npm install && npm run build"
+    startCommand: "npm start"
+    branch: main
+
+  - type: static_site
+    name: sknbridgetrade-frontend
+    env: static
+    plan: free
+    region: oregon
+    repo: .
+    buildCommand: "npm install && npm run build"
+    publishPath: "dist"
+    branch: main
+>>>>>>> cc97638ba2bc00ecfa8026f552ab06f85fb9199c
