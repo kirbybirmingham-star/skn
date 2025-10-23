@@ -16,9 +16,8 @@ export default defineConfig({
     host: true,
     allowedHosts: [
       'localhost',
-      '3d838acc679e.ngrok-free.app',
-      '*.ngrok-free.app',
-      '*.ngrok.io'
+      'sknbridgetrade-frontend.onrender.com',
+      'sknbridgetrade-server.onrender.com'
     ],
     cors: true
     ,

@@ -40,7 +40,8 @@ function startServer() {
     const allowedOrigins = [
       'http://localhost:3000',
       'http://localhost:3001',
-      'https://3d838acc679e.ngrok-free.app',
+      'https://sknbridgetrade-frontend.onrender.com',
+      'https://sknbridgetrade-server.onrender.com',
       process.env.FRONTEND_URL
     ].filter(Boolean);
 
