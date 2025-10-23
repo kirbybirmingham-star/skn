@@ -1,3 +1,30 @@
+<<<<<<< HEAD
+# skn
+webstuff
+=======
+# SKN Bridgetrade
+
+This repository contains a Vite + React frontend and an Express server.
+
+Quick local run
+
+```powershell
+npm install
+npm run dev
+```
+
+Build
+
+```powershell
+npm run build
+```
+
+Start server (production)
+
+```powershell
+npm start
+```
+
 # SKN Bridgetrade
 
 This repository contains a Vite + React frontend and an Express server.
@@ -41,4 +68,6 @@ Environment variables
 Notes
 
 - The `render.yaml` file is included as a blueprint that Render can use for Infrastructure as Code deployments.
+- Ensure the `main` branch exists and is the branch you use on GitHub.
+ is included as a blueprint that Render can use for Infrastructure as Code deployments.
 - Ensure the `main` branch exists and is the branch you use on GitHub.
