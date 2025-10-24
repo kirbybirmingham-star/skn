@@ -18,7 +18,8 @@ export default defineConfig({
       'localhost',
       'sknbridgetrade-frontend.onrender.com',
       'sknbridgetrade-server.onrender.com',
-      'eb894a61cc32.ngrok-free.app'
+      'eb894a61cc32.ngrok-free.app',
+      'xxmhi-192-214-113-86.a.free.pinggy.link'
     ],
     cors: true
     ,
