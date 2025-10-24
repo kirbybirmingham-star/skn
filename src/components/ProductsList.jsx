@@ -55,7 +55,7 @@ const ProductsList = ({ sellerId = null }) => {
     };
 
     fetchProductsWithQuantities();
-  }, []);
+  }, [sellerId]);
 
   if (loading) {
     return (
