@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "vite --host :: --port 3000",
     "dev:ngrok": "vite --host localhost --port 3000",
-    "build": "vite build",
+    "build": "node scripts/check-env.js && vite build",
     "preview": "vite preview --host :: --port 3000",
     "start": "node server/index.js",
     "postinstall": "npm run build"

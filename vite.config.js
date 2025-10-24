@@ -17,7 +17,8 @@ export default defineConfig({
     allowedHosts: [
       'localhost',
       'sknbridgetrade-frontend.onrender.com',
-      'sknbridgetrade-server.onrender.com'
+      'sknbridgetrade-server.onrender.com',
+      'eb894a61cc32.ngrok-free.app'
     ],
     cors: true
     ,
@@ -32,9 +33,13 @@ export default defineConfig({
     }
   },
   define: {
-    'process.env': JSON.stringify(process.env)
-  }
-  ,
+    'process.env.VITE_SUPABASE_URL': JSON.stringify(process.env.VITE_SUPABASE_URL),
+    'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY),
+    'process.env.VITE_PAYPAL_CLIENT_ID': JSON.stringify(process.env.VITE_PAYPAL_CLIENT_ID),
+    'process.env.VITE_PAYPAL_SECRET': JSON.stringify(process.env.VITE_PAYPAL_SECRET),
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
+    'process.env.FRONTEND_URL': JSON.stringify(process.env.FRONTEND_URL)
+  },
   build: {
     rollupOptions: {
       output: {
