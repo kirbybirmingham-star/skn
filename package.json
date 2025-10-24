@@ -7,10 +7,10 @@
   "scripts": {
     "dev": "vite --host :: --port 3000",
     "dev:ngrok": "vite --host localhost --port 3000",
-    "build": "node scripts/check-env.js && vite build",
+    "build": "vite build",
     "preview": "vite preview --host :: --port 3000",
     "start": "node server/index.js",
-    "postinstall": "npm run build"
+    "postinstall": "node scripts/postinstall-guard.js"
   },
   "dependencies": {
     "@paypal/react-paypal-js": "^8.9.2",
