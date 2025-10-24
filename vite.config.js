@@ -45,16 +45,11 @@ export default defineConfig({
     'import.meta.env.PROD': process.env.NODE_ENV === 'production',
   },
   build: {
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom')) return 'react-vendors';
-            return 'vendor';
-          }
-        }
-      }
-    },
+    // Use default chunking to avoid ordering issues between vendor chunks
+    // (some libraries like framer-motion can error at runtime if React isn't
+    //  initialized before their code runs). Removing manualChunks prevents
+    //  forcing a specific chunking order during the build.
+    rollupOptions: {},
     outDir: 'dist',
     assetsDir: 'assets',
     emptyOutDir: true,
