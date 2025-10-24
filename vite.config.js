@@ -19,7 +19,9 @@ export default defineConfig({
       'sknbridgetrade-frontend.onrender.com',
       'sknbridgetrade-server.onrender.com',
       'eb894a61cc32.ngrok-free.app',
-      'xxmhi-192-214-113-86.a.free.pinggy.link'
+      'xxmhi-192-214-113-86.a.free.pinggy.link',
+      'skn.onrender.com',
+      'skn-2.onrender.com'
     ],
     cors: true
     ,
