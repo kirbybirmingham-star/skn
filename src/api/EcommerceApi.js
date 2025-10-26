@@ -160,26 +160,52 @@ export async function getVendors() {
   // Derive vendors from the available products. Each vendor aggregates basic profile info.
   const { products } = await getProducts();
   const map = new Map();
+  
+  // First pass: collect all products for each vendor
   (products || []).forEach((p) => {
     const id = p.seller_id || p.sellerId || p.seller;
     if (!id) return;
+    
     if (!map.has(id)) {
       map.set(id, {
         id,
         name: p.seller_name || p.seller || 'Seller',
         store_name: p.store_name || `${p.seller_name || p.seller || 'Seller'}'s Store`,
         avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(id)}`,
-        description: p.seller_description || p.description || '',
+        description: p.seller_description || 'Quality products from a trusted seller',
         rating: 4.5,
         total_products: 0,
+        products: [], // Keep track of all products
+        categories: new Set(), // Track unique categories
       });
     }
+    
     const entry = map.get(id);
+    entry.products.push(p);
     entry.total_products += 1;
+    if (p.category) {
+      entry.categories.add(p.category);
+    }
   });
 
-  // Return as array
-  return Array.from(map.values());
+  // Second pass: finalize vendor data
+  const vendors = Array.from(map.values()).map(vendor => {
+    // Get the best-selling or featured product for the store description
+    const featuredProduct = vendor.products[0]; // Could enhance this to pick highest-rated/most sold
+    return {
+      ...vendor,
+      description: vendor.description || `Offering ${Array.from(vendor.categories).join(', ')}`,
+      categories: Array.from(vendor.categories),
+      featured_product: featuredProduct ? {
+        title: featuredProduct.title,
+        image: featuredProduct.image,
+        price: featuredProduct.variants?.[0]?.price_formatted
+      } : null,
+      products: vendor.products.slice(0, 3) // Only keep first 3 products for preview
+    };
+  });
+
+  return vendors;
 }
 
 export async function getProductQuantities() {
