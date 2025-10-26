@@ -36,6 +36,18 @@ async function generateAccessToken() {
 
 export async function createPayPalOrder(cartItems) {
   try {
+    // Validate cart items before sending
+    if (!Array.isArray(cartItems) || cartItems.length === 0) {
+      throw new Error('Cart is empty');
+    }
+
+    // Ensure each item has required fields
+    cartItems.forEach(item => {
+      if (!item?.variant?.price_in_cents) {
+        throw new Error('Invalid item in cart');
+      }
+    });
+
     // Call the local server endpoint which will create the PayPal order using server-side credentials
     const response = await fetch('/api/paypal/create-order', {
       method: 'POST',
@@ -43,10 +55,26 @@ export async function createPayPalOrder(cartItems) {
       body: JSON.stringify({ cartItems })
     });
 
-    const data = await response.json();
+    // First get the raw text
+    const text = await response.text();
+    
+    // Try to parse as JSON
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error('Invalid JSON response:', text);
+      throw new Error('Invalid server response');
+    }
+
     if (!response.ok) {
       console.error('Server create-order failed:', data);
       throw new Error(data.error || 'Failed to create order on server');
+    }
+
+    if (!data.id) {
+      console.error('Missing order ID in response:', data);
+      throw new Error('Invalid order response from server');
     }
 
     // Return the order id expected by the PayPal buttons

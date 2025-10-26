@@ -113,28 +113,44 @@ export default function PayPalCheckout({ cartItems, onSuccess }) {
       fundingSource="paypal"
       createOrder={async (data, actions) => {
         try {
+          console.log('Starting PayPal order creation...');
+          
           // Validate cart first
           if (!cartItems || cartItems.length === 0) {
             throw new Error('Your cart is empty');
           }
 
-          const response = await createPayPalOrder(cartItems);
-          if (!response || !response.id) {
+          // Log cart items for debugging
+          console.log('Cart items:', cartItems);
+
+          const orderId = await createPayPalOrder(cartItems);
+          console.log('Order created successfully:', orderId);
+          
+          if (!orderId) {
             throw new Error('Invalid order response from server');
           }
-          return response.id;
+
+          return orderId;
         } catch (error) {
           console.error('Create order error:', error);
-          const errorMessage = error.message || "Unable to create PayPal order. Please try again.";
+          
+          // Format user-friendly error message
+          let errorMessage = "Unable to create PayPal order. Please try again.";
+          if (error.message.includes('cart')) {
+            errorMessage = "Please add items to your cart before checking out.";
+          } else if (error.message.includes('Invalid server response')) {
+            errorMessage = "We're having trouble connecting to PayPal. Please try again in a moment.";
+          } else if (error.message.includes('authentication') || error.message.includes('token')) {
+            errorMessage = "Payment system needs to reconnect. Please try again.";
+            handleRetry();
+          }
+          
           toast({
             variant: "destructive",
             title: "Checkout Error",
             description: errorMessage,
           });
           
-          if (errorMessage.includes('authentication') || errorMessage.includes('token')) {
-            handleRetry();
-          }
           throw error;
         }
       }}
