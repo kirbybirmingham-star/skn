@@ -156,6 +156,32 @@ export async function getProducts(options = {}) {
   return { products: allProducts };
 }
 
+export async function getVendors() {
+  // Derive vendors from the available products. Each vendor aggregates basic profile info.
+  const { products } = await getProducts();
+  const map = new Map();
+  (products || []).forEach((p) => {
+    const id = p.seller_id || p.sellerId || p.seller;
+    if (!id) return;
+    if (!map.has(id)) {
+      map.set(id, {
+        id,
+        name: p.seller_name || p.seller || 'Seller',
+        store_name: p.store_name || `${p.seller_name || p.seller || 'Seller'}'s Store`,
+        avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(id)}`,
+        description: p.seller_description || p.description || '',
+        rating: 4.5,
+        total_products: 0,
+      });
+    }
+    const entry = map.get(id);
+    entry.total_products += 1;
+  });
+
+  // Return as array
+  return Array.from(map.values());
+}
+
 export async function getProductQuantities() {
   // Mock inventory data — return inventory_quantity to match ProductsList expectations
   return {
