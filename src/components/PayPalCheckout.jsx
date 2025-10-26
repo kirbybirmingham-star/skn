@@ -5,7 +5,7 @@ import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../components/ui/use-toast";
 import { createPayPalOrder, capturePayPalOrder } from "../api/EcommerceApi";
-import { ErrorBoundary } from "../ErrorBoundary";
+import ErrorBoundary from "../ErrorBoundary";
 
 // Constants for button styles
 const PAYPAL_BUTTON_STYLES = {
