@@ -1,5 +1,7 @@
-import React from 'react';
-import { PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js";
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../components/ui/use-toast";
 import { createPayPalOrder, capturePayPalOrder } from "../api/EcommerceApi";
@@ -16,13 +18,16 @@ const PAYPAL_BUTTON_STYLES = {
 export default function PayPalCheckout({ cartItems, onSuccess }) {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [{ isPending, isInitial, isRejected, isResolved }, dispatch] = usePayPalScriptReducer();
+  const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [scriptError, setScriptError] = useState(null);
 
-  React.useEffect(() => {
-    // Check PayPal configuration
+  useEffect(() => {
     const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
+    
     if (!clientId) {
-      console.error('PayPal Client ID is missing');
+      const error = 'PayPal Client ID is missing';
+      console.error(error);
+      setScriptError(error);
       toast({
         variant: "destructive",
         title: "PayPal Configuration Error",
@@ -31,27 +36,13 @@ export default function PayPalCheckout({ cartItems, onSuccess }) {
       return;
     }
 
-    // Log initialization status
-    console.log('PayPal Status:', {
-      isPending,
-      isInitial,
-      isRejected,
-      isResolved,
-      clientId: clientId.substring(0, 8) + '...' // Log partial ID for debugging
-    });
-
-    if (isRejected) {
-      console.error('PayPal script failed to load');
-      toast({
-        variant: "destructive",
-        title: "PayPal Error",
-        description: "Failed to initialize PayPal. Please refresh the page.",
-      });
-    }
-  }, [isPending, isInitial, isRejected, isResolved, toast]);
+    // Log initialization attempt
+    console.log('Initializing PayPal with Client ID:', clientId.substring(0, 8) + '...');
+    
+    setScriptLoaded(true);
+  }, [toast]);
   
   const handleRetry = () => {
-    // Reset the PayPal script
     if (!import.meta.env.VITE_PAYPAL_CLIENT_ID) {
       toast({
         variant: "destructive",
@@ -61,26 +52,11 @@ export default function PayPalCheckout({ cartItems, onSuccess }) {
       return;
     }
     
-    dispatch({
-      type: "resetOptions",
-      value: {
-        "client-id": import.meta.env.VITE_PAYPAL_CLIENT_ID,
-        currency: "USD",
-        intent: "capture",
-      },
-    });
+    setScriptError(null);
+    setScriptLoaded(true);
   };
 
-  if (isPending || isInitial) {
-    return (
-      <div className="w-full p-4 text-center space-y-2">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-        <p>Loading PayPal checkout...</p>
-      </div>
-    );
-  }
-
-  if (isRejected) {
+  if (scriptError) {
     return (
       <div className="w-full p-4 bg-red-50 border border-red-200 rounded-lg">
         <div className="text-center space-y-4">
@@ -88,7 +64,7 @@ export default function PayPalCheckout({ cartItems, onSuccess }) {
             Failed to load PayPal checkout
           </p>
           <p className="text-sm text-gray-600">
-            This could be due to network issues or an invalid configuration.
+            {scriptError}
           </p>
           <button
             onClick={handleRetry}
@@ -101,19 +77,30 @@ export default function PayPalCheckout({ cartItems, onSuccess }) {
     );
   }
 
-  if (!isResolved) {
+  if (!scriptLoaded) {
     return (
-      <div className="w-full p-4 text-center text-yellow-600 bg-yellow-50 border border-yellow-200 rounded-lg">
-        Initializing payment system...
+      <div className="w-full p-4 text-center space-y-2">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+        <p>Loading PayPal checkout...</p>
       </div>
     );
   }
 
+  const paypalConfig = {
+    "client-id": import.meta.env.VITE_PAYPAL_CLIENT_ID,
+    currency: "USD",
+    intent: "capture",
+    components: ["buttons"],
+    "disable-funding": "credit,card,p24,sofort",
+    "data-client-token": "abc123", // Optional: Add if you have a client token
+  };
+
   return (
-    <PayPalButtons
-      forceReRender={[cartItems]} // Re-render when cart changes
-      style={PAYPAL_BUTTON_STYLES}
-      createOrder={async (data, actions) => {
+    <PayPalScriptProvider options={paypalConfig}>
+      <PayPalButtons
+        forceReRender={[cartItems]} // Re-render when cart changes
+        style={PAYPAL_BUTTON_STYLES}
+        createOrder={async (data, actions) => {
         try {
           // Validate cart first
           if (!cartItems?.length) {
@@ -215,5 +202,6 @@ export default function PayPalCheckout({ cartItems, onSuccess }) {
         });
       }}
     />
+    </PayPalScriptProvider>
   );
 }

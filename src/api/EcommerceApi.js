@@ -4,9 +4,9 @@ const PAYPAL_API = {
   production: 'https://api-m.paypal.com'
 };
 
-const PAYPAL_CLIENT_ID = process.env.VITE_PAYPAL_CLIENT_ID;
-const PAYPAL_CLIENT_SECRET = process.env.VITE_PAYPAL_SECRET;
-const ENVIRONMENT = process.env.VITE_NODE_ENV === 'production' ? 'production' : 'sandbox';
+const PAYPAL_CLIENT_ID = import.meta.env.VITE_PAYPAL_CLIENT_ID;
+const PAYPAL_CLIENT_SECRET = import.meta.env.VITE_PAYPAL_SECRET;
+const ENVIRONMENT = import.meta.env.VITE_NODE_ENV === 'production' ? 'production' : 'sandbox';
 
 export function formatCurrency(amountInCents, currencyInfo = { code: 'USD', symbol: '$' }) {
   const amount = typeof amountInCents === 'number' ? amountInCents / 100 : 0;
@@ -49,7 +49,8 @@ export async function createPayPalOrder(cartItems) {
     });
 
     // Call the local server endpoint which will create the PayPal order using server-side credentials
-    const response = await fetch('/api/paypal/create-order', {
+    const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000';
+    const response = await fetch(`${serverUrl}/api/paypal/create-order`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ cartItems })
@@ -87,17 +88,25 @@ export async function createPayPalOrder(cartItems) {
 
 export async function capturePayPalOrder(orderID) {
   try {
-    const accessToken = await generateAccessToken();
-    const response = await fetch(`${PAYPAL_API[ENVIRONMENT]}/v2/checkout/orders/${orderID}/capture`, {
+    const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000';
+    const response = await fetch(`${serverUrl}/api/paypal/capture-order/${orderID}`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-        "PayPal-Request-Id": `capture-${orderID}-${Date.now()}`
+        "Content-Type": "application/json"
       }
     });
 
-    const data = await response.json();
+    // First get the raw text
+    const text = await response.text();
+    
+    // Try to parse as JSON
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error('Invalid JSON response:', text);
+      throw new Error('Invalid server response');
+    }
     if (data.error) {
       throw new Error(data.error.message);
     }

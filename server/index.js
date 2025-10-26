@@ -21,9 +21,25 @@ console.log('Loaded Environment Variables:', {
 // Dynamically import routes after env is loaded
 let webhookRoutes;
 let paypalRoutes;
+let paypalCaptureRoutes;
+let paypalMiddleware;
 (async () => {
-  webhookRoutes = (await import('./webhooks.js')).default;
-  paypalRoutes = (await import('./paypal-orders.js')).default;
+  const [
+    { default: webhook },
+    { default: paypal },
+    { default: capture },
+    { configurePayPalMiddleware }
+  ] = await Promise.all([
+    import('./webhooks.js'),
+    import('./paypal-orders.js'),
+    import('./paypal-capture.js'),
+    import('./paypal-middleware.js')
+  ]);
+  
+  webhookRoutes = webhook;
+  paypalRoutes = paypal;
+  paypalCaptureRoutes = capture;
+  paypalMiddleware = configurePayPalMiddleware;
 
   // Now start the server (moved inside async init)
   startServer();
@@ -35,19 +51,24 @@ function startServer() {
   app = express();
 
   // Middleware
-  app.use(cors({
-  origin: (origin, callback) => {
-    const allowedOrigins = [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'https://skn.onrender.com',
-      'https://skn-2.onrender.com',
-      process.env.FRONTEND_URL
-    ].filter(Boolean);
+  // Import and apply PayPal middleware
+  const { configurePayPalMiddleware } = await import('./paypal-middleware.js');
+  configurePayPalMiddleware(app);
 
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
+  // Fallback CORS for non-PayPal routes
+  app.use(cors({
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'https://skn.onrender.com',
+        'https://skn-2.onrender.com',
+        process.env.FRONTEND_URL
+      ].filter(Boolean);
+
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -60,6 +81,7 @@ function startServer() {
 
   // Routes
   app.use('/api/paypal', paypalRoutes);
+  app.use('/api/paypal', paypalCaptureRoutes);
   app.use('/api/webhooks', webhookRoutes);
 
   // Serve frontend static files if the build output exists (for deployments that use a single web service)

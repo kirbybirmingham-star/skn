@@ -66,25 +66,32 @@ async function generateAccessToken() {
 // Create order endpoint — returns PayPal order id and links or an informative error
 router.post('/create-order', express.json(), async (req, res) => {
   try {
-    console.log('Received create-order request from', req.ip);
+    console.log('Received create-order request');
     const { cartItems } = req.body || {};
 
+    // Debug request
+    console.log('Cart Items:', JSON.stringify(cartItems, null, 2));
+
     if (!Array.isArray(cartItems) || cartItems.length === 0) {
-      return res.status(400).json({ error: 'cartItems required and must be a non-empty array' });
+      console.error('Invalid cart items:', cartItems);
+      return res.status(400).send(JSON.stringify({ error: 'cartItems required and must be a non-empty array' }));
     }
 
-    // Defensive validation of items (ensure numbers and quantities)
+    // Defensive validation of items
     for (const item of cartItems) {
       if (!item?.variant || typeof item.quantity !== 'number') {
-        return res.status(400).json({ error: 'Each cart item must have a variant and numeric quantity' });
+        console.error('Invalid item:', item);
+        return res.status(400).send(JSON.stringify({ error: 'Each cart item must have a variant and numeric quantity' }));
       }
     }
 
+    console.log('Generating PayPal access token...');
     const accessToken = await generateAccessToken();
     if (!accessToken) {
       console.error('Failed to generate PayPal access token');
-      return res.status(500).json({ error: 'Failed to initialize payment processing' });
+      return res.status(500).send(JSON.stringify({ error: 'Failed to initialize payment processing' }));
     }
+    console.log('Access token generated successfully');
 
     const orderTotal = cartItems.reduce((total, item) => {
       const priceCents = item.variant.sale_price_in_cents ?? item.variant.price_in_cents ?? 0;
