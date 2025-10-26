@@ -40,8 +40,8 @@ function startServer() {
     const allowedOrigins = [
       'http://localhost:3000',
       'http://localhost:3001',
-      'https://sknbridgetrade-frontend.onrender.com',
-      'https://sknbridgetrade-server.onrender.com',
+      'https://skn.onrender.com',
+      'https://skn-2.onrender.com',
       process.env.FRONTEND_URL
     ].filter(Boolean);
 
@@ -67,10 +67,25 @@ function startServer() {
     const staticPath = join(rootDir, 'dist');
     if (fs.existsSync(staticPath)) {
       console.log('Serving static frontend from', staticPath);
-      app.use(express.static(staticPath));
-      // For SPA client-side routing, fallback to index.html
-      app.get('*', (req, res) => {
-        res.sendFile(join(staticPath, 'index.html'));
+
+      // Serve static assets with caching for performance. Do not rely on
+      // default "index" behavior — we'll handle SPA fallback explicitly.
+      app.use(express.static(staticPath, { maxAge: '1d', index: false }));
+
+      // SPA fallback: for any GET request that isn't an API route and doesn't
+      // look like a static file, return the app's index.html so the client
+      // router can handle the route.
+      app.get('*', (req, res, next) => {
+        if (req.method !== 'GET') return next();
+        // Skip API routes
+        if (req.path.startsWith('/api') || req.path.startsWith('/server') || req.path.startsWith('/_next')) return next();
+
+        // If the request appears to be for a file (has an extension), let static middleware handle it
+        if (req.path.match(/\.[a-zA-Z0-9]+$/)) return next();
+
+        res.sendFile(join(staticPath, 'index.html'), (err) => {
+          if (err) next(err);
+        });
       });
     }
   } catch (err) {

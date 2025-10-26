@@ -1,11 +1,30 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import ProductsList from '@/components/ProductsList';
+import { getProducts } from '@/api/EcommerceApi';
 
 const StorePage = () => {
   const { sellerId } = useParams();
+  const [sellerName, setSellerName] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchSeller = async () => {
+      if (!sellerId) return;
+      try {
+        const resp = await getProducts({ sellerId });
+        const first = (resp.products || [])[0];
+        if (mounted && first) setSellerName(first.seller_name || first.seller || 'Seller');
+      } catch (err) {
+        // ignore — ProductsList will handle empty state
+        console.warn('Failed to fetch seller info', err);
+      }
+    };
+    fetchSeller();
+    return () => { mounted = false };
+  }, [sellerId]);
   return (
     <>
       <Helmet>
@@ -22,7 +41,7 @@ const StorePage = () => {
             className="text-center max-w-3xl mx-auto mb-16"
           >
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent">
-              Our Store
+              {sellerName ? `${sellerName} — Store` : 'Our Store'}
             </h1>
             <p className="text-slate-600 text-lg sm:text-xl leading-relaxed">
               Discover amazing products from our trusted sellers
