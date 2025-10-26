@@ -51,9 +51,21 @@ function startServer() {
   app = express();
 
   // Middleware
-  // Import and apply PayPal middleware
-  const { configurePayPalMiddleware } = await import('./paypal-middleware.js');
-  configurePayPalMiddleware(app);
+  // Apply PayPal middleware if it was loaded during init. Avoid using `await` inside
+  // this function so the file can run cleanly in environments that don't allow
+  // top-level/embedded await during module compilation.
+  if (typeof paypalMiddleware === 'function') {
+    try {
+      paypalMiddleware(app);
+    } catch (err) {
+      console.error('Failed to apply PayPal middleware:', err);
+    }
+  } else {
+    // Fallback: dynamically import and apply without using await
+    import('./paypal-middleware.js')
+      .then(mod => mod.configurePayPalMiddleware(app))
+      .catch(err => console.error('Failed to load PayPal middleware dynamically:', err));
+  }
 
   // Fallback CORS for non-PayPal routes
   app.use(cors({
@@ -96,18 +108,25 @@ function startServer() {
 
       // SPA fallback: for any GET request that isn't an API route and doesn't
       // look like a static file, return the app's index.html so the client
-      // router can handle the route.
-      app.get('*', (req, res, next) => {
-        if (req.method !== 'GET') return next();
-        // Skip API routes
-        if (req.path.startsWith('/api') || req.path.startsWith('/server') || req.path.startsWith('/_next')) return next();
+      // router can handle the route. Use a middleware function instead of
+      // `app.get('*', ...)` to avoid path-to-regexp compatibility issues.
+      app.use((req, res, next) => {
+        try {
+          if (req.method !== 'GET') return next();
+          // Skip API routes
+          if (req.path.startsWith('/api') || req.path.startsWith('/server') || req.path.startsWith('/_next')) return next();
 
-        // If the request appears to be for a file (has an extension), let static middleware handle it
-        if (req.path.match(/\.[a-zA-Z0-9]+$/)) return next();
+          // If the request appears to be for a file (has an extension), let static middleware handle it
+          if (req.path.match(/\.[a-zA-Z0-9]+$/)) return next();
 
-        res.sendFile(join(staticPath, 'index.html'), (err) => {
-          if (err) next(err);
-        });
+          res.sendFile(join(staticPath, 'index.html'), (err) => {
+            if (err) next(err);
+          });
+        } catch (err) {
+          // If path matching throws due to path-to-regexp issues elsewhere, fall back to next()
+          console.warn('SPA fallback middleware error, skipping fallback:', err && err.message);
+          return next();
+        }
       });
     }
   } catch (err) {

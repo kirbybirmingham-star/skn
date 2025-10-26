@@ -41,8 +41,11 @@ export function configurePayPalMiddleware(app) {
     next();
   });
 
-  // Handle preflight requests
-  app.options('*', cors(corsOptions));
+  // Handle preflight requests. Use a path pattern compatible with the
+  // path-to-regexp version used by Express (use '/*' instead of '*').
+  // No explicit app.options registration to avoid path-to-regexp issues across
+  // different Express/path-to-regexp versions. The global `app.use(cors())`
+  // above will handle preflight requests.
 
   // Add environment check middleware
   app.use('/api/paypal', (req, res, next) => {
