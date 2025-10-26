@@ -81,12 +81,20 @@ router.post('/create-order', express.json(), async (req, res) => {
     }
 
     const accessToken = await generateAccessToken();
+    if (!accessToken) {
+      console.error('Failed to generate PayPal access token');
+      return res.status(500).json({ error: 'Failed to initialize payment processing' });
+    }
 
     const orderTotal = cartItems.reduce((total, item) => {
       const priceCents = item.variant.sale_price_in_cents ?? item.variant.price_in_cents ?? 0;
       const price = priceCents / 100;
       return total + price * item.quantity;
     }, 0);
+
+    if (orderTotal <= 0) {
+      return res.status(400).json({ error: 'Invalid order total amount' });
+    }
 
     const payload = {
       intent: 'CAPTURE',

@@ -110,17 +110,21 @@ export default function PayPalCheckout({ cartItems, onSuccess }) {
       }}
       createOrder={async () => {
         try {
-          const orderData = await createPayPalOrder(cartItems);
-          return orderData;
+          const response = await createPayPalOrder(cartItems);
+          if (!response || !response.id) {
+            throw new Error('Invalid order response from server');
+          }
+          return response.id;
         } catch (error) {
           console.error('Create order error:', error);
+          const errorMessage = error.message || "Unable to create PayPal order. Please try again.";
           toast({
             variant: "destructive",
             title: "Checkout Error",
-            description: error.message || "Unable to create PayPal order. Please try again.",
+            description: errorMessage,
           });
           // Re-initialize PayPal if there's an authentication error
-          if (error.message?.includes('authentication') || error.message?.includes('token')) {
+          if (errorMessage.includes('authentication') || errorMessage.includes('token')) {
             handleRetry();
           }
           throw error;
