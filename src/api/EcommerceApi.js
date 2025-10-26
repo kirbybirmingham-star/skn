@@ -1,12 +1,12 @@
 // PayPal API Configuration
-const PAYPAL_API = {
-  sandbox: 'https://api-m.sandbox.paypal.com',
-  production: 'https://api-m.paypal.com'
-};
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://skn-2.onrender.com';
 
-const PAYPAL_CLIENT_ID = import.meta.env.VITE_PAYPAL_CLIENT_ID;
-const PAYPAL_CLIENT_SECRET = import.meta.env.VITE_PAYPAL_SECRET;
-const ENVIRONMENT = import.meta.env.VITE_NODE_ENV === 'production' ? 'production' : 'sandbox';
+// PayPal config will be handled by the backend
+const API_ENDPOINTS = {
+  createOrder: `${API_BASE_URL}/api/paypal/create-order`,
+  captureOrder: `${API_BASE_URL}/api/paypal/capture-order`,
+  config: `${API_BASE_URL}/api/paypal/config`
+};
 
 export function formatCurrency(amountInCents, currencyInfo = { code: 'USD', symbol: '$' }) {
   const amount = typeof amountInCents === 'number' ? amountInCents / 100 : 0;
@@ -14,22 +14,20 @@ export function formatCurrency(amountInCents, currencyInfo = { code: 'USD', symb
   return `${symbol}${amount.toFixed(2)}`;
 }
 
-async function generateAccessToken() {
+// We'll use the backend to handle PayPal authentication
+async function checkBackendConfig() {
   try {
-    const auth = btoa(PAYPAL_CLIENT_ID + ":" + PAYPAL_CLIENT_SECRET);
-    const response = await fetch(`${PAYPAL_API[ENVIRONMENT]}/v1/oauth2/token`, {
-      method: "POST",
-      body: "grant_type=client_credentials",
-      headers: {
-        Authorization: `Basic ${auth}`,
-        "Content-Type": "application/x-www-form-urlencoded"
-      }
-    });
-    
+    const response = await fetch(API_ENDPOINTS.config);
+    if (!response.ok) {
+      throw new Error(`Backend config check failed: ${response.status}`);
+    }
     const data = await response.json();
-    return data.access_token;
+    if (!data.clientIdPresent || !data.secretPresent) {
+      throw new Error('PayPal configuration is incomplete on the backend');
+    }
+    return true;
   } catch (error) {
-    console.error("Failed to generate Access Token:", error);
+    console.error("Backend config check failed:", error);
     throw error;
   }
 }
@@ -48,11 +46,12 @@ export async function createPayPalOrder(cartItems) {
       }
     });
 
-    // Call the local server endpoint which will create the PayPal order using server-side credentials
-    const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000';
-    const response = await fetch(`${serverUrl}/api/paypal/create-order`, {
+    // Send the order creation request to our backend
+    const response = await fetch(API_ENDPOINTS.createOrder, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({ cartItems })
     });
 

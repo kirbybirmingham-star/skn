@@ -18,10 +18,16 @@ const PAYPAL_CLIENT_SECRET = process.env.VITE_PAYPAL_SECRET || process.env.PAYPA
 // Debug environment variables (redact secrets)
 console.log('PayPal env:', { NODE_ENV, ENV, PAYPAL_CLIENT_ID: PAYPAL_CLIENT_ID ? '\u2713' : '\u2717' });
 
-if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) {
-  console.error('Missing PayPal credentials. Check .env (VITE_PAYPAL_CLIENT_ID/VITE_PAYPAL_SECRET or PAYPAL_CLIENT_ID/PAYPAL_SECRET)');
-  // Throw to fail fast during startup so developer notices config issue.
-  throw new Error('PayPal configuration is incomplete');
+// Check PayPal configuration
+const missingVars = [];
+if (!PAYPAL_CLIENT_ID) missingVars.push('PAYPAL_CLIENT_ID');
+if (!PAYPAL_CLIENT_SECRET) missingVars.push('PAYPAL_SECRET');
+
+if (missingVars.length > 0) {
+  const message = `Missing PayPal credentials: ${missingVars.join(', ')}`;
+  console.error(message);
+  // Instead of throwing, we'll set an error state that routes can check
+  module.exports.configError = message;
 }
 
 async function generateAccessToken() {
@@ -67,6 +73,13 @@ async function generateAccessToken() {
 router.post('/create-order', express.json(), async (req, res) => {
   try {
     console.log('Received create-order request');
+
+    // Check if we have a configuration error
+    if (module.exports.configError) {
+      console.error('PayPal configuration error:', module.exports.configError);
+      return res.status(500).json({ error: 'PayPal configuration error', debug: process.env.DEBUG_PAYPAL === 'true' ? module.exports.configError : undefined });
+    }
+
     const { cartItems } = req.body || {};
 
     // Debug request
@@ -175,9 +188,45 @@ router.post('/create-order', express.json(), async (req, res) => {
     console.error('Server create-order error:', err && (err.stack || err));
     // If err.details exists (from generateAccessToken), surface it for debugging in dev only
     const payload = { error: err.message || 'Server error' };
-    if (process.env.NODE_ENV !== 'production' && err.details) payload.details = err.details;
+    // Expose extra details when DEBUG_PAYPAL is true (safe toggle for troubleshooting)
+    if ((process.env.NODE_ENV !== 'production' && err.details) || process.env.DEBUG_PAYPAL === 'true') {
+      payload.details = err.details;
+    }
     return res.status(500).json(payload);
   }
+});
+
+// Lightweight config endpoint to help debug environment variable presence
+router.get('/config', (req, res) => {
+  // Check configuration
+  const clientIdPresent = !!(process.env.VITE_PAYPAL_CLIENT_ID || process.env.PAYPAL_CLIENT_ID);
+  const secretPresent = !!(process.env.VITE_PAYPAL_SECRET || process.env.PAYPAL_SECRET);
+  const envPresent = !!process.env.NODE_ENV;
+  const debugMode = process.env.DEBUG_PAYPAL === 'true';
+
+  // Prepare response
+  const config = {
+    clientIdPresent,
+    secretPresent,
+    env: process.env.NODE_ENV || 'not set',
+    debug: debugMode,
+    ready: clientIdPresent && secretPresent
+  };
+
+  // Add error info in debug mode
+  if (debugMode) {
+    config.errors = [];
+    if (!clientIdPresent) config.errors.push('Missing PAYPAL_CLIENT_ID');
+    if (!secretPresent) config.errors.push('Missing PAYPAL_SECRET');
+    if (!envPresent) config.errors.push('Missing NODE_ENV');
+  }
+
+  // In production, only show detailed info if DEBUG_PAYPAL is true
+  if (process.env.NODE_ENV === 'production' && !debugMode) {
+    return res.json({ ready: config.ready });
+  }
+
+  return res.json(config);
 });
 
 export default router;
