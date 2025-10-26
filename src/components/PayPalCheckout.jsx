@@ -5,6 +5,7 @@ import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../components/ui/use-toast";
 import { createPayPalOrder, capturePayPalOrder } from "../api/EcommerceApi";
+import { ErrorBoundary } from "../ErrorBoundary";
 
 // Constants for button styles
 const PAYPAL_BUTTON_STYLES = {
@@ -36,10 +37,23 @@ export default function PayPalCheckout({ cartItems, onSuccess }) {
       return;
     }
 
-    // Log initialization attempt
-    console.log('Initializing PayPal with Client ID:', clientId.substring(0, 8) + '...');
-    
-    setScriptLoaded(true);
+    try {
+      // Validate the client ID format
+      const encodedClientId = encodeURIComponent(clientId);
+      
+      // Log initialization attempt (only show first few chars)
+      console.log('Initializing PayPal with Client ID:', encodedClientId.substring(0, 8) + '...');
+      
+      setScriptLoaded(true);
+    } catch (error) {
+      console.error('PayPal initialization error:', error);
+      setScriptError('Failed to initialize PayPal: ' + error.message);
+      toast({
+        variant: "destructive",
+        title: "PayPal Error",
+        description: "Failed to initialize PayPal checkout. Please try again.",
+      });
+    }
   }, [toast]);
   
   const handleRetry = () => {
@@ -86,20 +100,41 @@ export default function PayPalCheckout({ cartItems, onSuccess }) {
     );
   }
 
+  // Properly encode the client ID and other values
   const paypalConfig = {
-    "client-id": import.meta.env.VITE_PAYPAL_CLIENT_ID,
+    "client-id": encodeURIComponent(import.meta.env.VITE_PAYPAL_CLIENT_ID || ''),
     currency: "USD",
     intent: "capture",
-    components: ["buttons"],
-    "disable-funding": "credit,card,p24,sofort",
-    "data-client-token": "abc123", // Optional: Add if you have a client token
+    components: "buttons",
+    "disable-funding": "credit,card",
+    "enable-funding": "venmo,paylater",
+  };
+
+  // Function to handle script load errors
+  const handleScriptLoadError = (err) => {
+    console.error('PayPal script load error:', err);
+    setScriptError('Failed to load PayPal script: ' + err.message);
   };
 
   return (
-    <PayPalScriptProvider options={paypalConfig}>
-      <PayPalButtons
-        forceReRender={[cartItems]} // Re-render when cart changes
-        style={PAYPAL_BUTTON_STYLES}
+    <PayPalScriptProvider 
+      options={paypalConfig}
+      onError={handleScriptLoadError}
+    >
+      <ErrorBoundary
+        fallback={(error) => (
+          <div className="w-full p-4 bg-red-50 border border-red-200 rounded-lg text-center">
+            <p className="text-red-600">Something went wrong with PayPal checkout.</p>
+            <p className="text-sm text-gray-600 mt-2">{error.message}</p>
+            <button onClick={handleRetry} className="mt-2 px-4 py-2 bg-blue-600 text-white rounded">
+              Try Again
+            </button>
+          </div>
+        )}
+      >
+        <PayPalButtons
+          forceReRender={[cartItems]} // Re-render when cart changes
+          style={PAYPAL_BUTTON_STYLES}
         createOrder={async (data, actions) => {
         try {
           // Validate cart first
@@ -202,6 +237,7 @@ export default function PayPalCheckout({ cartItems, onSuccess }) {
         });
       }}
     />
+      </ErrorBoundary>
     </PayPalScriptProvider>
   );
 }
