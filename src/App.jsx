@@ -21,12 +21,7 @@ import React, { useState } from 'react';
         "enable-funding": "paypal",
         "disable-funding": "paylater,card,credit",
         // Additional configuration for better integration
-        "data-namespace": "PayPalSDK",
-        "data-sdk-integration-source": "button-factory",
-        // Set button customization defaults
-        "button-layout": "vertical",
-        "button-color": "gold",
-        "button-shape": "rect",
+        "data-sdk-integration-source": "react-paypal-js",
       };
 
       return (
