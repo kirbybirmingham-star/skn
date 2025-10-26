@@ -16,12 +16,17 @@ import React, { useState } from 'react';
         "client-id": import.meta.env.VITE_PAYPAL_CLIENT_ID,
         currency: "USD",
         intent: "capture",
-        "enable-funding": "paypal",
-        "disable-funding": "credit,card,paylater",
         components: "buttons",
-        "data-client-token": import.meta.env.VITE_PAYPAL_CLIENT_TOKEN,
-        vault: false,
-        "data-sdk-integration-source": "react-paypal-js",
+        // Enable only PayPal funding source
+        "enable-funding": "paypal",
+        "disable-funding": "paylater,card,credit",
+        // Additional configuration for better integration
+        "data-namespace": "PayPalSDK",
+        "data-sdk-integration-source": "button-factory",
+        // Set button customization defaults
+        "button-layout": "vertical",
+        "button-color": "gold",
+        "button-shape": "rect",
       };
 
       return (

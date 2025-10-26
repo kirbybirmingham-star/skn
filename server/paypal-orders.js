@@ -100,20 +100,42 @@ router.post('/create-order', express.json(), async (req, res) => {
       intent: 'CAPTURE',
       purchase_units: [
         {
+          reference_id: `order_${Date.now()}`,
+          description: 'SKN Bridge Trade Purchase',
           amount: {
             currency_code: 'USD',
             value: orderTotal.toFixed(2),
             breakdown: {
-              item_total: { currency_code: 'USD', value: orderTotal.toFixed(2) }
+              item_total: { 
+                currency_code: 'USD', 
+                value: orderTotal.toFixed(2) 
+              }
             }
           },
-          items: cartItems.map(item => ({
-            name: item.product?.title || 'Item',
-            unit_amount: { currency_code: 'USD', value: ((item.variant.sale_price_in_cents ?? item.variant.price_in_cents ?? 0) / 100).toFixed(2) },
-            quantity: String(item.quantity)
-          }))
+          items: cartItems.map(item => {
+            const unitPrice = ((item.variant.sale_price_in_cents ?? item.variant.price_in_cents ?? 0) / 100).toFixed(2);
+            return {
+              name: item.product?.title || 'Item',
+              description: item.variant?.title || '',
+              sku: item.variant?.id || '',
+              unit_amount: { 
+                currency_code: 'USD', 
+                value: unitPrice
+              },
+              quantity: String(item.quantity),
+              category: 'PHYSICAL_GOODS'
+            };
+          }),
+          shipping_preference: 'GET_FROM_FILE'
         }
-      ]
+      ],
+      application_context: {
+        brand_name: 'SKN Bridge Trade',
+        shipping_preference: 'GET_FROM_FILE',
+        user_action: 'PAY_NOW',
+        return_url: 'https://skn.onrender.com/success',
+        cancel_url: 'https://skn.onrender.com/cart'
+      }
     };
 
     const url = `${PAYPAL_API[ENV]}/v2/checkout/orders`;

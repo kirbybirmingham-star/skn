@@ -4,6 +4,15 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "../components/ui/use-toast";
 import { createPayPalOrder, capturePayPalOrder } from "../api/EcommerceApi";
 
+// Constants for button styles
+const PAYPAL_BUTTON_STYLES = {
+  layout: 'vertical',
+  color: 'gold',
+  shape: 'rect',
+  label: 'checkout',
+  height: 50,
+};
+
 export default function PayPalCheckout({ cartItems, onSuccess }) {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -103,47 +112,37 @@ export default function PayPalCheckout({ cartItems, onSuccess }) {
   return (
     <PayPalButtons
       forceReRender={[cartItems]} // Re-render when cart changes
-      style={{
-        layout: "vertical",
-        color: "gold",
-        shape: "rect",
-        label: "checkout",
-        height: 45,
-      }}
-      fundingSource="paypal"
+      style={PAYPAL_BUTTON_STYLES}
       createOrder={async (data, actions) => {
         try {
-          console.log('Starting PayPal order creation...');
-          
           // Validate cart first
-          if (!cartItems || cartItems.length === 0) {
+          if (!cartItems?.length) {
             throw new Error('Your cart is empty');
           }
 
-          // Log cart items for debugging
-          console.log('Cart items:', cartItems);
+          // Calculate order total (move this to a utility function if used elsewhere)
+          const orderTotal = cartItems.reduce((total, item) => {
+            const price = (item.variant.sale_price_in_cents ?? item.variant.price_in_cents) / 100;
+            return total + (price * item.quantity);
+          }, 0);
 
+          if (orderTotal <= 0) {
+            throw new Error('Invalid order total');
+          }
+
+          // Create the order on our server
           const orderId = await createPayPalOrder(cartItems);
-          console.log('Order created successfully:', orderId);
-          
           if (!orderId) {
-            throw new Error('Invalid order response from server');
+            throw new Error('Failed to create order');
           }
 
           return orderId;
         } catch (error) {
-          console.error('Create order error:', error);
+          console.error('PayPal createOrder error:', error);
           
-          // Format user-friendly error message
-          let errorMessage = "Unable to create PayPal order. Please try again.";
-          if (error.message.includes('cart')) {
-            errorMessage = "Please add items to your cart before checking out.";
-          } else if (error.message.includes('Invalid server response')) {
-            errorMessage = "We're having trouble connecting to PayPal. Please try again in a moment.";
-          } else if (error.message.includes('authentication') || error.message.includes('token')) {
-            errorMessage = "Payment system needs to reconnect. Please try again.";
-            handleRetry();
-          }
+          const errorMessage = error.message === 'Your cart is empty'
+            ? "Please add items to your cart before checking out."
+            : "Unable to create order. Please try again.";
           
           toast({
             variant: "destructive",
@@ -151,24 +150,40 @@ export default function PayPalCheckout({ cartItems, onSuccess }) {
             description: errorMessage,
           });
           
-          throw error;
+          throw error; // Let PayPal handle the error display
         }
       }}
-      onApprove={async (data, actions) => {
+      onApprove={async (data) => {
         try {
-          const orderData = await capturePayPalOrder(data.orderID);
+          // Show processing message
           toast({
-            title: "Payment Successful!",
+            title: "Processing Payment",
+            description: "Please wait while we confirm your payment...",
+          });
+
+          // Capture the order
+          const orderData = await capturePayPalOrder(data.orderID);
+          
+          if (!orderData || orderData.error) {
+            throw new Error(orderData?.error?.message || 'Failed to capture payment');
+          }
+
+          // Show success message and redirect
+          toast({
+            title: "Payment Successful! 🎉",
             description: "Thank you for your purchase.",
           });
+          
           onSuccess?.(orderData);
           navigate("/success");
         } catch (error) {
+          console.error('PayPal capture error:', error);
           toast({
             variant: "destructive",
             title: "Payment Error",
-            description: "Unable to process payment. Please try again.",
+            description: "We couldn't complete your payment. Please try again or contact support.",
           });
+          throw error; // Let PayPal handle the error display
         }
       }}
       onError={(err) => {
