@@ -19,8 +19,9 @@ import React, { useState } from 'react';
         "enable-funding": "paypal",
         "disable-funding": "credit,card,paylater",
         components: "buttons",
-        "data-sdk-integration-source": "integrationbuilder_sc",
-        debug: true,
+        "data-client-token": import.meta.env.VITE_PAYPAL_CLIENT_TOKEN,
+        vault: false,
+        "data-sdk-integration-source": "react-paypal-js",
       };
 
       return (

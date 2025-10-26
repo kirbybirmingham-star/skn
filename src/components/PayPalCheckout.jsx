@@ -102,14 +102,22 @@ export default function PayPalCheckout({ cartItems, onSuccess }) {
 
   return (
     <PayPalButtons
+      forceReRender={[cartItems]} // Re-render when cart changes
       style={{
         layout: "vertical",
         color: "gold",
         shape: "rect",
-        label: "paypal",
+        label: "checkout",
+        height: 45,
       }}
-      createOrder={async () => {
+      fundingSource="paypal"
+      createOrder={async (data, actions) => {
         try {
+          // Validate cart first
+          if (!cartItems || cartItems.length === 0) {
+            throw new Error('Your cart is empty');
+          }
+
           const response = await createPayPalOrder(cartItems);
           if (!response || !response.id) {
             throw new Error('Invalid order response from server');
@@ -123,7 +131,7 @@ export default function PayPalCheckout({ cartItems, onSuccess }) {
             title: "Checkout Error",
             description: errorMessage,
           });
-          // Re-initialize PayPal if there's an authentication error
+          
           if (errorMessage.includes('authentication') || errorMessage.includes('token')) {
             handleRetry();
           }
