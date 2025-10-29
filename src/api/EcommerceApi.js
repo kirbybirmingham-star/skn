@@ -87,8 +87,7 @@ export async function createPayPalOrder(cartItems) {
 
 export async function capturePayPalOrder(orderID) {
   try {
-    const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3000';
-    const response = await fetch(`${serverUrl}/api/paypal/capture-order/${orderID}`, {
+    const response = await fetch(`${API_BASE_URL}/api/paypal/capture-order/${orderID}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

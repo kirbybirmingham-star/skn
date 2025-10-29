@@ -22,6 +22,12 @@ if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) {
 }
 
 async function generateAccessToken() {
+  // Log the client ID to verify it's loaded, but redact most of it.
+  const redactedClientId = PAYPAL_CLIENT_ID 
+    ? `${PAYPAL_CLIENT_ID.substring(0, 8)}...${PAYPAL_CLIENT_ID.substring(PAYPAL_CLIENT_ID.length - 4)}`
+    : 'NOT FOUND';
+  console.log(`Generating token for PayPal Client ID: ${redactedClientId}`);
+
   const auth = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`).toString('base64');
   const tokenUrl = `${PAYPAL_API[ENV]}/v1/oauth2/token`;
   try {
@@ -34,13 +40,11 @@ async function generateAccessToken() {
       body: 'grant_type=client_credentials'
     });
 
-    const text = await res.text();
-    let data;
-    try { data = JSON.parse(text); } catch (e) { data = { raw: text }; }
+    const data = await res.json();
 
     if (!res.ok) {
-      // Include PayPal response body in the error to help debugging (but don't log secrets)
-      console.error('Failed to obtain PayPal token', { status: res.status, body: data });
+      const errorDetails = data.error_description || JSON.stringify(data);
+      console.error(`Failed to obtain PayPal token. Status: ${res.status}. PayPal says: "${errorDetails}"`);
       const err = new Error('Failed to obtain PayPal access token');
       err.details = { status: res.status, body: data };
       throw err;
