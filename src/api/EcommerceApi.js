@@ -127,8 +127,9 @@ export async function getProducts(options = {}) {
   const { sellerId, categoryId, searchQuery, priceRange, page = 1, perPage = 24 } = options;
 
   // Build base product filter conditions
+  // Note: products table uses `vendor_id` (not seller_id) per schema. Map sellerId -> vendor_id.
   let productFilter = (qb) => qb;
-  if (sellerId) productFilter = (qb) => qb.eq('seller_id', sellerId);
+  if (sellerId) productFilter = (qb) => qb.eq('vendor_id', sellerId);
   if (categoryId) {
     const prev = productFilter;
     productFilter = (qb) => prev(qb).eq('category_id', categoryId);
@@ -177,7 +178,7 @@ export async function getProducts(options = {}) {
   // Build the products query
   let productsQuery = supabase.from('products').select('*, product_variants(*)').order('created_at', { ascending: false });
   // Apply product-level filters
-  if (sellerId) productsQuery = productsQuery.eq('seller_id', sellerId);
+  if (sellerId) productsQuery = productsQuery.eq('vendor_id', sellerId);
   if (categoryId) productsQuery = productsQuery.eq('category_id', categoryId);
   if (productIdsFromPrice) productsQuery = productsQuery.in('id', productIdsFromPrice);
   if (searchQueryStr) {
@@ -187,9 +188,9 @@ export async function getProducts(options = {}) {
   // Get total count (exact) before pagination
   let total = null;
   try {
-    const countQuery = supabase.from('products').select('id', { count: 'exact', head: true });
-    if (sellerId) countQuery.eq('seller_id', sellerId);
-    if (categoryId) countQuery.eq('category_id', categoryId);
+  const countQuery = supabase.from('products').select('id', { count: 'exact', head: true });
+  if (sellerId) countQuery.eq('vendor_id', sellerId);
+  if (categoryId) countQuery.eq('category_id', categoryId);
     if (productIdsFromPrice) countQuery.in('id', productIdsFromPrice);
     if (searchQueryStr) countQuery.or(`title.ilike.%${searchQueryStr}%,description.ilike.%${searchQueryStr}%`);
     const { error: countErr, count } = await countQuery;
