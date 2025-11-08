@@ -56,7 +56,7 @@ const VendorCard = ({ vendor, index }) => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <Star className="w-5 h-5 text-yellow-400 mr-1" fill="currentColor" />
-                  <span className="text-sm font-medium text-gray-900">{vendor.rating.toFixed(1)}</span>
+                  <span className="text-sm font-medium text-gray-900">{vendor.rating ? vendor.rating.toFixed(1) : 'N/A'}</span>
                 </div>
                 <div className="text-sm text-gray-500">
                   {vendor.total_products} products
