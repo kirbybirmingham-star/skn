@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import { Search } from 'lucide-react';
@@ -16,6 +17,8 @@ const MarketplacePage = () => {
   const [priceRange, setPriceRange] = useState('all');
   const priceRanges = ['All', 'Under $50', '$50-$200', '$200-$500', 'Over $500'];
   const [featured, setFeatured] = useState([]);
+  const [showPopup, setShowPopup] = useState(false);
+  const [showFloatingAd, setShowFloatingAd] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -46,6 +49,31 @@ const MarketplacePage = () => {
     };
     loadFeatured();
     return () => { mounted = false };
+  }, []);
+
+  useEffect(() => {
+    // Only show popup/floating ad once per user (per browser) to avoid spamming.
+    try {
+      const popupShown = localStorage.getItem('marketplace_popup_shown');
+      const floatingShown = localStorage.getItem('marketplace_floating_shown');
+
+      let popupTimer, floatingTimer;
+      if (!popupShown) popupTimer = setTimeout(() => setShowPopup(true), 5000);
+      if (!floatingShown) floatingTimer = setTimeout(() => setShowFloatingAd(true), 8000);
+
+      return () => {
+        if (popupTimer) clearTimeout(popupTimer);
+        if (floatingTimer) clearTimeout(floatingTimer);
+      };
+    } catch (e) {
+      // If localStorage is unavailable, fall back to showing them once per page load
+      const popupTimer = setTimeout(() => setShowPopup(true), 5000);
+      const floatingTimer = setTimeout(() => setShowFloatingAd(true), 8000);
+      return () => {
+        clearTimeout(popupTimer);
+        clearTimeout(floatingTimer);
+      };
+    }
   }, []);
   
 
@@ -175,6 +203,34 @@ const MarketplacePage = () => {
           </div>
         </div>
       </div>
+      {showFloatingAd && (
+        <div className="fixed bottom-6 right-6 bg-white rounded-xl shadow-lg p-4 w-80 z-50">
+          <div className="flex justify-between items-start">
+            <div>
+              <h4 className="font-bold">🎁 Flash Deal!</h4>
+              <p className="text-sm text-slate-600">Limited time: 30% off electronics</p>
+            </div>
+            <button className="ml-4 text-slate-400" onClick={() => { setShowFloatingAd(false); try { localStorage.setItem('marketplace_floating_shown', '1'); } catch (e) {} }}>✕</button>
+          </div>
+          <div className="mt-3 text-right">
+            <button className="bg-indigo-600 text-white px-3 py-2 rounded" onClick={() => { try { localStorage.setItem('marketplace_floating_shown', '1'); } catch (e) {} /* navigate to promos */ window.location.href = '/promos'; }}>Claim</button>
+          </div>
+        </div>
+      )}
+
+      {showPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full relative">
+            <button className="absolute top-3 right-3 text-slate-500" onClick={() => { setShowPopup(false); try { localStorage.setItem('marketplace_popup_shown', '1'); } catch (e) {} }}>✕</button>
+            <h3 className="text-xl font-bold">🔥 Limited Time Offer!</h3>
+            <p className="mt-2 text-slate-600">Sign up today and get $20 off your first purchase.</p>
+            <div className="mt-4">
+              <button className="bg-indigo-600 text-white px-4 py-2 rounded" onClick={() => { try { localStorage.setItem('marketplace_popup_shown', '1'); } catch (e) {} window.location.href = '/signup'; setShowPopup(false); }}>Claim My Discount</button>
+              <button className="ml-3 text-slate-500" onClick={() => { setShowPopup(false); try { localStorage.setItem('marketplace_popup_shown', '1'); } catch (e) {} }}>No thanks</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

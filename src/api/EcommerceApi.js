@@ -122,12 +122,20 @@ export async function getProducts(options = {}) {
     console.warn('Supabase not initialized, returning empty products array');
     return { products: [] };
   }
-  // options can include { sellerId }
-  const query = supabase.from('products').select('*, product_variants(*)');
 
-  if (options.sellerId) {
-    query.eq('seller_id', options.sellerId);
+  // options can include { sellerId, categoryId, searchQuery, limit }
+  const { sellerId, categoryId, searchQuery, limit } = options;
+  let query = supabase.from('products').select('*, product_variants(*)').order('created_at', { ascending: false });
+
+  if (sellerId) query = query.eq('seller_id', sellerId);
+  if (categoryId) query = query.eq('category_id', categoryId);
+  if (searchQuery && String(searchQuery).trim().length > 0) {
+    const q = String(searchQuery).trim();
+    // search in title or description (case-insensitive)
+    query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%`);
   }
+
+  if (limit && Number.isInteger(limit)) query = query.limit(limit);
 
   const { data, error } = await query;
 
@@ -135,8 +143,6 @@ export async function getProducts(options = {}) {
     console.error('Error fetching products:', error);
     return { products: [] };
   }
-
-  console.log('Products data from Supabase:', data);
 
   return { products: data };
 }

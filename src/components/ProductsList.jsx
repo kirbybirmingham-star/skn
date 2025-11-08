@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, ShoppingCart } from 'lucide-react';
-import { getProducts, getProductQuantities } from '@/api/EcommerceApi';
+import { getProducts } from '@/api/EcommerceApi';
 import ProductCard from './ProductCard';
 
 
@@ -14,55 +14,28 @@ const ProductsList = ({ sellerId = null, categoryId = null, searchQuery = '', pr
       try {
         setLoading(true);
         setError(null);
-
-        const productsResponse = await getProducts(sellerId ? { sellerId } : {});
-
-        if (!productsResponse.products || productsResponse.products.length === 0) {
+        const resp = await getProducts({ sellerId, categoryId, searchQuery });
+        if (!resp.products || resp.products.length === 0) {
           setProducts([]);
           return;
         }
 
-        const productIds = productsResponse.products.map(product => product.id);
-
-        const quantitiesResponse = await getProductQuantities({
-          product_ids: productIds
-        });
-
-        const variantQuantityMap = new Map();
-        const variants = quantitiesResponse?.variants || [];
-        variants.forEach(variant => {
-          if (variant && variant.id) {
-            variantQuantityMap.set(variant.id, variant.inventory_quantity || 0);
-          }
-        });
-
-        let productsWithQuantities = productsResponse.products.map(product => {
+        // Normalize variants and ensure inventory_quantity exists
+        let productsWithQuantities = resp.products.map(product => {
           const productVariants = product.variants || product.product_variants || [];
-
           return {
             ...product,
             image: product.image || product.image_url || null,
             seller_name: product.seller_name || product.seller || null,
             variants: productVariants.map(variant => ({
               ...variant,
-              inventory_quantity: variantQuantityMap.get(variant.id) ?? variant.inventory_quantity ?? 0
+              inventory_quantity: variant.inventory_quantity ?? 0
             }))
           };
         });
 
         // Apply client-side filters: category, search text, price range
-        if (categoryId) {
-          productsWithQuantities = productsWithQuantities.filter(p => p.category_id === categoryId);
-        }
-
-        const qLower = (searchQuery || '').trim().toLowerCase();
-        if (qLower) {
-          productsWithQuantities = productsWithQuantities.filter(p => {
-            const title = (p.title || '').toLowerCase();
-            const desc = (p.description || '').toLowerCase();
-            return title.includes(qLower) || desc.includes(qLower);
-          });
-        }
+        // category and search are applied server-side; only apply priceRange client-side
 
         if (priceRange && priceRange !== 'all') {
           const ranges = {
