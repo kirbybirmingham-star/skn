@@ -159,6 +159,21 @@ export async function getVendors() {
   return data;
 }
 
+export async function getCategories() {
+  if (!supabase) {
+    console.warn('Supabase not initialized, returning empty categories array');
+    return [];
+  }
+
+  const { data, error } = await supabase.from('categories').select('id, name, slug').order('name', { ascending: true });
+  if (error) {
+    console.error('Error fetching categories:', error);
+    return [];
+  }
+
+  return data || [];
+}
+
 export async function getProductQuantities({ product_ids }) {
   if (!supabase) {
     console.warn('Supabase not initialized, returning empty variants array');

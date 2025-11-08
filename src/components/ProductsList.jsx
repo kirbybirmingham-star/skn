@@ -4,7 +4,7 @@ import { getProducts, getProductQuantities } from '@/api/EcommerceApi';
 import ProductCard from './ProductCard';
 
 
-const ProductsList = ({ sellerId = null }) => {
+const ProductsList = ({ sellerId = null, categoryId = null, searchQuery = '', priceRange = 'all' }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -36,7 +36,7 @@ const ProductsList = ({ sellerId = null }) => {
           }
         });
 
-        const productsWithQuantities = productsResponse.products.map(product => {
+        let productsWithQuantities = productsResponse.products.map(product => {
           const productVariants = product.variants || product.product_variants || [];
 
           return {
@@ -49,6 +49,38 @@ const ProductsList = ({ sellerId = null }) => {
             }))
           };
         });
+
+        // Apply client-side filters: category, search text, price range
+        if (categoryId) {
+          productsWithQuantities = productsWithQuantities.filter(p => p.category_id === categoryId);
+        }
+
+        const qLower = (searchQuery || '').trim().toLowerCase();
+        if (qLower) {
+          productsWithQuantities = productsWithQuantities.filter(p => {
+            const title = (p.title || '').toLowerCase();
+            const desc = (p.description || '').toLowerCase();
+            return title.includes(qLower) || desc.includes(qLower);
+          });
+        }
+
+        if (priceRange && priceRange !== 'all') {
+          const ranges = {
+            'under $50': [0, 5000],
+            '$50-$200': [5000, 20000],
+            '$200-$500': [20000, 50000],
+            'over $500': [50000, Infinity]
+          };
+          const key = priceRange.toLowerCase();
+          const range = ranges[Object.keys(ranges).find(k => k.toLowerCase() === key)];
+          if (range) {
+            productsWithQuantities = productsWithQuantities.filter(p => {
+              const variantPrices = (p.variants || []).map(v => v.price_in_cents || v.price || Infinity);
+              const minPrice = Math.min(...(variantPrices.length ? variantPrices : [Infinity]));
+              return minPrice >= range[0] && minPrice <= range[1];
+            });
+          }
+        }
 
         setProducts(productsWithQuantities);
       } catch (err) {

@@ -1,17 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ProductsList from '@/components/ProductsList';
+import { getCategories } from '@/api/EcommerceApi';
 
 const MarketplacePage = () => {
   // toast available for future notifications
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [categories, setCategories] = useState([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [priceRange, setPriceRange] = useState('all');
+  const priceRanges = ['All', 'Under $50', '$50-$200', '$200-$500', 'Over $500'];
 
-  const categories = ['All', 'Electronics', 'Furniture', 'Clothing', 'Sports', 'Books', 'Home & Garden'];
+  useEffect(() => {
+    let mounted = true;
+    const fetch = async () => {
+      try {
+        const cats = await getCategories();
+        if (!mounted) return;
+        setCategories(cats || []);
+      } catch (err) {
+        console.warn('Failed to load categories', err);
+      }
+    };
+    fetch();
+    return () => { mounted = false };
+  }, []);
   const priceRanges = ['All', 'Under $50', '$50-$200', '$200-$500', 'Over $500'];
 
   
@@ -60,11 +77,21 @@ const MarketplacePage = () => {
                 <label className="block text-sm font-semibold text-slate-700 mb-2">Category</label>
                 <select
                   value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSelectedCategory(val);
+                    if (val === 'all') {
+                      setSelectedCategoryId(null);
+                    } else {
+                      const cat = categories.find(c => c.slug === val || c.name.toLowerCase() === val);
+                      setSelectedCategoryId(cat ? cat.id : null);
+                    }
+                  }}
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
+                  <option key="all" value="all">All</option>
                   {categories.map((cat) => (
-                    <option key={cat} value={cat.toLowerCase()}>{cat}</option>
+                    <option key={cat.id} value={cat.slug || cat.name.toLowerCase()}>{cat.name}</option>
                   ))}
                 </select>
               </div>
@@ -85,7 +112,11 @@ const MarketplacePage = () => {
           </div>
 
           <div>
-            <ProductsList />
+            <ProductsList
+              categoryId={selectedCategoryId}
+              searchQuery={searchQuery}
+              priceRange={priceRange}
+            />
           </div>
         </div>
       </div>
