@@ -22,3 +22,10 @@ services:
     buildCommand: "npm install && npm run build"
     publishPath: "dist"
     branch: main
+    envVars:
+      - key: VITE_SUPABASE_URL
+        value: YOUR_SUPABASE_URL
+      - key: VITE_SUPABASE_ANON_KEY
+        value: YOUR_SUPABASE_ANON_KEY
+      - key: VITE_API_URL
+        value: https://sknbridgetrade-server.onrender.com

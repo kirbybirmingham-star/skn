@@ -1,7 +1,7 @@
 import { supabase } from '../lib/customSupabaseClient';
 
 // PayPal API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://skn-2.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 // PayPal config will be handled by the backend
 const API_ENDPOINTS = {
@@ -118,25 +118,48 @@ export async function capturePayPalOrder(orderID) {
 }
 
 export async function getProducts(options = {}) {
+  console.log('getProducts called with options:', options);
   if (!supabase) {
     console.warn('Supabase not initialized, returning empty products array');
     return { products: [] };
   }
-  // options can include { sellerId }
-  const query = supabase.from('products').select('*');
+  try {
+    console.log('Supabase client:', supabase);
+    // options can include { sellerId }
+    const query = supabase
+      .from('products')
+      .select('*');
 
-  if (options.sellerId) {
-    query.eq('seller_id', options.sellerId);
-  }
+    if (options.sellerId) {
+      query.eq('seller_id', options.sellerId);
+    }
 
-  const { data, error } = await query;
+    const { data, error } = await query;
 
-  if (error) {
-    console.error('Error fetching products:', error);
+    if (error) {
+      console.error('Error fetching products:', error);
+      return { products: [] };
+    }
+
+    // Transform the data to match the expected format
+    const transformedProducts = data.map(product => ({
+      ...product,
+      seller_name: product.vendor?.name || 'Unknown Seller',
+      variants: product.variants?.map(variant => ({
+        ...variant,
+        price_in_cents: variant.price,
+        sale_price_in_cents: variant.compare_at,
+        inventory_quantity: variant.stock,
+        price_formatted: formatCurrency(variant.price),
+        sale_price_formatted: variant.compare_at ? formatCurrency(variant.compare_at) : null
+      })) || []
+    }));
+
+    return { products: transformedProducts };
+  } catch (err) {
+    console.error('Failed to fetch products:', err);
     return { products: [] };
   }
-
-  return { products: data };
 }
 
 export async function getVendors() {
