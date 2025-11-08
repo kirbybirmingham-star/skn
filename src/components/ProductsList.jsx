@@ -36,15 +36,19 @@ const ProductsList = ({ sellerId = null }) => {
           }
         });
 
-        const productsWithQuantities = productsResponse.products.map(product => ({
-          ...product,
-          image: product.image || product.image_url || null,
-          seller_name: product.seller_name || product.seller || null,
-          variants: product.variants.map(variant => ({
-            ...variant,
-            inventory_quantity: variantQuantityMap.get(variant.id) ?? variant.inventory_quantity
-          }))
-        }));
+        const productsWithQuantities = productsResponse.products.map(product => {
+          const productVariants = product.variants || product.product_variants || [];
+
+          return {
+            ...product,
+            image: product.image || product.image_url || null,
+            seller_name: product.seller_name || product.seller || null,
+            variants: productVariants.map(variant => ({
+              ...variant,
+              inventory_quantity: variantQuantityMap.get(variant.id) ?? variant.inventory_quantity ?? 0
+            }))
+          };
+        });
 
         setProducts(productsWithQuantities);
       } catch (err) {
