@@ -97,7 +97,7 @@ EXECUTE FUNCTION public.set_updated_at();
 CREATE TABLE IF NOT EXISTS public.product_variants (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id uuid REFERENCES public.products(id) ON DELETE CASCADE,
-  sku text,
+  seller_id uuid not null references public.profiles(id) on delete cascade,  sku text,
   price numeric(12,2) NOT NULL,
   compare_at numeric(12,2),
   stock integer DEFAULT 0,
@@ -138,7 +138,12 @@ CREATE TABLE IF NOT EXISTS public.cart_items (
 CREATE INDEX IF NOT EXISTS cart_items_user_idx ON public.cart_items(user_id);
 
 -- ===== orders =====
-CREATE TYPE IF NOT EXISTS public.order_status AS ENUM ('pending', 'paid', 'processing', 'fulfilled', 'cancelled', 'refunded');
+DO $$
+BEGIN
+    CREATE TYPE public.order_status AS ENUM ('pending', 'paid', 'processing', 'fulfilled', 'cancelled', 'refunded');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 CREATE TABLE IF NOT EXISTS public.orders (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -235,7 +240,6 @@ FOR EACH ROW
 EXECUTE FUNCTION public.order_items_after_change();
 
 -- ===== full text search index example (products) =====
-ALTER TABLE public.products ALTER COLUMN description SET DATA TYPE text;
 CREATE INDEX IF NOT EXISTS products_search_idx ON public.products USING gin (to_tsvector('english', coalesce(title,'') || ' ' || coalesce(description,'')));
 
 -- ===== maintenance recommended indexes =====
