@@ -120,31 +120,103 @@ export async function capturePayPalOrder(orderID) {
 export async function getProducts(options = {}) {
   if (!supabase) {
     console.warn('Supabase not initialized, returning empty products array');
-    return { products: [] };
+    return { products: [], total: 0 };
   }
 
   // options can include { sellerId, categoryId, searchQuery, limit }
-  const { sellerId, categoryId, searchQuery, limit } = options;
-  let query = supabase.from('products').select('*, product_variants(*)').order('created_at', { ascending: false });
+  const { sellerId, categoryId, searchQuery, priceRange, page = 1, perPage = 24 } = options;
 
-  if (sellerId) query = query.eq('seller_id', sellerId);
-  if (categoryId) query = query.eq('category_id', categoryId);
-  if (searchQuery && String(searchQuery).trim().length > 0) {
-    const q = String(searchQuery).trim();
-    // search in title or description (case-insensitive)
-    query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%`);
+  // Build base product filter conditions
+  let productFilter = (qb) => qb;
+  if (sellerId) productFilter = (qb) => qb.eq('seller_id', sellerId);
+  if (categoryId) {
+    const prev = productFilter;
+    productFilter = (qb) => prev(qb).eq('category_id', categoryId);
   }
 
-  if (limit && Number.isInteger(limit)) query = query.limit(limit);
+  // Normalize search query
+  let searchQueryStr = null;
+  if (searchQuery && String(searchQuery).trim().length > 0) {
+    searchQueryStr = String(searchQuery).trim();
+  }
 
-  const { data, error } = await query;
+  // If priceRange is provided, first query product_variants to find matching product_ids
+  let productIdsFromPrice = null;
+  if (priceRange && priceRange !== 'all') {
+    // priceRange expected to be a token like 'under-50', '50-200', 'over-500'
+    let min = null;
+    let max = null;
+    const pr = String(priceRange).toLowerCase();
+    if (pr.startsWith('under')) { max = parseInt(pr.replace(/[^0-9]/g, ''), 10) * 100; min = 0; }
+    else if (pr.startsWith('over')) { min = parseInt(pr.replace(/[^0-9]/g, ''), 10) * 100; }
+    else if (pr.includes('-')) {
+      const parts = pr.split('-').map(p => parseInt(p.replace(/[^0-9]/g, ''), 10));
+      if (parts.length === 2) { min = parts[0] * 100; max = parts[1] * 100; }
+    }
+
+    try {
+      let variantQuery = supabase.from('product_variants').select('product_id');
+      if (min !== null) variantQuery = variantQuery.gte('price_in_cents', min);
+      if (max !== null && Number.isFinite(max)) variantQuery = variantQuery.lte('price_in_cents', max);
+      const { data: variantData, error: variantError } = await variantQuery;
+      if (variantError) {
+        console.error('Error fetching variants for price filter:', variantError);
+      } else {
+        productIdsFromPrice = Array.from(new Set((variantData || []).map(v => v.product_id))).filter(Boolean);
+      }
+    } catch (err) {
+      console.error('Price filter lookup failed:', err);
+    }
+
+    // If no matching product ids, return empty
+    if (productIdsFromPrice && productIdsFromPrice.length === 0) {
+      return { products: [], total: 0 };
+    }
+  }
+
+  // Build the products query
+  let productsQuery = supabase.from('products').select('*, product_variants(*)').order('created_at', { ascending: false });
+  // Apply product-level filters
+  if (sellerId) productsQuery = productsQuery.eq('seller_id', sellerId);
+  if (categoryId) productsQuery = productsQuery.eq('category_id', categoryId);
+  if (productIdsFromPrice) productsQuery = productsQuery.in('id', productIdsFromPrice);
+  if (searchQueryStr) {
+    productsQuery = productsQuery.or(`title.ilike.%${searchQueryStr}%,description.ilike.%${searchQueryStr}%`);
+  }
+
+  // Get total count (exact) before pagination
+  let total = null;
+  try {
+    const countQuery = supabase.from('products').select('id', { count: 'exact', head: true });
+    if (sellerId) countQuery.eq('seller_id', sellerId);
+    if (categoryId) countQuery.eq('category_id', categoryId);
+    if (productIdsFromPrice) countQuery.in('id', productIdsFromPrice);
+    if (searchQueryStr) countQuery.or(`title.ilike.%${searchQueryStr}%,description.ilike.%${searchQueryStr}%`);
+    const { error: countErr, count } = await countQuery;
+    if (countErr) {
+      console.warn('Failed to retrieve products count', countErr);
+    } else {
+      total = count || 0;
+    }
+  } catch (e) {
+    console.warn('Count query failed', e);
+  }
+
+  // Apply pagination via range
+  const per = Number.isInteger(perPage) ? perPage : 24;
+  const pg = Math.max(1, parseInt(page, 10) || 1);
+  const start = (pg - 1) * per;
+  const end = pg * per - 1;
+  productsQuery = productsQuery.range(start, end);
+
+  const { data, error } = await productsQuery;
 
   if (error) {
     console.error('Error fetching products:', error);
-    return { products: [] };
+    return { products: [], total: total ?? 0 };
   }
 
-  return { products: data };
+  return { products: data || [], total: total ?? (Array.isArray(data) ? data.length : 0) };
 }
 
 export async function getVendors() {

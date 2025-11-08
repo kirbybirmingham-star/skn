@@ -8,15 +8,34 @@ const ProductsList = ({ sellerId = null, categoryId = null, searchQuery = '', pr
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [perPage] = useState(24);
+  const [total, setTotal] = useState(null);
 
   useEffect(() => {
-    const fetchProductsWithQuantities = async () => {
+    const fetchProducts = async () => {
       try {
         setLoading(true);
         setError(null);
-        const resp = await getProducts({ sellerId, categoryId, searchQuery });
+
+        // Normalize incoming priceRange into tokens our API understands
+        const normalizePriceRange = (pr) => {
+          if (!pr) return 'all';
+          const p = String(pr).toLowerCase();
+          if (p.includes('under')) return 'under-50';
+          if (p.includes('over')) return 'over-500';
+          // ranges like '50-200' or '$50-$200' or '50 - 200'
+          const nums = p.match(/(\d+)/g);
+          if (nums && nums.length >= 2) return `${nums[0]}-${nums[1]}`;
+          return 'all';
+        };
+
+        const prToken = normalizePriceRange(priceRange);
+        const resp = await getProducts({ sellerId, categoryId, searchQuery, priceRange: prToken, page, perPage });
+
         if (!resp.products || resp.products.length === 0) {
           setProducts([]);
+          setTotal(resp.total || 0);
           return;
         }
 
@@ -34,28 +53,8 @@ const ProductsList = ({ sellerId = null, categoryId = null, searchQuery = '', pr
           };
         });
 
-        // Apply client-side filters: category, search text, price range
-        // category and search are applied server-side; only apply priceRange client-side
-
-        if (priceRange && priceRange !== 'all') {
-          const ranges = {
-            'under $50': [0, 5000],
-            '$50-$200': [5000, 20000],
-            '$200-$500': [20000, 50000],
-            'over $500': [50000, Infinity]
-          };
-          const key = priceRange.toLowerCase();
-          const range = ranges[Object.keys(ranges).find(k => k.toLowerCase() === key)];
-          if (range) {
-            productsWithQuantities = productsWithQuantities.filter(p => {
-              const variantPrices = (p.variants || []).map(v => v.price_in_cents || v.price || Infinity);
-              const minPrice = Math.min(...(variantPrices.length ? variantPrices : [Infinity]));
-              return minPrice >= range[0] && minPrice <= range[1];
-            });
-          }
-        }
-
         setProducts(productsWithQuantities);
+        setTotal(resp.total ?? null);
       } catch (err) {
         setError(err.message || 'Failed to load products');
       } finally {
@@ -63,8 +62,8 @@ const ProductsList = ({ sellerId = null, categoryId = null, searchQuery = '', pr
       }
     };
 
-    fetchProductsWithQuantities();
-  }, [sellerId]);
+    fetchProducts();
+  }, [sellerId, categoryId, searchQuery, priceRange, page]);
 
   if (loading) {
     return (
@@ -108,6 +107,14 @@ const ProductsList = ({ sellerId = null, categoryId = null, searchQuery = '', pr
       {products.map((product, index) => (
         <ProductCard key={product.id} product={product} index={index} />
       ))}
+      {/* Pagination controls */}
+      {total > perPage && (
+        <div className="col-span-full flex items-center justify-center space-x-4 mt-6">
+          <button className="px-3 py-2 bg-white border rounded" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>Prev</button>
+          <span className="text-sm text-slate-600">Page {page} {total ? `of ${Math.ceil(total / perPage)}` : ''}</span>
+          <button className="px-3 py-2 bg-white border rounded" onClick={() => setPage(p => p + 1)} disabled={total && page >= Math.ceil(total / perPage)}>Next</button>
+        </div>
+      )}
     </div>
   );
 };
