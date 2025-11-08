@@ -227,9 +227,10 @@ export async function getVendors() {
   }
   // Fetch from `vendors` table and include a small products selection so the UI can show a featured product
   try {
+    // Disambiguate the products relationship using the products->vendor_id foreign key
     const { data, error } = await supabase
       .from('vendors')
-      .select(`id, owner_id, name, slug, description, logo_url, cover_url, website, location, is_active, created_at, products(id, title, slug, description, image_url, base_price, is_published, product_variants(id, price_in_cents, inventory_quantity))`)
+      .select(`id, owner_id, name, slug, description, logo_url, cover_url, website, location, is_active, created_at, products!products_vendor_id_fkey(id, title, slug, description, image_url, base_price, is_published, product_variants(id, price_in_cents, inventory_quantity))`)
       .order('name', { ascending: true });
 
     if (error) {
