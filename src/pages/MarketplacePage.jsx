@@ -29,7 +29,7 @@ const MarketplacePage = () => {
     fetch();
     return () => { mounted = false };
   }, []);
-  const priceRanges = ['All', 'Under $50', '$50-$200', '$200-$500', 'Over $500'];
+  
 
   
 
