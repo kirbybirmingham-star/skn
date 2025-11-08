@@ -225,17 +225,55 @@ export async function getVendors() {
     console.warn('Supabase not initialized, returning empty vendors array');
     return [];
   }
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('role', 'seller');
+  // Fetch from `vendors` table and include a small products selection so the UI can show a featured product
+  try {
+    const { data, error } = await supabase
+      .from('vendors')
+      .select(`id, owner_id, name, slug, description, logo_url, cover_url, website, location, is_active, created_at, products(id, title, slug, description, image_url, base_price, is_published, product_variants(id, price_in_cents, inventory_quantity))`)
+      .order('name', { ascending: true });
 
-  if (error) {
-    console.error('Error fetching vendors:', error);
+    if (error) {
+      console.error('Error fetching vendors:', error);
+      return [];
+    }
+
+    // Map to vendor card shape
+    const mapped = (data || []).map(v => {
+      const prods = v.products || [];
+      const published = prods.filter(p => p.is_published !== false);
+      const featured = published.length ? published[0] : (prods[0] || null);
+      const featured_product = featured ? {
+        id: featured.id,
+        title: featured.title,
+        image: featured.image_url || (featured.product_variants && featured.product_variants[0] && featured.product_variants[0].images ? featured.product_variants[0].images[0] : null),
+        price: featured.product_variants && featured.product_variants[0] ? formatCurrency(Number(featured.product_variants[0].price_in_cents || featured.base_price * 100)) : null
+      } : null;
+
+      return {
+        id: v.id,
+        owner_id: v.owner_id,
+        name: v.name || v.slug,
+        store_name: v.name || v.slug,
+        slug: v.slug,
+        description: v.description || '',
+        avatar: v.logo_url || v.cover_url || null,
+        cover_url: v.cover_url || null,
+        website: v.website || null,
+        location: v.location || null,
+        is_active: v.is_active,
+        created_at: v.created_at,
+        featured_product,
+        categories: [], // categories would require a separate join; leave empty for now
+        rating: null,
+        total_products: prods.length || 0
+      };
+    });
+
+    return mapped;
+  } catch (err) {
+    console.error('Failed to load vendors', err);
     return [];
   }
-
-  return data;
 }
 
 export async function getCategories() {
