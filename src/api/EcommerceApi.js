@@ -164,7 +164,7 @@ export async function getProductQuantities() {
     console.warn('Supabase not initialized, returning empty variants array');
     return { variants: [] };
   }
-  const { data, error } = await supabase.from('variants').select('id, inventory_quantity');
+  const { data, error } = await supabase.from('product_variants').select('id, inventory_quantity');
 
   if (error) {
     console.error('Error fetching product quantities:', error);
