@@ -98,9 +98,9 @@ CREATE TABLE IF NOT EXISTS public.product_variants (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id uuid REFERENCES public.products(id) ON DELETE CASCADE,
   seller_id uuid not null references public.profiles(id) on delete cascade,  sku text,
-  price numeric(12,2) NOT NULL,
+  price_in_cents numeric(12,2) NOT NULL,
   compare_at numeric(12,2),
-  stock integer DEFAULT 0,
+  inventory_quantity integer DEFAULT 0,
   is_active boolean DEFAULT true,
   attributes jsonb DEFAULT '{}'::jsonb, -- e.g. {"color":"red","size":"M"}
   images jsonb DEFAULT '[]'::jsonb, -- array of image URLs

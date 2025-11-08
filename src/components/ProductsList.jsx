@@ -25,16 +25,16 @@ const ProductsList = ({ sellerId = null }) => {
         const productIds = productsResponse.products.map(product => product.id);
 
         const quantitiesResponse = await getProductQuantities({
-          fields: 'inventory_quantity',
           product_ids: productIds
         });
 
         const variantQuantityMap = new Map();
-        if (quantitiesResponse.variants) {
-          quantitiesResponse.variants.forEach(variant => {
-            variantQuantityMap.set(variant.id, variant.inventory_quantity);
-          });
-        }
+        const variants = quantitiesResponse?.variants || [];
+        variants.forEach(variant => {
+          if (variant && variant.id) {
+            variantQuantityMap.set(variant.id, variant.inventory_quantity || 0);
+          }
+        });
 
         const productsWithQuantities = productsResponse.products.map(product => ({
           ...product,

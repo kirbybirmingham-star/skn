@@ -20,7 +20,7 @@ ALTER TABLE public.products
 
 -- Alter 'product_variants' table
 ALTER TABLE public.product_variants
-  ALTER COLUMN price TYPE integer USING (price * 100)::integer,
+  ALTER COLUMN price_in_cents TYPE integer USING (price_in_cents * 100)::integer,
   ALTER COLUMN compare_at TYPE integer USING (compare_at * 100)::integer;
 
 -- Alter 'order_items' table

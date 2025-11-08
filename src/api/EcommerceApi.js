@@ -123,7 +123,7 @@ export async function getProducts(options = {}) {
     return { products: [] };
   }
   // options can include { sellerId }
-  const query = supabase.from('products').select('*');
+  const query = supabase.from('products').select('*, product_variants(*)');
 
   if (options.sellerId) {
     query.eq('seller_id', options.sellerId);
@@ -159,12 +159,15 @@ export async function getVendors() {
   return data;
 }
 
-export async function getProductQuantities() {
+export async function getProductQuantities({ product_ids }) {
   if (!supabase) {
     console.warn('Supabase not initialized, returning empty variants array');
     return { variants: [] };
   }
-  const { data, error } = await supabase.from('product_variants').select('id, inventory_quantity');
+  const { data, error } = await supabase
+    .from('product_variants')
+    .select('id, inventory_quantity')
+    .in('product_id', product_ids);
 
   if (error) {
     console.error('Error fetching product quantities:', error);

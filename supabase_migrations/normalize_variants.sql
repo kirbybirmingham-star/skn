@@ -14,8 +14,8 @@ create table if not exists public.product_variants (
 	seller_id uuid not null references public.profiles(id) on delete cascade,
 	title text,
 	sku text,
-	price_cents integer not null,
-	stock integer default 0,
+	price_in_cents integer not null,
+	inventory_quantity integer default 0,
 	metadata jsonb default '{}'::jsonb,
 	variant_idx integer,
 	created_at timestamptz default now(),
@@ -30,15 +30,15 @@ create index if not exists idx_product_variants_seller on public.product_variant
 -- This assumes the JSON object for each variant may contain keys: title, sku, price_cents, stock
 -- For price, we fallback to product.price_cents if variant price missing.
 insert into public.product_variants (
-	product_id, seller_id, title, sku, price_cents, stock, metadata, variant_idx
+	product_id, seller_id, title, sku, price_in_cents, inventory_quantity, metadata, variant_idx
 )
 select
 	p.id,
 	p.seller_id,
 	(v.elem ->> 'title')::text,
 	(v.elem ->> 'sku')::text,
-	coalesce((v.elem ->> 'price_cents')::int, p.price_cents),
-	coalesce((v.elem ->> 'stock')::int, 0),
+	coalesce((v.elem ->> 'price_in_cents')::int, p.price_in_cents),
+	coalesce((v.elem ->> 'inventory_quantity')::int, 0),
 	v.elem,
 	v.ordinality - 1
 from public.products p
@@ -108,7 +108,7 @@ create policy product_variants_delete_own on public.product_variants
 create index if not exists idx_product_variants_product_published on public.product_variants (product_id) where product_id is not null;
 
 -- Helper: sample query to fetch products and aggregate variants into a JSON array
--- SELECT p.*, coalesce(jsonb_agg(jsonb_build_object('id', v.id, 'title', v.title, 'sku', v.sku, 'price_cents', v.price_cents, 'stock', v.stock) ORDER BY v.variant_idx) FILTER (WHERE v.id IS NOT NULL), '[]') as variants
+-- SELECT p.*, coalesce(jsonb_agg(jsonb_build_object('id', v.id, 'title', v.title, 'sku', v.sku, 'price_in_cents', v.price_in_cents, 'inventory_quantity', v.inventory_quantity) ORDER BY v.variant_idx) FILTER (WHERE v.id IS NOT NULL), '[]') as variants
 -- FROM public.products p
 -- LEFT JOIN public.product_variants v ON v.product_id = p.id
 -- WHERE p.published = true
