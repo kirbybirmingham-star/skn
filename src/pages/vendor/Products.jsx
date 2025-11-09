@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
-import { listProductsBySeller, createProduct, updateProduct, deleteProduct, uploadImageFile } from '@/api/EcommerceApi';
+import { listProductsBySeller, createProduct, updateProduct, deleteProduct } from '@/api/EcommerceApi';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import ProductForm from '@/components/products/ProductForm';
+import { supabase } from '@/lib/customSupabaseClient';
 
 const emptyForm = { title: '', description: '', price_in_cents: 0, inventory_quantity: 0, image: '', category: 'Uncategorized', variants: [] };
 

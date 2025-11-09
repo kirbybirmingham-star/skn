@@ -33,11 +33,71 @@ const seedData = {
     { name: 'Home Goods', slug: 'home-goods' },
   ],
   products: [
-    { title: 'Laptop', slug: 'laptop', description: 'A powerful laptop', base_price: 120000, currency: 'USD', is_published: true },
-    { title: 'T-Shirt', slug: 't-shirt', description: 'A comfortable t-shirt', base_price: 2500, currency: 'USD', is_published: true },
-    { title: 'Coffee Mug', slug: 'coffee-mug', description: 'A mug for your coffee', base_price: 1500, currency: 'USD', is_published: true },
-    { title: 'Smartphone', slug: 'smartphone', description: 'A smart smartphone', base_price: 80000, currency: 'USD', is_published: true },
-    { title: 'Jeans', slug: 'jeans', description: 'A pair of jeans', base_price: 6000, currency: 'USD', is_published: true },
+    { 
+      title: 'Laptop', 
+      slug: 'laptop', 
+      description: 'A powerful laptop', 
+      base_price: 120000, 
+      currency: 'USD', 
+      is_published: true,
+      image_url: 'https://supabase.co/storage/v1/object/public/listings-images/laptop.jpg',
+      gallery_images: [
+        'https://supabase.co/storage/v1/object/public/listings-images/laptop-1.jpg',
+        'https://supabase.co/storage/v1/object/public/listings-images/laptop-2.jpg'
+      ]
+    },
+    { 
+      title: 'T-Shirt', 
+      slug: 't-shirt', 
+      description: 'A comfortable t-shirt', 
+      base_price: 2500, 
+      currency: 'USD', 
+      is_published: true,
+      image_url: 'https://supabase.co/storage/v1/object/public/listings-images/t-shirt.jpg',
+      gallery_images: [
+        'https://supabase.co/storage/v1/object/public/listings-images/t-shirt-1.jpg',
+        'https://supabase.co/storage/v1/object/public/listings-images/t-shirt-2.jpg'
+      ]
+    },
+    { 
+      title: 'Coffee Mug', 
+      slug: 'coffee-mug', 
+      description: 'A mug for your coffee', 
+      base_price: 1500, 
+      currency: 'USD', 
+      is_published: true,
+      image_url: 'https://supabase.co/storage/v1/object/public/listings-images/coffee-mug.jpg',
+      gallery_images: [
+        'https://supabase.co/storage/v1/object/public/listings-images/coffee-mug-1.jpg',
+        'https://supabase.co/storage/v1/object/public/listings-images/coffee-mug-2.jpg'
+      ]
+    },
+    { 
+      title: 'Smartphone', 
+      slug: 'smartphone', 
+      description: 'A smart smartphone', 
+      base_price: 80000, 
+      currency: 'USD', 
+      is_published: true,
+      image_url: 'https://supabase.co/storage/v1/object/public/listings-images/smartphone.jpg',
+      gallery_images: [
+        'https://supabase.co/storage/v1/object/public/listings-images/smartphone-1.jpg',
+        'https://supabase.co/storage/v1/object/public/listings-images/smartphone-2.jpg'
+      ]
+    },
+    { 
+      title: 'Jeans', 
+      slug: 'jeans', 
+      description: 'A pair of jeans', 
+      base_price: 6000, 
+      currency: 'USD', 
+      is_published: true,
+      image_url: 'https://supabase.co/storage/v1/object/public/listings-images/jeans.jpg',
+      gallery_images: [
+        'https://supabase.co/storage/v1/object/public/listings-images/jeans-1.jpg',
+        'https://supabase.co/storage/v1/object/public/listings-images/jeans-2.jpg'
+      ]
+    }
   ]
 };
 

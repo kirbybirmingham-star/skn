@@ -8,6 +8,12 @@ import { useToast } from '@/components/ui/use-toast';
 
 const placeholderImage = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300'><rect width='100%' height='100%' fill='%23eef2ff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23728bd6' font-family='Arial,Helvetica,sans-serif' font-size='20'>No Image</text></svg>";
 
+const getImageUrl = (product) => {
+  if (!product) return placeholderImage;
+  const imageUrl = product.image_url || (product.gallery_images && product.gallery_images[0]);
+  return imageUrl || placeholderImage;
+};
+
 const ProductCard = ({ product, index }) => {
   const { addToCart } = useCart();
   const { toast } = useToast();

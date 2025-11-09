@@ -12,6 +12,7 @@ const ProductDetailsPage = () => {
   const [loading, setLoading] = useState(true);
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [selectedImage, setSelectedImage] = useState(0);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -68,7 +69,7 @@ const ProductDetailsPage = () => {
   }
 
   const currentVariant = product.product_variants?.[selectedVariantIndex] || null;
-  const imageUrl = currentVariant?.images?.[0] || product.image_url || 'https://placehold.co/600x600';
+  const imageUrl = currentVariant?.images?.[0] || product.image_url || 'https://picsum.photos/600/600?grayscale&blur=2';
 
 
   return (
