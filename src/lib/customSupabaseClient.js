@@ -1,8 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Use Vite's import.meta.env for client-side, and process.env for server-side
-const supabaseUrl = (import.meta.env && import.meta.env.VITE_SUPABASE_URL) || process.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = (import.meta.env && import.meta.env.VITE_SUPABASE_ANON_KEY) || process.env.VITE_SUPABASE_ANON_KEY;
+let supabaseUrl;
+let supabaseAnonKey;
+
+// Check if we are in a Vite (client-side) environment
+if (typeof import.meta.env !== 'undefined') {
+  supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+} else {
+  // We are in a Node.js (server-side) environment
+  // The server/index.js should have already loaded dotenv
+  supabaseUrl = process.env.VITE_SUPABASE_URL;
+  supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
+}
 
 console.log('Supabase Config:', {
   url: supabaseUrl,
@@ -14,18 +24,18 @@ let supabase = null;
 if (supabaseUrl && supabaseAnonKey) {
   try {
     supabase = createClient(supabaseUrl, supabaseAnonKey);
-    // keep logs minimal in production
-    if (import.meta.env && import.meta.env.DEV) console.log('Supabase client initialized');
+    if (typeof import.meta.env !== 'undefined' && import.meta.env.DEV) {
+      console.log('Supabase client initialized');
+    }
   } catch (err) {
     console.warn('Failed to initialize Supabase client, falling back to in-memory store', err);
     supabase = null;
   }
 } else {
-  const isDev = (import.meta.env && import.meta.env.DEV) || process.env.NODE_ENV === 'development';
+  const isDev = (typeof import.meta.env !== 'undefined' && import.meta.env.DEV) || process.env.NODE_ENV === 'development';
   if (isDev) {
     console.warn('Supabase env vars not present. Running in in-memory fallback mode.');
   }
 }
 
 export { supabase };
-
