@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, ShoppingCart } from 'lucide-react';
-import { getProducts } from '@/api/EcommerceApi';
+import { getProducts, formatCurrency } from '@/api/EcommerceApi';
 import ProductCard from './ProductCard';
 
 
@@ -48,7 +48,9 @@ const ProductsList = ({ sellerId = null, categoryId = null, searchQuery = '', pr
             seller_name: product.seller_name || product.seller || null,
             variants: productVariants.map(variant => ({
               ...variant,
-              inventory_quantity: variant.inventory_quantity ?? 0
+              inventory_quantity: variant.inventory_quantity ?? 0,
+              price_formatted: formatCurrency(variant.price_in_cents),
+              sale_price_formatted: variant.sale_price_in_cents != null ? formatCurrency(variant.sale_price_in_cents) : null
             }))
           };
         });

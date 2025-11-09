@@ -89,9 +89,15 @@ const ProductCard = ({ product, index }) => {
           </h3>
           
           <div className="flex items-baseline gap-2 mb-1">
-            <span className="text-lg font-bold text-gray-900">{displayPrice}</span>
-            {hasSale && (
-              <span className="text-sm text-gray-500 line-through">{originalPrice}</span>
+            {displayPrice ? (
+              <>
+                <span className="text-lg font-bold text-gray-900">{displayPrice}</span>
+                {hasSale && (
+                  <span className="text-sm text-gray-500 line-through">{originalPrice}</span>
+                )}
+              </>
+            ) : (
+              <span className="text-lg font-bold text-gray-500">Price not available</span>
             )}
           </div>
 
