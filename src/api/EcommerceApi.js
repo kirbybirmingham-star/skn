@@ -230,7 +230,7 @@ export async function getVendors() {
     // Disambiguate the products relationship using the products->vendor_id foreign key
     const { data, error } = await supabase
       .from('vendors')
-      .select(`id, owner_id, name, slug, description, logo_url, cover_url, website, location, is_active, created_at, products!products_vendor_id_fkey(id, title, slug, description, image_url, base_price, is_published, product_variants(id, price_in_cents, inventory_quantity))`)
+      .select(`id, owner_id, name, slug, description, logo_url, cover_url, website, location, is_active, created_at, products!products_vendor_id_fkey(id, title, slug, description, base_price, is_published, product_variants(id, price_in_cents, inventory_quantity, images))`)
       .order('name', { ascending: true });
 
     if (error) {
@@ -246,7 +246,7 @@ export async function getVendors() {
       const featured_product = featured ? {
         id: featured.id,
         title: featured.title,
-        image: featured.image_url || (featured.product_variants && featured.product_variants[0] && featured.product_variants[0].images ? featured.product_variants[0].images[0] : null),
+        image: featured.product_variants && featured.product_variants[0] && featured.product_variants[0].images ? featured.product_variants[0].images[0] : null,
         price: featured.product_variants && featured.product_variants[0] ? formatCurrency(Number(featured.product_variants[0].price_in_cents || featured.base_price * 100)) : null
       } : null;
 
