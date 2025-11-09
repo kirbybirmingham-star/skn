@@ -1,12 +1,40 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
     import { Helmet } from 'react-helmet';
     import { motion } from 'framer-motion';
-    import { useAuth } from '@/contexts/SupabaseAuthContext';
+    // (useAuth already imported above)
     import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
     import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+    import { Button } from '@/components/ui/button';
+    import { useAuth } from '@/contexts/SupabaseAuthContext';
 
     const DashboardPage = () => {
-      const { user } = useAuth();
+      const { user, session } = useAuth();
+      const [vendor, setVendor] = useState(null);
+      const [counts, setCounts] = useState({ activeListings: 0, itemsSold: 0, itemsBought: 0 });
+      const [loadingVendor, setLoadingVendor] = useState(false);
+
+      useEffect(() => {
+        const load = async () => {
+          if (!session?.access_token) return;
+          setLoadingVendor(true);
+          try {
+            const res = await fetch('/api/onboarding/me', { headers: { Authorization: `Bearer ${session.access_token}` } });
+            if (!res.ok) {
+              setLoadingVendor(false);
+              return;
+            }
+            const json = await res.json();
+            if (json.vendor) setVendor(json.vendor);
+            if (json.counts) setCounts(json.counts);
+          } catch (err) {
+            console.error('Failed to load vendor info', err);
+          } finally {
+            setLoadingVendor(false);
+          }
+        };
+
+        load();
+      }, [session]);
 
       const getAvatarFallback = (email) => {
         if (!email) return "U";
@@ -51,6 +79,42 @@ import React from 'react';
                     </CardHeader>
                     <CardContent>
                       <p className="text-sm text-center text-muted-foreground">Member since {new Date(user?.created_at).toLocaleDateString()}</p>
+                      {vendor ? (
+                        <div className="mt-4 text-center">
+                          <p className="text-sm font-medium">Store: {vendor.name}</p>
+                          <p className="text-sm text-muted-foreground">Onboarding: {vendor.onboarding_status || 'not started'}</p>
+                          <div className="mt-3 flex justify-center gap-2">
+                            <a href={`/dashboard/onboarding`} className="text-sm underline">Open Onboarding Dashboard</a>
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={async () => {
+                                try {
+                                  const token = session?.access_token;
+                                  const res = await fetch('/api/onboarding/start-kyc', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                                    body: JSON.stringify({ vendor_id: vendor.id })
+                                  });
+                                  const json = await res.json();
+                                  if (res.ok && json.providerUrl) {
+                                    window.open(json.providerUrl, '_blank');
+                                  } else {
+                                    alert(json.error || 'Could not start verification');
+                                  }
+                                } catch (err) {
+                                  console.error('start KYC error', err);
+                                  alert('Failed to start verification');
+                                }
+                              }}
+                            >
+                              Start/Resume Verification
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-center text-muted-foreground mt-4">No store connected yet.</p>
+                      )}
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -68,15 +132,15 @@ import React from 'react';
                     <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                           <div className="bg-blue-50 p-4 rounded-lg">
-                            <p className="text-2xl font-bold text-blue-600">0</p>
+                            <p className="text-2xl font-bold text-blue-600">{counts.activeListings}</p>
                             <p className="text-sm text-muted-foreground">Active Listings</p>
                           </div>
                           <div className="bg-green-50 p-4 rounded-lg">
-                            <p className="text-2xl font-bold text-green-600">0</p>
+                            <p className="text-2xl font-bold text-green-600">{counts.itemsSold}</p>
                             <p className="text-sm text-muted-foreground">Items Sold</p>
                           </div>
                           <div className="bg-purple-50 p-4 rounded-lg">
-                            <p className="text-2xl font-bold text-purple-600">0</p>
+                            <p className="text-2xl font-bold text-purple-600">{counts.itemsBought}</p>
                             <p className="text-sm text-muted-foreground">Items Bought</p>
                           </div>
                       </div>

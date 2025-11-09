@@ -119,6 +119,63 @@ router.post('/start-kyc', verifySupabaseJwt, async (req, res) => {
   }
 });
 
+// GET /api/onboarding/me - return vendor for the authenticated user and some helper counts
+router.get('/me', verifySupabaseJwt, async (req, res) => {
+  try {
+    const requesterId = req.user?.id;
+    if (!requesterId) return res.status(401).json({ error: 'Not authenticated' });
+
+    // Find vendor owned by this user
+    const { data: vendors, error: vErr } = await supabase.from('vendors').select('*').eq('owner_id', requesterId).limit(1);
+    if (vErr) return res.status(500).json({ error: 'DB error' });
+    const vendor = vendors && vendors[0];
+    if (!vendor) return res.json({ vendor: null, counts: { activeListings: 0, itemsSold: 0, itemsBought: 0 } });
+
+    // Active listings: published products for this vendor
+    const { count: listingsCount, error: pErr } = await supabase.from('products').select('id', { count: 'exact', head: true }).eq('vendor_id', vendor.id).eq('is_published', true);
+    if (pErr) console.warn('Failed to count products for vendor:', pErr);
+
+    // Items sold: sum of quantities from order_items for this vendor where order status indicates paid/fulfilled/processing
+    const paidStatuses = ['paid', 'processing', 'fulfilled'];
+    const { data: soldRows, error: soldErr } = await supabase
+      .from('order_items')
+      .select('quantity, order_id')
+      .eq('vendor_id', vendor.id);
+    let itemsSold = 0;
+    if (!soldErr && Array.isArray(soldRows)) {
+      // need to check order status for each unique order_id
+      const orderIds = [...new Set(soldRows.map(r => r.order_id))].filter(Boolean);
+      if (orderIds.length > 0) {
+        const { data: orders, error: oErr } = await supabase.from('orders').select('id, status').in('id', orderIds);
+        const statusMap = {};
+        if (!oErr && Array.isArray(orders)) orders.forEach(o => statusMap[o.id] = o.status);
+        soldRows.forEach(r => {
+          const status = statusMap[r.order_id];
+          if (status && paidStatuses.includes(status)) itemsSold += Number(r.quantity || 0);
+        });
+      }
+    }
+
+    // Items bought: count of order_items where the current user is the buyer
+    let itemsBought = 0;
+    try {
+      const { data: userOrders } = await supabase.from('orders').select('id').eq('user_id', requesterId).in('status', paidStatuses);
+      const userOrderIds = (userOrders || []).map(o => o.id);
+      if (userOrderIds.length > 0) {
+        const { data: boughtRows } = await supabase.from('order_items').select('quantity').in('order_id', userOrderIds);
+        (boughtRows || []).forEach(r => itemsBought += Number(r.quantity || 0));
+      }
+    } catch (err) {
+      console.warn('Failed to compute itemsBought:', err);
+    }
+
+    return res.json({ vendor, counts: { activeListings: listingsCount || 0, itemsSold, itemsBought } });
+  } catch (err) {
+    console.error('onboarding /me error:', err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // POST /api/onboarding/webhook - provider webhooks should POST verification results here
 router.post('/webhook', async (req, res) => {
   try {
