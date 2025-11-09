@@ -3,16 +3,13 @@ import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import { DollarSign, Users, Shield, TrendingUp, CheckCircle, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 const BecomeSellerPage = () => {
-  const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSignUpClick = () => {
-    toast({
-      title: "🚧 Feature Coming Soon!",
-      description: "This feature isn't implemented yet—but don't worry! You can request it in your next prompt! 🚀",
-    });
+    navigate('/onboarding');
   };
 
   return (

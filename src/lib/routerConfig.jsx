@@ -32,6 +32,8 @@ export const router = createBrowserRouter([
       { path: 'product/:id', element: <ProductDetailsPage /> },
       { path: 'success', element: <SuccessPage /> },
       { path: 'become-seller', element: <BecomeSellerPage /> },
+        { path: 'onboarding', element: <SellerOnboarding /> },
+        { path: 'onboarding/:token', element: <SellerOnboarding /> },
       { path: 'trust-safety', element: <TrustSafetyPage /> },
       { path: 'about', element: <AboutPage /> },
       { path: 'faq', element: <FAQPage /> },

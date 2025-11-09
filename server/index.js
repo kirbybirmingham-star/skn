@@ -28,18 +28,21 @@ let paypalMiddleware;
     { default: webhook },
     { default: paypal },
     { default: capture },
-    { configurePayPalMiddleware }
+    { configurePayPalMiddleware },
+    { default: onboarding }
   ] = await Promise.all([
     import('./webhooks.js'),
     import('./paypal-orders.js'),
     import('./paypal-capture.js'),
-    import('./paypal-middleware.js')
+    import('./paypal-middleware.js'),
+    import('./onboarding.js')
   ]);
   
   webhookRoutes = webhook;
   paypalRoutes = paypal;
   paypalCaptureRoutes = capture;
   paypalMiddleware = configurePayPalMiddleware;
+  onboardingRoutes = onboarding;
 
   // Now start the server (moved inside async init)
   startServer();
@@ -95,6 +98,7 @@ function startServer() {
   app.use('/api/paypal', paypalRoutes);
   app.use('/api/paypal', paypalCaptureRoutes);
   app.use('/api/webhooks', webhookRoutes);
+  app.use('/api/onboarding', onboardingRoutes);
 
   // Serve frontend static files if the build output exists (for deployments that use a single web service)
   try {
