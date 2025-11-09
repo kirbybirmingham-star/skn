@@ -356,6 +356,29 @@ export async function getProductById(productId) {
   return data;
 }
 
+export async function getVendorById(vendorId) {
+  if (!supabase) {
+    console.warn('Supabase not initialized, returning null');
+    return null;
+  }
+  try {
+    const { data, error } = await supabase
+      .from('vendors')
+      .select('*')
+      .eq('id', vendorId)
+      .single();
+
+    if (error) {
+      console.error(`Error fetching vendor with id ${vendorId}:`, error);
+      return null;
+    }
+    return data;
+  } catch (err) {
+    console.error(`Failed to load vendor ${vendorId}`, err);
+    return null;
+  }
+}
+
 export async function uploadImageFile(file) {
   if (!supabase) throw new Error('Supabase client not available');
   if (!file) throw new Error('No file provided');

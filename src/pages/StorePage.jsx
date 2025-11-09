@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import ProductsList from '@/components/ProductsList';
 import VendorCard from '@/components/VendorCard';
-import { getProducts, getVendors } from '@/api/EcommerceApi';
+import { getProducts, getVendors, getVendorById } from '@/api/EcommerceApi';
 
 const StorePage = () => {
   const { sellerId } = useParams();
@@ -16,9 +16,10 @@ const StorePage = () => {
     const fetchSeller = async () => {
       if (!sellerId) return;
       try {
-        const resp = await getProducts({ sellerId });
-        const first = (resp.products || [])[0];
-        if (mounted && first) setSellerName(first.seller_name || first.seller || 'Seller');
+        const seller = await getVendorById(sellerId);
+        if (mounted && seller) {
+          setSellerName(seller.name || 'Seller');
+        }
       } catch (err) {
         // ignore — ProductsList will handle empty state
         console.warn('Failed to fetch seller info', err);
