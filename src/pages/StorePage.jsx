@@ -47,7 +47,7 @@ const StorePage = () => {
   return (
     <>
       <Helmet>
-        <title>{sellerId ? `${sellerName ? sellerName + ' — Store' : 'Store'} | SKN Bridge Trade` : 'Stores | SKN Bridge Trade'}</title>
+        <title>{sellerId ? `${sellerName ? sellerName  : 'Store'} | SKN Bridge Trade` : 'Stores | SKN Bridge Trade'}</title>
         <meta name="description" content={sellerId ? 'Explore this seller store on SKN Bridge Trade.' : 'Browse all stores on SKN Bridge Trade.'} />
       </Helmet>
 
