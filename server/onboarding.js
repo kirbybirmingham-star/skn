@@ -156,4 +156,38 @@ router.post('/webhook', async (req, res) => {
   }
 });
 
+// POST /api/onboarding/:id/appeal - vendor requests an appeal (must be owner)
+router.post('/:id/appeal', verifySupabaseJwt, async (req, res) => {
+  try {
+    const vendorId = req.params.id;
+    const { reason } = req.body;
+    if (!vendorId) return res.status(400).json({ error: 'vendor id required' });
+
+    // Fetch vendor
+    const { data: vendors, error: fetchErr } = await supabase.from('vendors').select('*').eq('id', vendorId).limit(1);
+    if (fetchErr) return res.status(500).json({ error: 'DB error' });
+    const vendor = vendors && vendors[0];
+    if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
+
+    // Authorization: only owner can request appeal
+    const requesterId = req.user?.id;
+    if (!requesterId || requesterId !== vendor.owner_id) {
+      return res.status(403).json({ error: 'Only the vendor owner may request an appeal' });
+    }
+
+    const appeals = (vendor.onboarding_data && vendor.onboarding_data.appeals) || [];
+    const appeal = { id: `appeal-${Date.now()}`, reason: reason || '', created_at: new Date().toISOString() };
+    appeals.push(appeal);
+
+    const updates = { onboarding_status: 'appeal_requested', onboarding_data: { ...(vendor.onboarding_data || {}), appeals } };
+    const { error: upErr } = await supabase.from('vendors').update(updates).eq('id', vendorId);
+    if (upErr) return res.status(500).json({ error: 'Failed to record appeal' });
+
+    return res.json({ success: true, appeal });
+  } catch (err) {
+    console.error('appeal error:', err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
 export default router;

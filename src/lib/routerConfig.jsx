@@ -19,6 +19,7 @@ import VendorOrders from '../pages/vendor/Orders';
 import App from '../App';
 import MarketplacePage from '../pages/MarketplacePage';
 import RouteError from '../components/RouteError';
+import OnboardingDashboard from '../pages/OnboardingDashboard';
 
 export const router = createBrowserRouter([
   {
@@ -33,8 +34,9 @@ export const router = createBrowserRouter([
       { path: 'product/:id', element: <ProductDetailsPage /> },
       { path: 'success', element: <SuccessPage /> },
       { path: 'become-seller', element: <BecomeSellerPage /> },
-        { path: 'onboarding', element: <SellerOnboarding /> },
-        { path: 'onboarding/:token', element: <SellerOnboarding /> },
+  { path: 'onboarding', element: <SellerOnboarding /> },
+  { path: 'onboarding/:token', element: <SellerOnboarding /> },
+  { path: 'dashboard/onboarding', element: <ProtectedRoute><OnboardingDashboard /></ProtectedRoute> },
       { path: 'trust-safety', element: <TrustSafetyPage /> },
       { path: 'about', element: <AboutPage /> },
       { path: 'faq', element: <FAQPage /> },
