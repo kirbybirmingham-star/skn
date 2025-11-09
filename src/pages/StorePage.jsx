@@ -60,7 +60,7 @@ const StorePage = () => {
             className="text-center max-w-3xl mx-auto mb-16"
           >
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent">
-              {sellerId ? (sellerName ? `${sellerName} — Store` : 'Our Store') : 'Stores'}
+              {sellerId ? (sellerName ? sellerName : 'Our Store') : 'Stores'}
             </h1>
             <p className="text-slate-600 text-lg sm:text-xl leading-relaxed">
               {sellerId ? 'Discover amazing products from our trusted sellers' : 'Browse all stores and discover sellers near you.'}
