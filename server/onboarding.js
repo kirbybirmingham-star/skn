@@ -79,7 +79,9 @@ router.get('/:token', async (req, res) => {
 
 // POST /api/onboarding/start-kyc - body: { vendor_id }
 // This starts a KYC session with the configured provider (stubbed) and returns a providerUrl
-router.post('/start-kyc', async (req, res) => {
+import { verifySupabaseJwt } from './middleware/supabaseAuth.js';
+
+router.post('/start-kyc', verifySupabaseJwt, async (req, res) => {
   try {
     const { vendor_id } = req.body;
     if (!vendor_id) return res.status(400).json({ error: 'vendor_id required' });
@@ -89,6 +91,12 @@ router.post('/start-kyc', async (req, res) => {
     if (fetchErr) return res.status(500).json({ error: 'DB error' });
     const vendor = vendors && vendors[0];
     if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
+
+    // Authorization: only vendor owner can start KYC
+    const requesterId = req.user?.id;
+    if (!requesterId || requesterId !== vendor.owner_id) {
+      return res.status(403).json({ error: 'Only the vendor owner may start KYC' });
+    }
 
     // Here you'd call the real KYC provider SDK/API (e.g. jewelhuq) to create a session.
     // For now we'll create a stub provider session id and return a frontend URL to continue.
