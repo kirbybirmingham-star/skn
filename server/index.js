@@ -1,3 +1,4 @@
+import './cron.js';
 import express from 'express';
 import cors from 'cors';
 import { config } from 'dotenv';
@@ -24,17 +25,20 @@ let paypalRoutes;
 let paypalCaptureRoutes;
 let paypalMiddleware;
 let onboardingRoutes;
+let paypalPayoutsRoutes;
 (async () => {
   const [
     { default: webhook },
     { default: paypal },
     { default: capture },
+    { default: payouts },
     { configurePayPalMiddleware },
     { default: onboarding }
   ] = await Promise.all([
     import('./webhooks.js'),
     import('./paypal-orders.js'),
     import('./paypal-capture.js'),
+    import('./paypal-payouts.js'),
     import('./paypal-middleware.js'),
     import('./onboarding.js')
   ]);
@@ -42,6 +46,7 @@ let onboardingRoutes;
   webhookRoutes = webhook;
   paypalRoutes = paypal;
   paypalCaptureRoutes = capture;
+  paypalPayoutsRoutes = payouts;
   paypalMiddleware = configurePayPalMiddleware;
   onboardingRoutes = onboarding;
 
@@ -98,6 +103,7 @@ function startServer() {
   // Routes
   app.use('/api/paypal', paypalRoutes);
   app.use('/api/paypal', paypalCaptureRoutes);
+  app.use('/api/paypal', paypalPayoutsRoutes);
   app.use('/api/webhooks', webhookRoutes);
   app.use('/api/onboarding', onboardingRoutes);
 
