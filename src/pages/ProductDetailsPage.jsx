@@ -5,7 +5,7 @@ import { useCart } from '@/hooks/useCart';
 import { getProductById } from '@/api/EcommerceApi';
 
 const ProductDetailsPage = () => {
-  const { productId } = useParams();
+  const { id: productId } = useParams();
   const { addToCart } = useCart();
   const { toast } = useToast();
   const [product, setProduct] = useState(null);
