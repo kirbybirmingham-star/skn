@@ -23,6 +23,7 @@ let webhookRoutes;
 let paypalRoutes;
 let paypalCaptureRoutes;
 let paypalMiddleware;
+let onboardingRoutes;
 (async () => {
   const [
     { default: webhook },
