@@ -10,6 +10,7 @@ import AboutPage from '../pages/AboutPage';
 import FAQPage from '../pages/FAQPage';
 import ContactPage from '../pages/ContactPage';
 import DashboardPage from '../pages/Dashboardpage';
+import SellerOnboarding from '../pages/SellerOnboarding';
 import ProtectedRoute from '../components/ProtectedRoute';
 import RequireRole from '../components/RequireRole';
 import VendorIndex from '../pages/vendor/Index';
