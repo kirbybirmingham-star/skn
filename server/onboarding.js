@@ -59,4 +59,93 @@ router.post('/signup', async (req, res) => {
   }
 });
 
+// GET /api/onboarding/:token - retrieve vendor by onboarding token
+router.get('/:token', async (req, res) => {
+  try {
+    const token = req.params.token;
+    const { data, error } = await supabase
+      .from('vendors')
+      .select('*')
+      .eq('onboarding_token', token)
+      .limit(1);
+    if (error) return res.status(500).json({ error: 'DB error' });
+    if (!data || data.length === 0) return res.status(404).json({ error: 'Not found' });
+    return res.json({ vendor: data[0] });
+  } catch (err) {
+    console.error('Onboarding GET error:', err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /api/onboarding/start-kyc - body: { vendor_id }
+// This starts a KYC session with the configured provider (stubbed) and returns a providerUrl
+router.post('/start-kyc', async (req, res) => {
+  try {
+    const { vendor_id } = req.body;
+    if (!vendor_id) return res.status(400).json({ error: 'vendor_id required' });
+
+    // Fetch vendor
+    const { data: vendors, error: fetchErr } = await supabase.from('vendors').select('*').eq('id', vendor_id).limit(1);
+    if (fetchErr) return res.status(500).json({ error: 'DB error' });
+    const vendor = vendors && vendors[0];
+    if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
+
+    // Here you'd call the real KYC provider SDK/API (e.g. jewelhuq) to create a session.
+    // For now we'll create a stub provider session id and return a frontend URL to continue.
+    const providerSessionId = `stub-${Date.now()}`;
+
+    // Update vendor with kyc_provider and provisional kyc_id and status
+    const { error: updErr } = await supabase
+      .from('vendors')
+      .update({ kyc_provider: process.env.KYC_PROVIDER || 'stub', kyc_id: providerSessionId, onboarding_status: 'kyc_in_progress' })
+      .eq('id', vendor_id);
+    if (updErr) console.warn('Failed to update vendor with kyc session:', updErr);
+
+    // Construct a provider URL - in real integration this would be returned by the provider
+    const providerUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/onboarding/${vendor.onboarding_token}?provider=stub&session=${providerSessionId}`;
+
+    return res.json({ providerUrl, providerSessionId });
+  } catch (err) {
+    console.error('start-kyc error:', err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /api/onboarding/webhook - provider webhooks should POST verification results here
+router.post('/webhook', async (req, res) => {
+  try {
+    const payload = req.body;
+    // Expect { onboarding_token, vendor_id, kyc_id, status, details }
+    const { onboarding_token, vendor_id, kyc_id, status, details } = payload;
+
+    let filter;
+    if (onboarding_token) filter = { onboarding_token };
+    else if (vendor_id) filter = { id: vendor_id };
+    else if (kyc_id) filter = { kyc_id };
+    else return res.status(400).json({ error: 'Missing identifier' });
+
+    // Build update
+    const updates = { onboarding_status: status || 'kyc_completed', onboarding_data: details || {} };
+    if (kyc_id) updates.kyc_id = kyc_id;
+
+    // Apply update
+    let query = supabase.from('vendors');
+    if (filter.onboarding_token) query = query.update(updates).eq('onboarding_token', filter.onboarding_token);
+    else if (filter.id) query = query.update(updates).eq('id', filter.id);
+    else if (filter.kyc_id) query = query.update(updates).eq('kyc_id', filter.kyc_id);
+
+    const { error: uerr } = await query;
+    if (uerr) {
+      console.error('Webhook update error:', uerr);
+      return res.status(500).json({ error: 'DB update failed' });
+    }
+
+    // Acknowledge
+    return res.status(200).json({ received: true });
+  } catch (err) {
+    console.error('Webhook handler error:', err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
 export default router;
