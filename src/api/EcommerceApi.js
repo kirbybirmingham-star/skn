@@ -346,7 +346,7 @@ export async function getProductById(productId) {
     console.warn('Supabase not initialized, returning null');
     return null;
   }
-  const { data, error } = await supabase.from('products').select('*').eq('id', productId).single();
+  const { data, error } = await supabase.from('products').select('*, product_variants(*)').eq('id', productId).single();
 
   if (error) {
     console.error(`Error fetching product with id ${productId}:`, error);

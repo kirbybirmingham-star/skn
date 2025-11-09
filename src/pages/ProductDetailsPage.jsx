@@ -14,7 +14,6 @@ const ProductDetailsPage = () => {
   const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
-    // TODO: Replace with actual API call
     const fetchProduct = async () => {
       try {
         setLoading(true);
@@ -32,7 +31,7 @@ const ProductDetailsPage = () => {
 
   const handleAddToCart = () => {
     if (!product) return;
-    const variant = product.variants?.[selectedVariantIndex] ?? null;
+    const variant = product.product_variants?.[selectedVariantIndex] ?? null;
     if (!variant) {
       toast({ title: 'No variant selected', variant: 'destructive' });
       return;
@@ -68,12 +67,16 @@ const ProductDetailsPage = () => {
     );
   }
 
+  const currentVariant = product.product_variants?.[selectedVariantIndex] || null;
+  const imageUrl = currentVariant?.images?.[0] || product.image_url || 'https://placehold.co/600x600';
+
+
   return (
     <div className="container mx-auto p-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
           <img
-            src={product.images[0]}
+            src={imageUrl}
             alt={product.name}
             className="w-full h-full object-cover"
           />
@@ -82,11 +85,11 @@ const ProductDetailsPage = () => {
           <h1 className="text-3xl font-bold mb-4">{product.title || product.name}</h1>
           <p className="text-gray-600 mb-6">{product.description}</p>
 
-          {product.variants && product.variants.length > 0 && (
+          {product.product_variants && product.product_variants.length > 0 && (
             <div className="mb-4">
               <label className="block text-sm mb-2">Variant</label>
               <select value={selectedVariantIndex} onChange={e => setSelectedVariantIndex(Number(e.target.value))} className="p-2 border rounded w-full">
-                {product.variants.map((v, idx) => (
+                {product.product_variants.map((v, idx) => (
                   <option key={v.id || idx} value={idx}>{v.title || `Variant ${idx+1}`} — {v.price_formatted || `$${((v.price_in_cents||0)/100).toFixed(2)}`}</option>
                 ))}
               </select>
@@ -102,7 +105,7 @@ const ProductDetailsPage = () => {
             </div>
           </div>
 
-          <div className="text-2xl font-bold mb-6">{product.variants && product.variants[selectedVariantIndex] ? (product.variants[selectedVariantIndex].price_formatted || `$${((product.variants[selectedVariantIndex].price_in_cents||0)/100).toFixed(2)}`) : '$0.00'}</div>
+          <div className="text-2xl font-bold mb-6">{currentVariant ? (currentVariant.price_formatted || `$${((currentVariant.price_in_cents||0)/100).toFixed(2)}`) : '$0.00'}</div>
 
           <button
             onClick={handleAddToCart}
