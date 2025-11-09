@@ -10,8 +10,18 @@ const placeholderImage = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/
 
 const getImageUrl = (product) => {
   if (!product) return placeholderImage;
-  const imageUrl = product.image_url || (product.gallery_images && product.gallery_images[0]);
+  // Prefer explicit featured image, then canonical image_url, then generic image, then first gallery image
+  const imageUrl = product.featured_image || product.image_url || product.image || (product.gallery_images && product.gallery_images[0]);
   return imageUrl || placeholderImage;
+};
+
+const formatPrice = (cents, currency = 'USD') => {
+  if (cents == null) return null;
+  try {
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(cents / 100);
+  } catch (e) {
+    return `$${(cents / 100).toFixed(2)}`;
+  }
 };
 
 const ProductCard = ({ product, index }) => {
@@ -20,12 +30,20 @@ const ProductCard = ({ product, index }) => {
   const navigate = useNavigate();
 
   // Normalize variants - backend may return variants under `variants` or `product_variants`
-  const variants = useMemo(() => (product.variants || product.product_variants || []), [product]);
+  const variants = useMemo(() => (product?.variants || product?.product_variants || []), [product]);
   const displayVariant = useMemo(() => (variants && variants.length ? variants[0] : null), [variants]);
   const [imgLoaded, setImgLoaded] = useState(false);
-  const hasSale = useMemo(() => displayVariant && displayVariant.sale_price_in_cents != null, [displayVariant]);
-  const displayPrice = useMemo(() => (displayVariant ? (hasSale ? displayVariant.sale_price_formatted : displayVariant.price_formatted) : null), [displayVariant, hasSale]);
-  const originalPrice = useMemo(() => (hasSale && displayVariant ? displayVariant.price_formatted : null), [displayVariant, hasSale]);
+
+  // Pricing: prefer variant prices, fall back to product.base_price
+  const variantPriceCents = displayVariant?.price_in_cents ?? displayVariant?.price ?? null;
+  const variantSaleCents = displayVariant?.sale_price_in_cents ?? displayVariant?.sale_price ?? null;
+  const productPriceCents = product?.base_price ?? product?.price ?? null;
+  const currency = product?.currency || 'USD';
+
+  const priceToShowCents = variantPriceCents ?? productPriceCents;
+  const hasSale = variantSaleCents != null && priceToShowCents != null && variantSaleCents < priceToShowCents;
+  const displayPrice = hasSale ? formatPrice(variantSaleCents, currency) : formatPrice(priceToShowCents, currency);
+  const originalPrice = hasSale ? formatPrice(priceToShowCents, currency) : null;
 
   const handleAddToCart = useCallback(async (e) => {
     e.preventDefault();
@@ -74,10 +92,10 @@ const ProductCard = ({ product, index }) => {
               </div>
             )}
             <img
-              src={product.image || placeholderImage}
+              src={getImageUrl(product)}
               alt={product.title}
               onLoad={() => setImgLoaded(true)}
-              className={`w-full h-48 object-contain ${imgLoaded ? 'block' : 'hidden'}`}
+              className={`w-full h-48 object-cover rounded-md ${imgLoaded ? 'block' : 'hidden'}`}
             />
             {product.featured && (
               <div className="absolute top-3 left-3 bg-yellow-300 text-black px-3 py-1 rounded-full text-sm font-bold">Featured</div>
@@ -92,7 +110,7 @@ const ProductCard = ({ product, index }) => {
             {displayPrice ? (
               <>
                 <span className="text-lg font-bold text-gray-900">{displayPrice}</span>
-                {hasSale && (
+                {hasSale && originalPrice && (
                   <span className="text-sm text-gray-500 line-through">{originalPrice}</span>
                 )}
               </>
