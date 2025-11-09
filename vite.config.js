@@ -6,7 +6,10 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
+      // Resolve from current working directory so CI/build agents that
+      // change the working dir (e.g. Render uses /opt/render/project/src)
+      // don't end up with duplicated paths like /opt/render/project/src/src
+      '@': path.resolve(process.cwd(), 'src')
     },
     extensions: ['.js', '.jsx', '.json']
   },
