@@ -26,6 +26,7 @@ let paypalCaptureRoutes;
 let paypalMiddleware;
 let onboardingRoutes;
 let paypalPayoutsRoutes;
+let dashboardRoutes;
 (async () => {
   const [
     { default: webhook },
@@ -33,14 +34,16 @@ let paypalPayoutsRoutes;
     { default: capture },
     { default: payouts },
     { configurePayPalMiddleware },
-    { default: onboarding }
+    { default: onboarding },
+    { default: dashboard },
   ] = await Promise.all([
     import('./webhooks.js'),
     import('./paypal-orders.js'),
     import('./paypal-capture.js'),
     import('./paypal-payouts.js'),
     import('./paypal-middleware.js'),
-    import('./onboarding.js')
+    import('./onboarding.js'),
+    import('./dashboard.js'),
   ]);
   
   webhookRoutes = webhook;
@@ -49,6 +52,7 @@ let paypalPayoutsRoutes;
   paypalPayoutsRoutes = payouts;
   paypalMiddleware = configurePayPalMiddleware;
   onboardingRoutes = onboarding;
+  dashboardRoutes = dashboard;
 
   // Now start the server (moved inside async init)
   startServer();
@@ -106,6 +110,7 @@ function startServer() {
   app.use('/api/paypal', paypalPayoutsRoutes);
   app.use('/api/webhooks', webhookRoutes);
   app.use('/api/onboarding', onboardingRoutes);
+  app.use('/api/dashboard', dashboardRoutes);
 
   // Serve frontend static files if the build output exists (for deployments that use a single web service)
   try {

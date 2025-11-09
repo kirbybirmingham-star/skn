@@ -1,5 +1,6 @@
 import React from 'react';
 import VendorSidebar from '@/components/VendorSidebar';
+import VendorDashboard from './Dashboard';
 
 const VendorIndex = () => {
   return (
@@ -10,7 +11,7 @@ const VendorIndex = () => {
         </div>
         <div className="lg:col-span-3">
           <h1 className="text-3xl font-bold mb-4">Vendor Dashboard</h1>
-          <p className="text-slate-600">Welcome to your vendor dashboard. Use the sidebar to manage products and orders.</p>
+          <VendorDashboard />
         </div>
       </div>
     </div>

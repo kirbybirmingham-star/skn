@@ -9,11 +9,12 @@ dotenv.config({ path: path.join(process.cwd(), '.env') });
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+let supabase = null;
 if (!supabaseUrl || !supabaseKey) {
-  console.warn('Supabase not configured for onboarding route. Some operations will fail.');
+  console.warn('Supabase not configured for onboarding route. Onboarding endpoints will be disabled.');
+} else {
+  supabase = createClient(supabaseUrl, supabaseKey);
 }
-
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 const router = express.Router();
 
@@ -21,6 +22,7 @@ const router = express.Router();
 // Body: { owner_id, name, slug, description, website, contact_email }
 router.post('/signup', async (req, res) => {
   try {
+    if (!supabase) return res.status(503).json({ error: 'Server not configured for onboarding' });
     const { owner_id, name, slug, description, website, contact_email } = req.body;
     if (!owner_id || !name || !slug) return res.status(400).json({ error: 'owner_id, name and slug are required' });
 
@@ -62,6 +64,7 @@ router.post('/signup', async (req, res) => {
 // GET /api/onboarding/:token - retrieve vendor by onboarding token
 router.get('/:token', async (req, res) => {
   try {
+    if (!supabase) return res.status(503).json({ error: 'Server not configured for onboarding' });
     const token = req.params.token;
     const { data, error } = await supabase
       .from('vendors')
@@ -83,6 +86,7 @@ import { verifySupabaseJwt } from './middleware/supabaseAuth.js';
 
 router.post('/start-kyc', verifySupabaseJwt, async (req, res) => {
   try {
+    if (!supabase) return res.status(503).json({ error: 'Server not configured for onboarding' });
     const { vendor_id } = req.body;
     if (!vendor_id) return res.status(400).json({ error: 'vendor_id required' });
 
@@ -179,6 +183,7 @@ router.get('/me', verifySupabaseJwt, async (req, res) => {
 // POST /api/onboarding/webhook - provider webhooks should POST verification results here
 router.post('/webhook', async (req, res) => {
   try {
+    if (!supabase) return res.status(503).json({ error: 'Server not configured for onboarding' });
     const payload = req.body;
     // Expect { onboarding_token, vendor_id, kyc_id, status, details }
     const { onboarding_token, vendor_id, kyc_id, status, details } = payload;
@@ -216,6 +221,7 @@ router.post('/webhook', async (req, res) => {
 // POST /api/onboarding/:id/appeal - vendor requests an appeal (must be owner)
 router.post('/:id/appeal', verifySupabaseJwt, async (req, res) => {
   try {
+    if (!supabase) return res.status(503).json({ error: 'Server not configured for onboarding' });
     const vendorId = req.params.id;
     const { reason } = req.body;
     if (!vendorId) return res.status(400).json({ error: 'vendor id required' });

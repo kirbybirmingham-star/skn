@@ -4,16 +4,22 @@ import { createPayout } from './commission-payouts.js';
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+let supabase = null;
 if (!supabaseUrl || !supabaseKey) {
-  console.warn('Supabase not configured for payouts. Some operations will fail.');
+  console.warn('Supabase not configured for payouts. Payout processing will be disabled.');
+} else {
+  // Only create the client when both values are present to avoid throwing during import
+  supabase = createClient(supabaseUrl, supabaseKey);
 }
-
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 const COMMISSION_RATE = 0.1; // 10%
 
 export async function processPayouts() {
   try {
+    if (!supabase) {
+      console.warn('Skipping payout processing because Supabase service key is not configured.');
+      return;
+    }
     // 1. Get all completed orders that have not been paid out yet
     const { data: orders, error: ordersError } = await supabase
       .from('orders')

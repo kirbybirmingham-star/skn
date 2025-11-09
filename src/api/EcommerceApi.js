@@ -409,6 +409,24 @@ export async function listProductsBySeller(sellerId) {
   return data;
 }
 
+export async function getVendorDashboardData(vendorId) {
+  if (!vendorId) {
+    console.warn('Vendor ID is required to fetch dashboard data');
+    return null;
+  }
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/dashboard/vendor/${vendorId}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch vendor dashboard data: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching vendor dashboard data:', error);
+    throw error;
+  }
+}
+
 
 
 
