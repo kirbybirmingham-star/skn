@@ -7,7 +7,43 @@ import { supabase } from './customSupabaseClient';
  * @param {string} bucketName - The name of the storage bucket (default: 'listings-images')
  * @returns {Promise<string>} - The public URL of the uploaded file
  */
-export const uploadImage = async (file, path, bucketName = 'listing-images') => {
+/**
+ * Generates a standardized path for storing images
+ * @param {string} type - Type of image ('product', 'vendor', 'category', 'avatar')
+ * @param {string} id - Identifier (slug or ID)
+ * @param {string} subtype - Subtype of image ('main', 'gallery', 'variant', 'thumbnail', etc.)
+ * @param {string} filename - Original filename
+ * @returns {string} - Standardized storage path
+ */
+const getStoragePath = (type, id, subtype, filename) => {
+  const extension = filename.split('.').pop().toLowerCase();
+  
+  switch (type) {
+    case 'product':
+      switch (subtype) {
+        case 'main':
+          return `products/${id}/main.${extension}`;
+        case 'gallery':
+          return `products/${id}/gallery/${filename}`;
+        case 'variant':
+          return `products/${id}/variants/${filename}`;
+        case 'thumbnail':
+          return `products/${id}/thumbnails/thumb.${extension}`;
+        default:
+          return `products/${id}/${filename}`;
+      }
+    case 'vendor':
+      return `vendors/${id}/${subtype}.${extension}`;
+    case 'category':
+      return `categories/${id}/${subtype}.${extension}`;
+    case 'avatar':
+      return `users/${id}/${subtype}.${extension}`;
+    default:
+      return filename;
+  }
+};
+
+export const uploadImage = async (file, path, bucketName = 'listings-images') => {
   try {
     const { data, error } = await supabase.storage
       .from(bucketName)
