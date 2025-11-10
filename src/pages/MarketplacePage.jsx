@@ -188,7 +188,7 @@ const MarketplacePage = () => {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {featured.map((p, i) => (
-                      <ProductCard key={p.id} product={{ ...p, variants: p.variants || p.product_variants || [] }} index={i} />
+                      <ProductCard key={p.id} product={p} index={i} />
                     ))}
                   </div>
                 </section>

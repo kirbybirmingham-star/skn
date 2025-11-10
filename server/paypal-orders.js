@@ -96,9 +96,9 @@ router.post('/create-order', express.json(), async (req, res) => {
 
     // Defensive validation of items
     for (const item of cartItems) {
-      if (!item?.variant || typeof item.quantity !== 'number') {
+      if (!item?.product || typeof item.quantity !== 'number') {
         console.error('Invalid item:', item);
-        return res.status(400).send(JSON.stringify({ error: 'Each cart item must have a variant and numeric quantity' }));
+        return res.status(400).send(JSON.stringify({ error: 'Each cart item must have a product and numeric quantity' }));
       }
     }
 
@@ -111,7 +111,7 @@ router.post('/create-order', express.json(), async (req, res) => {
     console.log('Access token generated successfully');
 
     const orderTotal = cartItems.reduce((total, item) => {
-      const priceCents = item.variant.sale_price_in_cents ?? item.variant.price_in_cents ?? 0;
+      const priceCents = item.product.base_price ?? 0;
       const price = priceCents / 100;
       return total + price * item.quantity;
     }, 0);
@@ -137,11 +137,11 @@ router.post('/create-order', express.json(), async (req, res) => {
             }
           },
           items: cartItems.map(item => {
-            const unitPrice = ((item.variant.sale_price_in_cents ?? item.variant.price_in_cents ?? 0) / 100).toFixed(2);
+            const unitPrice = (item.product.base_price / 100).toFixed(2);
             return {
-              name: item.product?.title || 'Item',
-              description: item.variant?.title || '',
-              sku: item.variant?.id || '',
+              name: item.product.title || 'Item',
+              description: item.product.description || '',
+              sku: item.product.id || '',
               unit_amount: { 
                 currency_code: 'USD', 
                 value: unitPrice

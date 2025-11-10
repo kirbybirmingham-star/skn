@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { useCart } from '@/hooks/useCart';
 import { getProductById } from '@/api/EcommerceApi';
+import Reviews from '../components/reviews/Reviews';
 
 const ProductDetailsPage = () => {
   const { id: productId } = useParams();
@@ -116,6 +117,7 @@ const ProductDetailsPage = () => {
           </button>
         </div>
       </div>
+      <Reviews productId={productId} />
     </div>
   );
 };

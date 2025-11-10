@@ -39,23 +39,7 @@ const ProductsList = ({ sellerId = null, categoryId = null, searchQuery = '', pr
           return;
         }
 
-        // Normalize variants and ensure inventory_quantity exists
-        let productsWithQuantities = resp.products.map(product => {
-          const productVariants = product.variants || product.product_variants || [];
-          return {
-            ...product,
-            image: product.image || product.image_url || null,
-            seller_name: product.seller_name || product.seller || null,
-            variants: productVariants.map(variant => ({
-              ...variant,
-              inventory_quantity: variant.inventory_quantity ?? 0,
-              price_formatted: formatCurrency(variant.price_in_cents),
-              sale_price_formatted: variant.sale_price_in_cents != null ? formatCurrency(variant.sale_price_in_cents) : null
-            }))
-          };
-        });
-
-        setProducts(productsWithQuantities);
+        setProducts(resp.products);
         setTotal(resp.total ?? null);
       } catch (err) {
         setError(err.message || 'Failed to load products');

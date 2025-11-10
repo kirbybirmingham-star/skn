@@ -7,7 +7,8 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 const API_ENDPOINTS = {
   createOrder: `${API_BASE_URL}/api/paypal/create-order`,
   captureOrder: `${API_BASE_URL}/api/paypal/capture-order`,
-  config: `${API_BASE_URL}/api/paypal/config`
+  config: `${API_BASE_URL}/api/paypal/config`,
+  reviews: `${API_BASE_URL}/api/reviews`,
 };
 
 export function formatCurrency(amountInCents, currencyInfo = { code: 'USD', symbol: '$' }) {
@@ -123,77 +124,38 @@ export async function getProducts(options = {}) {
     return { products: [], total: 0 };
   }
 
-  // options can include { sellerId, categoryId, searchQuery, limit }
   const { sellerId, categoryId, searchQuery, priceRange, page = 1, perPage = 24 } = options;
 
-  // Build base product filter conditions
-  // Note: products table uses `vendor_id` (not seller_id) per schema. Map sellerId -> vendor_id.
-  let productFilter = (qb) => qb;
-  if (sellerId) productFilter = (qb) => qb.eq('vendor_id', sellerId);
-  if (categoryId) {
-    const prev = productFilter;
-    productFilter = (qb) => prev(qb).eq('category_id', categoryId);
-  }
+  let productsQuery = supabase.from('products').select('*, vendors(name), product_ratings(*)').order('created_at', { ascending: false });
 
-  // Normalize search query
-  let searchQueryStr = null;
-  if (searchQuery && String(searchQuery).trim().length > 0) {
-    searchQueryStr = String(searchQuery).trim();
-  }
-
-  // If priceRange is provided, first query product_variants to find matching product_ids
-  let productIdsFromPrice = null;
-  if (priceRange && priceRange !== 'all') {
-    // priceRange expected to be a token like 'under-50', '50-200', 'over-500'
-    let min = null;
-    let max = null;
-    const pr = String(priceRange).toLowerCase();
-    if (pr.startsWith('under')) { max = parseInt(pr.replace(/[^0-9]/g, ''), 10) * 100; min = 0; }
-    else if (pr.startsWith('over')) { min = parseInt(pr.replace(/[^0-9]/g, ''), 10) * 100; }
-    else if (pr.includes('-')) {
-      const parts = pr.split('-').map(p => parseInt(p.replace(/[^0-9]/g, ''), 10));
-      if (parts.length === 2) { min = parts[0] * 100; max = parts[1] * 100; }
-    }
-
-    try {
-      let variantQuery = supabase.from('product_variants').select('product_id');
-      if (min !== null) variantQuery = variantQuery.gte('price_in_cents', min);
-      if (max !== null && Number.isFinite(max)) variantQuery = variantQuery.lte('price_in_cents', max);
-      const { data: variantData, error: variantError } = await variantQuery;
-      if (variantError) {
-        console.error('Error fetching variants for price filter:', variantError);
-      } else {
-        productIdsFromPrice = Array.from(new Set((variantData || []).map(v => v.product_id))).filter(Boolean);
-      }
-    } catch (err) {
-      console.error('Price filter lookup failed:', err);
-    }
-
-    // If no matching product ids, return empty
-    if (productIdsFromPrice && productIdsFromPrice.length === 0) {
-      return { products: [], total: 0 };
-    }
-  }
-
-  // Build the products query
-  let productsQuery = supabase.from('products').select('*, product_variants(*)').order('created_at', { ascending: false });
-  // Apply product-level filters
   if (sellerId) productsQuery = productsQuery.eq('vendor_id', sellerId);
   if (categoryId) productsQuery = productsQuery.eq('category_id', categoryId);
-  if (productIdsFromPrice) productsQuery = productsQuery.in('id', productIdsFromPrice);
-  if (searchQueryStr) {
+
+  if (searchQuery && String(searchQuery).trim().length > 0) {
+    const searchQueryStr = String(searchQuery).trim();
     productsQuery = productsQuery.or(`title.ilike.%${searchQueryStr}%,description.ilike.%${searchQueryStr}%`);
   }
 
-  // Get total count (exact) before pagination
+  if (priceRange && priceRange !== 'all') {
+    const pr = String(priceRange).toLowerCase();
+    if (pr.startsWith('under')) {
+      const max = parseInt(pr.replace(/[^0-9]/g, ''), 10) * 100;
+      productsQuery = productsQuery.lte('base_price', max);
+    } else if (pr.startsWith('over')) {
+      const min = parseInt(pr.replace(/[^0-9]/g, ''), 10) * 100;
+      productsQuery = productsQuery.gte('base_price', min);
+    } else if (pr.includes('-')) {
+      const parts = pr.split('-').map(p => parseInt(p.replace(/[^0-9]/g, ''), 10));
+      if (parts.length === 2) {
+        productsQuery = productsQuery.gte('base_price', parts[0] * 100);
+        productsQuery = productsQuery.lte('base_price', parts[1] * 100);
+      }
+    }
+  }
+
   let total = null;
   try {
-  const countQuery = supabase.from('products').select('id', { count: 'exact', head: true });
-  if (sellerId) countQuery.eq('vendor_id', sellerId);
-  if (categoryId) countQuery.eq('category_id', categoryId);
-    if (productIdsFromPrice) countQuery.in('id', productIdsFromPrice);
-    if (searchQueryStr) countQuery.or(`title.ilike.%${searchQueryStr}%,description.ilike.%${searchQueryStr}%`);
-    const { error: countErr, count } = await countQuery;
+    const { error: countErr, count } = await productsQuery.select('id', { count: 'exact', head: true });
     if (countErr) {
       console.warn('Failed to retrieve products count', countErr);
     } else {
@@ -203,7 +165,6 @@ export async function getProducts(options = {}) {
     console.warn('Count query failed', e);
   }
 
-  // Apply pagination via range
   const per = Number.isInteger(perPage) ? perPage : 24;
   const pg = Math.max(1, parseInt(page, 10) || 1);
   const start = (pg - 1) * per;
@@ -225,12 +186,20 @@ export async function getVendors() {
     console.warn('Supabase not initialized, returning empty vendors array');
     return [];
   }
-  // Fetch from `vendors` table and include a small products selection so the UI can show a featured product
   try {
-    // Disambiguate the products relationship using the products->vendor_id foreign key
     const { data, error } = await supabase
       .from('vendors')
-      .select(`id, owner_id, name, slug, description, logo_url, cover_url, website, location, is_active, created_at, products!products_vendor_id_fkey(id, title, slug, description, base_price, is_published, product_variants(id, price_in_cents, inventory_quantity, images))`)
+      .select(`
+        id, 
+        owner_id, 
+        name, 
+        slug, 
+        description, 
+        created_at, 
+        products!products_vendor_id_fkey(id, title, slug, description, base_price, is_published, image_url),
+        profile:profiles(avatar_url),
+        vendor_ratings(*)
+      `)
       .order('name', { ascending: true });
 
     if (error) {
@@ -238,7 +207,6 @@ export async function getVendors() {
       return [];
     }
 
-    // Map to vendor card shape
     const mapped = (data || []).map(v => {
       const prods = v.products || [];
       const published = prods.filter(p => p.is_published !== false);
@@ -246,9 +214,10 @@ export async function getVendors() {
       const featured_product = featured ? {
         id: featured.id,
         title: featured.title,
-        image: featured.product_variants && featured.product_variants[0] && featured.product_variants[0].images ? featured.product_variants[0].images[0] : null,
-        price: featured.product_variants && featured.product_variants[0] ? formatCurrency(Number(featured.product_variants[0].price_in_cents || featured.base_price * 100)) : null
+        image: featured.image_url,
+        price: formatCurrency(Number(featured.base_price || 0))
       } : null;
+      const rating = v.vendor_ratings?.[0];
 
       return {
         id: v.id,
@@ -257,15 +226,15 @@ export async function getVendors() {
         store_name: v.name || v.slug,
         slug: v.slug,
         description: v.description || '',
-        avatar: v.logo_url || v.cover_url || null,
-        cover_url: v.cover_url || null,
-        website: v.website || null,
-        location: v.location || null,
-        is_active: v.is_active,
+        avatar: v.profile?.avatar_url,
+        cover_url: null, // cover_url is missing
+        website: null, // website is missing
+        location: null, // location is missing
+        is_active: v.status === 'active', // Assuming 'active' status means is_active
         created_at: v.created_at,
         featured_product,
-        categories: [], // categories would require a separate join; leave empty for now
-        rating: null,
+        categories: [],
+        rating: rating?.avg_rating,
         total_products: prods.length || 0
       };
     });
@@ -415,7 +384,7 @@ export async function getVendorByOwner(ownerId) {
     return null;
   }
   try {
-    const { data, error } = await supabase
+    const { data,.error } = await supabase
       .from('vendors')
       .select('*')
       .eq('owner_id', ownerId)
@@ -450,6 +419,39 @@ export async function getVendorDashboardData(vendorId) {
   }
 }
 
+export async function getReviews(productId) {
+  try {
+    const response = await fetch(`${API_ENDPOINTS.reviews}/${productId}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch reviews: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching reviews:', error);
+    throw error;
+  }
+}
+
+export async function createReview(reviewData) {
+  try {
+    const response = await fetch(API_ENDPOINTS.reviews, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(reviewData),
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to create review: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error creating review:', error);
+    throw error;
+  }
+}
 
 
 

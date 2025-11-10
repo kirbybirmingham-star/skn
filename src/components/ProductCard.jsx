@@ -6,6 +6,8 @@ import { ShoppingCart } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/components/ui/use-toast';
 
+import StarRating from './reviews/StarRating';
+
 const placeholderImage = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300'><rect width='100%' height='100%' fill='%23eef2ff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23728bd6' font-family='Arial,Helvetica,sans-serif' font-size='20'>No Image</text></svg>";
 
 const getImageUrl = (product) => {
@@ -28,41 +30,18 @@ const ProductCard = ({ product, index }) => {
   const { addToCart } = useCart();
   const { toast } = useToast();
   const navigate = useNavigate();
-
-  // Normalize variants - backend may return variants under `variants` or `product_variants`
-  const variants = useMemo(() => (product?.variants || product?.product_variants || []), [product]);
-  const displayVariant = useMemo(() => (variants && variants.length ? variants[0] : null), [variants]);
   const [imgLoaded, setImgLoaded] = useState(false);
 
-  // Pricing: prefer variant prices, fall back to product.base_price
-  const variantPriceCents = displayVariant?.price_in_cents ?? displayVariant?.price ?? null;
-  const variantSaleCents = displayVariant?.sale_price_in_cents ?? displayVariant?.sale_price ?? null;
-  const productPriceCents = product?.base_price ?? product?.price ?? null;
   const currency = product?.currency || 'USD';
-
-  const priceToShowCents = variantPriceCents ?? productPriceCents;
-  const hasSale = variantSaleCents != null && priceToShowCents != null && variantSaleCents < priceToShowCents;
-  const displayPrice = hasSale ? formatPrice(variantSaleCents, currency) : formatPrice(priceToShowCents, currency);
-  const originalPrice = hasSale ? formatPrice(priceToShowCents, currency) : null;
+  const displayPrice = formatPrice(product.base_price, currency);
+  const rating = product.product_ratings?.[0];
 
   const handleAddToCart = useCallback(async (e) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!variants || variants.length === 0) {
-      toast({ title: 'No variant available', description: 'This product has no purchasable variants.' });
-      return;
-    }
-
-    if (variants.length > 1) {
-      navigate(`/product/${product.id}`);
-      return;
-    }
-
-    const defaultVariant = variants[0];
-
     try {
-      await addToCart(product, defaultVariant, 1, defaultVariant.inventory_quantity || 0);
+      await addToCart(product, 1);
       toast({
         title: "Added to Cart! 🛒",
         description: `${product.title} has been added to your cart.`,
@@ -74,7 +53,7 @@ const ProductCard = ({ product, index }) => {
         description: error.message,
       });
     }
-  }, [product, addToCart, toast, navigate]);
+  }, [product, addToCart, toast]);
 
   return (
     <motion.div
@@ -110,9 +89,6 @@ const ProductCard = ({ product, index }) => {
             {displayPrice ? (
               <>
                 <span className="text-lg font-bold text-gray-900">{displayPrice}</span>
-                {hasSale && originalPrice && (
-                  <span className="text-sm text-gray-500 line-through">{originalPrice}</span>
-                )}
               </>
             ) : (
               <span className="text-lg font-bold text-gray-500">Price not available</span>
@@ -120,10 +96,16 @@ const ProductCard = ({ product, index }) => {
           </div>
 
           <div className="flex items-center mb-2">
-            <div className="flex text-yellow-400">
-              {"★★★★☆"}
-            </div>
-            <span className="text-sm text-gray-500 ml-1">(24)</span>
+            {rating ? (
+              <>
+                <StarRating rating={rating.avg_rating} />
+                <span className="text-sm text-gray-500 ml-1">({rating.review_count})</span>
+              </>
+            ) : (
+              <div className="flex text-yellow-400">
+                <span className="text-sm text-gray-500">No reviews yet</span>
+              </div>
+            )}
           </div>
 
           {product.ribbon_text && (

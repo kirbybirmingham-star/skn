@@ -28,6 +28,7 @@ let onboardingRoutes;
 let paypalPayoutsRoutes;
 let dashboardRoutes;
 let healthRoutes;
+let reviewRoutes;
 (async () => {
   const [
     { default: webhook },
@@ -38,6 +39,7 @@ let healthRoutes;
     { default: onboarding },
     { default: dashboard },
     { default: health },
+    { default: review },
   ] = await Promise.all([
     import('./webhooks.js'),
     import('./paypal-orders.js'),
@@ -47,6 +49,7 @@ let healthRoutes;
     import('./onboarding.js'),
     import('./dashboard.js'),
     import('./health.js'),
+    import('./reviews.js'),
   ]);
   
   webhookRoutes = webhook;
@@ -57,6 +60,7 @@ let healthRoutes;
   onboardingRoutes = onboarding;
   dashboardRoutes = dashboard;
   healthRoutes = health;
+  reviewRoutes = review;
 
   // Now start the server (moved inside async init)
   startServer();
@@ -116,6 +120,7 @@ function startServer() {
   app.use('/api/onboarding', onboardingRoutes);
   app.use('/api/dashboard', dashboardRoutes);
   app.use('/api/health', healthRoutes);
+  app.use('/api', reviewRoutes);
 
   // Serve frontend static files if the build output exists (for deployments that use a single web service)
   try {
