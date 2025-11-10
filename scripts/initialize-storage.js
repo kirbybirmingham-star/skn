@@ -17,7 +17,7 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const STORAGE_STRUCTURE = {
-  'listing-images': [
+  'listings-images': [
     'products/',
     'products/thumbnails/',
     'vendors/',
@@ -27,7 +27,7 @@ const STORAGE_STRUCTURE = {
     'categories/icons/',
     'categories/banners/'
   ],
-  'avatars': [
+  'avatar': [
     'users/',
     'users/originals/',
     'users/large/',

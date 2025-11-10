@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
-import { listProductsBySeller, createProduct, updateProduct, deleteProduct } from '@/api/EcommerceApi';
+import { getVendorByOwner, listProductsByVendor, createProduct, updateProduct, deleteProduct } from '@/api/EcommerceApi';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import ProductForm from '@/components/products/ProductForm';
@@ -11,19 +11,30 @@ const emptyForm = { title: '', description: '', price_in_cents: 0, inventory_qua
 
 const VendorProducts = () => {
   const { profile } = useAuth();
-  const sellerId = profile?.id || 'seller-1';
   const { toast } = useToast();
 
+  const [vendor, setVendor] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
   const [open, setOpen] = useState(false);
 
-  const load = async () => {
+  useEffect(() => {
+    const loadVendor = async () => {
+      if (profile?.id) {
+        const vendorData = await getVendorByOwner(profile.id);
+        setVendor(vendorData);
+      }
+    };
+    loadVendor();
+  }, [profile]);
+
+  const loadProducts = async () => {
+    if (!vendor) return;
     setLoading(true);
     try {
-      const list = await listProductsBySeller(sellerId);
+      const list = await listProductsByVendor(vendor.id);
       setProducts(list);
     } catch (err) {
       toast({ title: 'Failed to load products', description: String(err), variant: 'destructive' });
@@ -32,7 +43,9 @@ const VendorProducts = () => {
     }
   };
 
-  useEffect(() => { load(); }, [sellerId]);
+  useEffect(() => {
+    loadProducts();
+  }, [vendor]);
 
   const openCreate = () => { setForm(emptyForm); setEditingId(null); setOpen(true); };
   const openEdit = (p) => {
@@ -56,7 +69,7 @@ const VendorProducts = () => {
         toast({ title: 'Product updated' });
       } else {
         const variantsToSave = (form.variants && form.variants.length) ? form.variants.map((v, i) => ({ id: v.id || `${Date.now()}-v${i+1}`, title: v.title || `Variant ${i+1}`, price_in_cents: Number(v.price_in_cents || 0), price_formatted: `$${((Number(v.price_in_cents)||0)/100).toFixed(2)}`, inventory_quantity: Number(v.inventory_quantity || 0) })) : [{ id: `${Date.now()}-v1`, title: 'Default', price_in_cents: form.price_in_cents, price_formatted: `$${(form.price_in_cents/100).toFixed(2)}`, inventory_quantity: form.inventory_quantity }];
-        const p = await createProduct(sellerId, { ...form, seller_name: profile?.username || profile?.email, variants: variantsToSave });
+        const p = await createProduct(vendor.id, { ...form, variants: variantsToSave });
         setProducts(prev => [p, ...prev]);
         toast({ title: 'Product created' });
       }

@@ -71,7 +71,8 @@ node_modules/
 
 # Build output
 dist/
-
+scripts/
+supabase_migrations/
 
 # dataconnect generated files
 .dataconnect

@@ -43,7 +43,8 @@ else {
   candidates.push('tester123@example.com')
 }
 
-const password = passwordArg || 'Test1234!';
+// Default password for seeded test user. Set to a simple test password for local/dev use.
+const password = passwordArg || 'test1234';
 
 ;(async () => {
   for (const email of candidates) {

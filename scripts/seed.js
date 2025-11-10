@@ -1,9 +1,14 @@
 
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
-// Load environment variables from .env file
-dotenv.config({ path: 'd:/WOrkspaces/SKNbridgetrade/.env' });
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load environment variables from .env file in repo root
+dotenv.config({ path: join(__dirname, '..', '.env') });
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -16,12 +21,13 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const seedData = {
-  profiles: [
-    { email: 'seller1@example.com', full_name: 'John Doe', role: 'seller' },
-    { email: 'seller2@example.com', full_name: 'Jane Smith', role: 'seller' },
-    { email: 'buyer1@example.com', full_name: 'Peter Jones', role: 'buyer' },
-    { email: 'buyer2@example.com', full_name: 'Mary Williams', role: 'buyer' },
-    { email: 'buyer3@example.com', full_name: 'David Brown', role: 'buyer' },
+  // Define test users with consistent password
+  users: [
+    { email: 'seller1@example.com', password: 'test1234', full_name: 'John Doe', role: 'seller' },
+    { email: 'seller2@example.com', password: 'test1234', full_name: 'Jane Smith', role: 'seller' },
+    { email: 'buyer1@example.com', password: 'test1234', full_name: 'Peter Jones', role: 'buyer' },
+    { email: 'buyer2@example.com', password: 'test1234', full_name: 'Mary Williams', role: 'buyer' },
+    { email: 'buyer3@example.com', password: 'test1234', full_name: 'David Brown', role: 'buyer' },
   ],
   vendors: [
     { name: 'Johns General Store', slug: 'johns-general-store', description: 'A little bit of everything' },
@@ -101,48 +107,93 @@ const seedData = {
   ]
 };
 
+async function createAuthUser(userData) {
+  try {
+    // Create user directly via admin API
+    const { data, error } = await supabase.auth.admin.createUser({
+      email: userData.email,
+      password: userData.password,
+      user_metadata: { 
+        full_name: userData.full_name,
+        role: userData.role
+      },
+      email_confirm: true
+    });
+
+    if (error) throw error;
+    if (!data?.user) throw new Error('No user data returned');
+    return data.user;
+  } catch (err) {
+    console.error(`Error creating auth user ${userData.email}:`, err.message);
+    throw err;
+  }
+}
+
+function generateUUID() {
+  // Simple UUID v4 implementation for profile IDs when auth fails
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 async function main() {
   console.log('Starting to seed data...');
 
-  // Note: This script doesn't create auth users. 
-  // You should create them manually in Supabase and get their IDs.
-  // For this script, we'll use placeholders for owner_id.
-  // You should replace 'placeholder-seller-id-1' and 'placeholder-seller-id-2'
-  // with the actual user IDs from Supabase auth.
+  // Step 1: Create auth users and their profiles
+  console.log('\nCreating auth users and profiles...');
+  const profiles = [];
+  
+  for (const userData of seedData.users) {
+    try {
+      // Create auth user first (this gives us the ID we need)
+      const authUser = await createAuthUser(userData);
+      console.log(`✓ Created auth user ${userData.email} (${authUser.id})`);
+      
+      // Now create the profile using the auth user's ID
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: authUser.id,  // Must match auth.users.id
+          email: userData.email,
+          full_name: userData.full_name,
+          role: userData.role
+        })
+        .select()
+        .single();
 
-  // Upsert profiles
-  const { data: profiles, error: profilesError } = await supabase
-    .from('profiles')
-    .upsert(seedData.profiles, { onConflict: 'email' });
+      if (profileError) {
+        console.error(`Error creating profile for ${userData.email}:`, profileError);
+        continue;
+      }
 
-  if (profilesError) {
-    console.error('Error seeding profiles:', profilesError);
-    return;
+      console.log(`✓ Created profile for ${userData.email}`);
+      profiles.push(profile);
+      
+    } catch (err) {
+      console.error(`Failed to process user ${userData.email}:`, err.message);
+    }
   }
-  console.log('Seeded profiles');
 
-  // Get seller profiles to associate with vendors
-  const { data: sellers, error: sellersError } = await supabase
-    .from('profiles')
-    .select('id, email')
-    .in('role', ['seller']);
-
-  if (sellersError) {
-    console.error('Error fetching sellers:', sellersError);
-    return;
-  }
-
+  // Get seller profiles from the ones we just created
+  const sellers = profiles.filter(p => p.role === 'seller');
   if (sellers.length < 2) {
     console.error('Error: At least two seller profiles are needed to seed vendors.');
     return;
   }
   
-  const seller1Id = sellers.find(s => s.email === 'seller1@example.com').id;
-  const seller2Id = sellers.find(s => s.email === 'seller2@example.com').id;
+  const seller1 = sellers.find(s => s.email === 'seller1@example.com');
+  const seller2 = sellers.find(s => s.email === 'seller2@example.com');
 
   // Upsert vendors
-  seedData.vendors[0].owner_id = seller1Id;
-  seedData.vendors[1].owner_id = seller2Id;
+  if (!seller1 || !seller2) {
+    console.error('Error: Could not find required seller profiles');
+    return;
+  }
+
+  seedData.vendors[0].owner_id = seller1.id;
+  seedData.vendors[1].owner_id = seller2.id;
   const { data: vendors, error: vendorsError } = await supabase
     .from('vendors')
     .upsert(seedData.vendors, { onConflict: 'slug' });
@@ -164,49 +215,47 @@ async function main() {
   }
   console.log('Seeded categories');
 
-  // Get vendor and category IDs for products
-  const { data: allVendors, error: allVendorsError } = await supabase.from('vendors').select('id, slug');
-  if (allVendorsError) {
-    console.error('Error fetching vendors for products:', allVendorsError);
+  // Step 5: Get vendor and category IDs for products
+  const { data: allVendors } = await supabase.from('vendors').select('id, slug');
+  const { data: allCategories } = await supabase.from('categories').select('id, slug');
+
+  const vendor1 = allVendors.find(v => v.slug === 'johns-general-store');
+  const vendor2 = allVendors.find(v => v.slug === 'janes-gadgets');
+  const electronics = allCategories.find(c => c.slug === 'electronics');
+  const clothing = allCategories.find(c => c.slug === 'clothing');
+  const homeGoods = allCategories.find(c => c.slug === 'home-goods');
+
+  if (!vendor1 || !vendor2 || !electronics || !clothing || !homeGoods) {
+    console.error('Error: Missing required vendors or categories');
     return;
   }
-  const { data: allCategories, error: allCategoriesError } = await supabase.from('categories').select('id, slug');
-  if (allCategoriesError) {
-    console.error('Error fetching categories for products:', allCategoriesError);
-    return;
-  }
 
-  const vendor1Id = allVendors.find(v => v.slug === 'johns-general-store').id;
-  const vendor2Id = allVendors.find(v => v.slug === 'janes-gadgets').id;
-  const electronicsCatId = allCategories.find(c => c.slug === 'electronics').id;
-  const clothingCatId = allCategories.find(c => c.slug === 'clothing').id;
-  const homeGoodsCatId = allCategories.find(c => c.slug === 'home-goods').id;
+  // Step 6: Create products
+  console.log('\nCreating products...');
+  const productsWithRefs = [
+    { ...seedData.products[0], vendor_id: vendor2.id, category_id: electronics.id }, // Laptop -> Janes
+    { ...seedData.products[1], vendor_id: vendor1.id, category_id: clothing.id },    // T-Shirt -> Johns
+    { ...seedData.products[2], vendor_id: vendor1.id, category_id: homeGoods.id },   // Mug -> Johns
+    { ...seedData.products[3], vendor_id: vendor2.id, category_id: electronics.id }, // Phone -> Janes
+    { ...seedData.products[4], vendor_id: vendor1.id, category_id: clothing.id }     // Jeans -> Johns
+  ];
 
-  // Assign vendors and categories to products
-  seedData.products[0].vendor_id = vendor2Id; // Laptop -> Janes Gadgets
-  seedData.products[0].category_id = electronicsCatId;
-  seedData.products[1].vendor_id = vendor1Id; // T-Shirt -> Johns General Store
-  seedData.products[1].category_id = clothingCatId;
-  seedData.products[2].vendor_id = vendor1Id; // Coffee Mug -> Johns General Store
-  seedData.products[2].category_id = homeGoodsCatId;
-  seedData.products[3].vendor_id = vendor2Id; // Smartphone -> Janes Gadgets
-  seedData.products[3].category_id = electronicsCatId;
-  seedData.products[4].vendor_id = vendor1Id; // Jeans -> Johns General Store
-  seedData.products[4].category_id = clothingCatId;
-
-  // Upsert products
-  const { data: products, error: productsError } = await supabase
+  const { error: productsError } = await supabase
     .from('products')
-    .upsert(seedData.products, { onConflict: 'slug, vendor_id' });
+    .upsert(productsWithRefs, { 
+      onConflict: 'slug,vendor_id',
+      ignoreDuplicates: false // update if exists
+    });
 
   if (productsError) {
-    console.error('Error seeding products:', productsError);
+    console.error('Error creating products:', productsError);
     return;
   }
-  console.log('Seeded products');
+  console.log('✓ Created products');
 
-
-  console.log('Finished seeding data.');
+  console.log('\n✨ Finished seeding data successfully!');
+  console.log('\nTest users created (all with password: test1234):');
+  seedData.users.forEach(u => console.log(`- ${u.email} (${u.role})`));
 }
 
 main().catch(console.error);

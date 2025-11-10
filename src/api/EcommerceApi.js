@@ -43,7 +43,7 @@ export async function createPayPalOrder(cartItems) {
 
     // Ensure each item has required fields
     cartItems.forEach(item => {
-      if (!item?.variant?.price_in_cents) {
+      if (!item?.variant?.price) {
         throw new Error('Invalid item in cart');
       }
     });
@@ -310,11 +310,10 @@ export async function getProductQuantities({ product_ids }) {
   return { variants: data };
 }
 
-export async function createProduct(sellerId, productData) {
+export async function createProduct(vendorId, productData) {
   if (!supabase) throw new Error('Supabase client not available');
   const payload = {
-    seller_id: sellerId,
-    seller_name: productData.seller_name,
+    vendor_id: vendorId,
     title: productData.title,
     description: productData.description,
     category: productData.category,
@@ -402,11 +401,35 @@ export async function uploadImageFile(file) {
   }
 }
 
-export async function listProductsBySeller(sellerId) {
+export async function listProductsByVendor(vendorId) {
   if (!supabase) throw new Error('Supabase client not available');
-  const { data, error } = await supabase.from('products').select('*').eq('seller_id', sellerId).order('created_at', { ascending: false });
+  const { data, error } = await supabase.from('products').select('*').eq('vendor_id', vendorId).order('created_at', { ascending: false });
   if (error) throw error;
   return data;
+}
+
+
+export async function getVendorByOwner(ownerId) {
+  if (!supabase) {
+    console.warn('Supabase not initialized, returning null');
+    return null;
+  }
+  try {
+    const { data, error } = await supabase
+      .from('vendors')
+      .select('*')
+      .eq('owner_id', ownerId)
+      .single();
+
+    if (error) {
+      console.error(`Error fetching vendor with owner id ${ownerId}:`, error);
+      return null;
+    }
+    return data;
+  } catch (err) {
+    console.error(`Failed to load vendor with owner ${ownerId}`, err);
+    return null;
+  }
 }
 
 export async function getVendorDashboardData(vendorId) {
