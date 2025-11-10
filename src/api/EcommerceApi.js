@@ -384,7 +384,7 @@ export async function getVendorByOwner(ownerId) {
     return null;
   }
   try {
-    const { data,.error } = await supabase
+    const { data, error } = await supabase
       .from('vendors')
       .select('*')
       .eq('owner_id', ownerId)
