@@ -126,7 +126,7 @@ export async function getProducts(options = {}) {
 
   const { sellerId, categoryId, searchQuery, priceRange, page = 1, perPage = 24 } = options;
 
-  let productsQuery = supabase.from('products').select('id, vendor_id, title, slug, description, base_price, currency, is_published, images, gallery_images, created_at, vendors(name), reviews(*)').order('created_at', { ascending: false });
+  let productsQuery = supabase.from('products').select('id, vendor_id, title, slug, description, base_price, currency, is_published, images, gallery_images, created_at, vendors(name), product_ratings(avg_rating, review_count)', { count: 'exact' });
 
   if (sellerId) productsQuery = productsQuery.eq('vendor_id', sellerId);
   if (categoryId) productsQuery = productsQuery.eq('category_id', categoryId);
@@ -153,32 +153,21 @@ export async function getProducts(options = {}) {
     }
   }
 
-  let total = null;
-  try {
-    const { error: countErr, count } = await productsQuery.select('id', { count: 'exact', head: true });
-    if (countErr) {
-      console.warn('Failed to retrieve products count', countErr);
-    } else {
-      total = count || 0;
-    }
-  } catch (e) {
-    console.warn('Count query failed', e);
-  }
-
   const per = Number.isInteger(perPage) ? perPage : 24;
   const pg = Math.max(1, parseInt(page, 10) || 1);
   const start = (pg - 1) * per;
   const end = pg * per - 1;
-  productsQuery = productsQuery.range(start, end);
+  
+  productsQuery = productsQuery.order('created_at', { ascending: false }).range(start, end);
 
-  const { data, error } = await productsQuery;
+  const { data, error, count } = await productsQuery;
 
   if (error) {
     console.error('Error fetching products:', error);
-    return { products: [], total: total ?? 0 };
+    return { products: [], total: 0 };
   }
 
-  return { products: data || [], total: total ?? (Array.isArray(data) ? data.length : 0) };
+  return { products: data || [], total: count ?? 0 };
 }
 
 export async function getVendors() {

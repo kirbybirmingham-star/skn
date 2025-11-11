@@ -14,22 +14,29 @@ const placeholderImage = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/
 const getImageUrl = (product) => {
   if (!product) return placeholderImage;
 
-  // Use the new `images` array which contains filenames.
-  if (product.images && product.images.length > 0 && product.slug) {
-    const mainImageFilename = product.images[0];
-    const extension = mainImageFilename.split('.').pop();
-
-    if (extension) {
-      // Construct the path for the thumbnail variant based on `supabaseStorage.js` logic
-      const thumbnailPath = `products/${product.slug}/thumbnails/thumb.${extension}`;
-      const url = getSupabaseImageUrl(thumbnailPath, 'listings-images');
-      return url;
+  // Use the new `images` array which contains full paths.
+  if (product.images && product.images.length > 0) {
+    // The path from the DB is the source of truth.
+    const imagePath = product.images[0];
+    if (imagePath) {
+      // The `getImageUrl` from supabaseStorage expects the path within the bucket.
+      // If the URL is already absolute, use it directly. Otherwise, generate it.
+      if (imagePath.startsWith('http')) {
+        return imagePath;
+      }
+      // Assuming 'listings-images' is the correct bucket.
+      return getSupabaseImageUrl(imagePath, 'listings-images');
     }
   }
   
   // Fallback for older data structures
   const fallbackUrl = product.image_url || (product.gallery_images && product.gallery_images[0]);
-  if(fallbackUrl) return fallbackUrl;
+  if(fallbackUrl) {
+    if (fallbackUrl.startsWith('http')) {
+      return fallbackUrl;
+    }
+    return getSupabaseImageUrl(fallbackUrl, 'listings-images');
+  }
 
   return placeholderImage;
 };
@@ -44,6 +51,7 @@ const formatPrice = (cents, currency = 'USD') => {
 };
 
 const ProductCard = ({ product, index }) => {
+  console.log('Product data:', product);
   const { addToCart } = useCart();
   const { toast } = useToast();
   const navigate = useNavigate();
