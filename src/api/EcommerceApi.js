@@ -126,7 +126,7 @@ export async function getProducts(options = {}) {
 
   const { sellerId, categoryId, searchQuery, priceRange, page = 1, perPage = 24 } = options;
 
-  let productsQuery = supabase.from('products').select('id, vendor_id, title, slug, description, base_price, currency, is_published, images, gallery_images, created_at, vendors(name), product_ratings(avg_rating, review_count)', { count: 'exact' });
+  let productsQuery = supabase.from('products').select('id, vendor_id, title, slug, description, base_price, currency, is_published, images, gallery_images, created_at, vendors(name)', { count: 'exact' });
 
   if (sellerId) productsQuery = productsQuery.eq('vendor_id', sellerId);
   if (categoryId) productsQuery = productsQuery.eq('category_id', categoryId);
