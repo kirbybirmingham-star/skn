@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ShoppingCart } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/components/ui/use-toast';
+import { getImageUrl as getSupabaseImageUrl } from '@/lib/supabaseStorage';
 
 import StarRating from './reviews/StarRating';
 
@@ -12,9 +13,25 @@ const placeholderImage = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/
 
 const getImageUrl = (product) => {
   if (!product) return placeholderImage;
-  // Prefer images array, then gallery images
-  const imageUrl = (product.images && product.images[0]) || (product.gallery_images && product.gallery_images[0]);
-  return imageUrl || placeholderImage;
+
+  // Use the new `images` array which contains filenames.
+  if (product.images && product.images.length > 0 && product.slug) {
+    const mainImageFilename = product.images[0];
+    const extension = mainImageFilename.split('.').pop();
+
+    if (extension) {
+      // Construct the path for the thumbnail variant based on `supabaseStorage.js` logic
+      const thumbnailPath = `products/${product.slug}/thumbnails/thumb.${extension}`;
+      const url = getSupabaseImageUrl(thumbnailPath, 'listings-images');
+      return url;
+    }
+  }
+  
+  // Fallback for older data structures
+  const fallbackUrl = product.image_url || (product.gallery_images && product.gallery_images[0]);
+  if(fallbackUrl) return fallbackUrl;
+
+  return placeholderImage;
 };
 
 const formatPrice = (cents, currency = 'USD') => {
