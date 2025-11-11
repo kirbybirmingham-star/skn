@@ -11,7 +11,8 @@
     "preview": "vite preview --host :: --port 3000",
     "start": "node server/index.js",
     "postinstall": "node scripts/postinstall-guard.js",
-    "check:seed": "node scripts/check_seed_conflicts.js"
+    "check:seed": "node scripts/check_seed_conflicts.js",
+    "db:migrate": "node scripts/apply_migrations.js"
   },
   "dependencies": {
     "@paypal/react-paypal-js": "^8.9.2",

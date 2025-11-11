@@ -13,6 +13,10 @@ const __dirname = dirname(__filename);
 const envPath = join(__dirname, '..', '.env');
 dotenv.config({ path: envPath });
 
+// Verify environment variables (non-secret checks)
+console.log('VITE_SUPABASE_URL set?', !!process.env.VITE_SUPABASE_URL);
+console.log('SUPABASE_SERVICE_ROLE_KEY set?', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+
 // Initialize Supabase client
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -23,6 +27,9 @@ if (!supabaseUrl || !supabaseKey) {
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Bucket name constant (use a single bucket for consistency)
+const BUCKET_NAME = 'listings-images';
 
 // Sample image URLs for each product
 const SAMPLE_IMAGES = {
@@ -88,7 +95,7 @@ async function downloadImage(url, options = { width: 800 }) {
  */
 async function uploadToStorage(buffer, path, contentType = 'image/jpeg') {
   const { data, error } = await supabase.storage
-    .from('listing-images')
+    .from(BUCKET_NAME)
     .upload(path, buffer, {
       contentType,
       upsert: true
@@ -134,7 +141,7 @@ async function processProductImages(slug, images) {
     // Update product record with image URLs
     try {
       console.log('Updating product record with image URLs...');
-      const bucketName = 'listing-images';
+      const bucketName = BUCKET_NAME;
       const mainImageUrl = `${supabaseUrl}/storage/v1/object/public/${bucketName}/products/${slug}/main.jpg`;
       const galleryUrls = images.gallery.map((_, index) => 
         `${supabaseUrl}/storage/v1/object/public/${bucketName}/products/${slug}/gallery/image-${index + 1}.jpg`
@@ -149,7 +156,8 @@ async function processProductImages(slug, images) {
         .select();
 
       if (updateError) {
-        console.error('Error details:', updateError);
+        console.error('Update error object:', updateError);
+        console.error('Attempted update: products SET image_url =', mainImageUrl, 'WHERE slug =', slug);
         throw updateError;
       }
       console.log('Product record updated:', data);
@@ -177,6 +185,26 @@ async function main() {
   console.log('\n✨ Image upload process completed!');
 }
 
+/**
+ * Test: verify that the client is using the service role
+ */
+async function verifyServiceRole() {
+  try {
+    // Many projects include a "reload_schema_cache" RPC — only service_role can run it.
+    const { data, error } = await supabase.rpc('reload_schema_cache');
+    if (error) {
+      console.log('Service role test: RPC failed (not using service role):', error.message);
+      return false;
+    } else {
+      console.log('Service role test: RPC succeeded (using service role).');
+      return true;
+    }
+  } catch (err) {
+    console.log('Service role test: exception', err.message);
+    return false;
+  }
+}
+
 // Try to reload schema cache before running
 async function reloadCache() {
   try {
@@ -188,6 +216,9 @@ async function reloadCache() {
 }
 
 // Run the script
-reloadCache()
+verifyServiceRole().then((isService) => {
+  console.log('Using service role?', isService);
+  return reloadCache();
+})
   .then(() => main())
   .catch(console.error);

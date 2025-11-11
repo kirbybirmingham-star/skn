@@ -126,7 +126,7 @@ export async function getProducts(options = {}) {
 
   const { sellerId, categoryId, searchQuery, priceRange, page = 1, perPage = 24 } = options;
 
-  let productsQuery = supabase.from('products').select('*, vendors(name), product_ratings(*)').order('created_at', { ascending: false });
+  let productsQuery = supabase.from('products').select('id, vendor_id, title, slug, description, base_price, currency, is_published, images, gallery_images, created_at, vendors(name), reviews(*)').order('created_at', { ascending: false });
 
   if (sellerId) productsQuery = productsQuery.eq('vendor_id', sellerId);
   if (categoryId) productsQuery = productsQuery.eq('category_id', categoryId);
@@ -192,15 +192,15 @@ export async function getVendors() {
       .select(`
         id, 
         owner_id, 
-        name, 
+        business_name, 
         slug, 
         description, 
         created_at, 
-        products!products_vendor_id_fkey(id, title, slug, description, base_price, is_published, image_url),
+        products!products_vendor_id_fkey(id, title, slug, description, base_price, is_published, image_url, images, gallery_images),
         profile:profiles(avatar_url),
         vendor_ratings(*)
       `)
-      .order('name', { ascending: true });
+      .order('business_name', { ascending: true });
 
     if (error) {
       console.error('Error fetching vendors:', error);
@@ -214,7 +214,7 @@ export async function getVendors() {
       const featured_product = featured ? {
         id: featured.id,
         title: featured.title,
-        image: featured.image_url,
+        image: featured.image_url || (featured.images && featured.images[0]) || (featured.gallery_images && featured.gallery_images[0]),
         price: formatCurrency(Number(featured.base_price || 0))
       } : null;
       const rating = v.vendor_ratings?.[0];
@@ -222,15 +222,15 @@ export async function getVendors() {
       return {
         id: v.id,
         owner_id: v.owner_id,
-        name: v.name || v.slug,
-        store_name: v.name || v.slug,
+        name: v.business_name || v.slug,
+        store_name: v.business_name || v.slug,
         slug: v.slug,
         description: v.description || '',
         avatar: v.profile?.avatar_url,
-        cover_url: null, // cover_url is missing
-        website: null, // website is missing
-        location: null, // location is missing
-        is_active: v.status === 'active', // Assuming 'active' status means is_active
+        cover_url: null,
+        website: null,
+        location: null,
+        is_active: true,
         created_at: v.created_at,
         featured_product,
         categories: [],

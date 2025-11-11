@@ -33,7 +33,7 @@ async function main() {
     return;
   }
 
-  const bucket = 'listing-images';
+  const bucket = 'listings-images';
   for (const p of products) {
     const slug = p.slug;
     try {
@@ -50,13 +50,13 @@ async function main() {
       const imageUrl = `${supabaseUrl}/storage/v1/object/public/${bucket}/products/${slug}/main.jpg`;
       const { data, error: updateErr } = await supabase
         .from('products')
-        .update({ image_url: imageUrl })
+        .update({ images: images })
         .eq('slug', slug)
         .select();
       if (updateErr) {
         console.warn(`Failed to update product ${slug}:`, updateErr.message || updateErr);
       } else {
-        console.log(`Updated product ${slug} -> image_url set to ${imageUrl}`);
+        console.log(`Updated product ${slug} -> image_url set to ${images}`);
       }
     } catch (err) {
       console.error(`Error processing ${slug}:`, err.message || err);

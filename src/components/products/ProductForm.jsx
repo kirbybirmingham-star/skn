@@ -71,7 +71,7 @@ const ProductForm = ({
           <ProductImageManager
             productId={product.id}
             productSlug={product.slug}
-            images={[product.image_url, ...(product.gallery_images || [])].filter(Boolean)}
+            images={[product.image_url, ...(product.images || []), ...(product.gallery_images || [])].filter(Boolean)}
             onImagesUpdate={(newImages) => onImagesUpdate(product.id, product.slug, newImages)}
           />
         </Card>

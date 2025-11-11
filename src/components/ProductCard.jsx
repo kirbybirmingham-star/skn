@@ -12,8 +12,8 @@ const placeholderImage = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/
 
 const getImageUrl = (product) => {
   if (!product) return placeholderImage;
-  // Prefer explicit featured image, then canonical image_url, then generic image, then first gallery image
-  const imageUrl = product.featured_image || product.image_url || product.image || (product.gallery_images && product.gallery_images[0]);
+  // Prefer images array, then gallery images
+  const imageUrl = (product.images && product.images[0]) || (product.gallery_images && product.gallery_images[0]);
   return imageUrl || placeholderImage;
 };
 
