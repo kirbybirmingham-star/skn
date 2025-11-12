@@ -126,35 +126,82 @@ export async function getProducts(options = {}) {
 
   const { sellerId, categoryId, searchQuery, priceRange, page = 1, perPage = 24 } = options;
 
+  let total = 0;
+
+  // Try to include product_variants and product_ratings relations if they exist. If the
+  // relation/table is missing the query will return an error; in that case we fallback to
+  // selecting products without the missing relation so the listings still render.
+  // Explicitly request the fields we need to render cards to avoid accidental omission
+  // of the `images` field when using '*' with nested relations.
+  const baseSelect = 'id, title, slug, vendor_id, base_price, currency, image_url, images, gallery_images, is_published, ribbon_text, created_at';
+  // product_variants uses 'name' as the variant label column in this schema (not 'title')
+  // Include variant price fields so listings can display a price without extra requests.
+  let productsQuery = supabase
+    .from('products')
+    .select(`${baseSelect}, product_variants(id,name,images,price_in_cents,price_formatted), product_ratings(*)`)
+    .order('created_at', { ascending: false });
+
+  if (sellerId) productsQuery = productsQuery.eq('vendor_id', sellerId);
+  if (categoryId) productsQuery = productsQuery.eq('category_id', categoryId);
+
+  if (searchQuery && String(searchQuery).trim().length > 0) {
+    const searchQueryStr = String(searchQuery).trim();
+    productsQuery = productsQuery.or(`title.ilike.%${searchQueryStr}%,description.ilike.%${searchQueryStr}%`);
+  }
+
+  if (priceRange && priceRange !== 'all') {
+    const pr = String(priceRange).toLowerCase();
+    if (pr.startsWith('under')) {
+      const max = parseInt(pr.replace(/[^0-9]/g, ''), 10) * 100;
+      productsQuery = productsQuery.lte('base_price', max);
+    } else if (pr.startsWith('over')) {
+      const min = parseInt(pr.replace(/[^0-9]/g, ''), 10) * 100;
+      productsQuery = productsQuery.gte('base_price', min);
+    } else if (pr.includes('-')) {
+      const parts = pr.split('-').map(p => parseInt(p.replace(/[^0-9]/g, ''), 10));
+      if (parts.length === 2) {
+        productsQuery = productsQuery.gte('base_price', parts[0] * 100);
+        productsQuery = productsQuery.lte('base_price', parts[1] * 100);
+      }
+    }
+  }
+
+  let total = null;
+  try {
+    // first attempt count with variants+ratings; if the relation doesn't exist, retry without ratings
+    const { error: countErr, count } = await productsQuery.select('id', { count: 'exact', head: true });
+    if (countErr) {
+      console.warn('Count with variants/ratings failed, retrying without ratings relation', countErr.message || countErr);
+  // fallback: keep product_variants but drop product_ratings (ratings table often missing in some environments)
+  productsQuery = supabase.from('products').select(`${baseSelect}, product_variants(id,name,images,price_in_cents,price_formatted)`).order('created_at', { ascending: false });
+      const { error: cErr2, count: c2 } = await productsQuery.select('id', { count: 'exact', head: true });
+      if (cErr2) {
+        console.warn('Failed to retrieve products count (fallback)', cErr2);
+      } else {
+        total = c2 || 0;
+      }
+    } else {
+      total = count || 0;
+    }
+  } catch (e) {
+    console.warn('Count query failed', e);
+  }
+
   const per = Number.isInteger(perPage) ? perPage : 24;
   const pg = Math.max(1, parseInt(page, 10) || 1);
   const start = (pg - 1) * per;
   const end = pg * per - 1;
+  productsQuery = productsQuery.range(start, end);
 
-  // Correctly chain query modifiers after select()
-  let query = supabase
-    .from('vendor_products')
-    .select('*', { count: 'exact' })
-    .order('created_at', { ascending: false })
-    .range(start, end);
-
-  // Add filters if they are provided
-  if (sellerId) {
-    query = query.eq('vendor_id', sellerId);
-  }
-  if (categoryId) {
-    query = query.eq('category_id', categoryId);
-  }
-  // Note: Add other filters like searchQuery and priceRange here if needed
-
-  const { data, error, count } = await query;
+  const { data, error } = await productsQuery;
 
   if (error) {
     console.error('Error fetching products:', error);
-    return { products: [], total: 0 };
+    return { products: [], total: total ?? 0 };
   }
 
   // Post-process: ensure variant images exist so UI can resolve a thumbnail.
+  // If a variant has no images but the product has a main image, copy that into the variant
   const products = (data || []).map(p => {
     try {
       if (Array.isArray(p.product_variants) && Array.isArray(p.images) && p.images.length > 0) {
@@ -166,21 +213,14 @@ export async function getProducts(options = {}) {
           return v;
         });
       }
-
-      if (!p.image_url) {
-        const variantImage = p?.product_variants?.[0]?.images?.[0];
-        const imageUrl = variantImage || (p.images && p.images[0]) || (p.gallery_images && p.gallery_images[0]);
-        if (imageUrl) {
-          p.image_url = imageUrl;
-        }
-      }
     } catch (e) {
-      console.warn('Variant image mapping or image_url population failed for product', p?.id, e?.message || e);
+      // swallow mapping errors to avoid breaking listings
+      console.warn('Variant image mapping failed for product', p?.id, e?.message || e);
     }
     return p;
   });
 
-  return { products, total: count || 0 };
+  return { products, total: total ?? (Array.isArray(products) ? products.length : 0) };
 }
 
 export async function getVendors() {

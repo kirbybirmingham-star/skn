@@ -14,7 +14,7 @@ const getImageUrl = (product) => {
   if (!product) return placeholderImage;
   // Follow ProductDetailsPage logic: prefer first variant image, then other fields
   const variantImage = product?.product_variants?.[0]?.images?.[0];
-  const imageUrl = variantImage || product.image_url || product.image || (product.images && product.images[0]) || (product.gallery_images && product.gallery_images[0]) || placeholderImage;
+  const imageUrl = variantImage || product.image_url || (product.images && product.images[0]) || (product.gallery_images && product.gallery_images[0]) || placeholderImage;
   return imageUrl;
 };
 
