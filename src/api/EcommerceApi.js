@@ -1,7 +1,7 @@
 import { supabase } from '../lib/customSupabaseClient';
 
 // PayPal API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 // PayPal config will be handled by the backend
 const API_ENDPOINTS = {
@@ -126,22 +126,18 @@ export async function getProducts(options = {}) {
 
   const { sellerId, categoryId, searchQuery, priceRange, page = 1, perPage = 24 } = options;
 
-  let productsQuery = supabase.from('products').select(`
-      id,
-      vendor_id,
-      title,
-      slug,
-      description,
-      base_price,
-      currency,
-      is_published,
-      image_url,
-      gallery_images,
-      featured,
-      ribbon_text,
-      vendors!inner(business_name),
-      images (url, alt)
-    `).order('created_at', { ascending: false });
+  // Try to include product_variants and product_ratings relations if they exist. If the
+  // relation/table is missing the query will return an error; in that case we fallback to
+  // selecting products without the missing relation so the listings still render.
+  // Explicitly request the fields we need to render cards to avoid accidental omission
+  // of the `images` field when using '*' with nested relations.
+  const baseSelect = 'id, title, slug, vendor_id, base_price, currency, image_url, images, gallery_images, is_published, ribbon_text, created_at';
+  // product_variants uses 'name' as the variant label column in this schema (not 'title')
+  // Include variant price fields so listings can display a price without extra requests.
+  let productsQuery = supabase
+    .from('products')
+    .select(`${baseSelect}, product_variants(id,name,images,price_in_cents,price_formatted), product_ratings(*)`)
+    .order('created_at', { ascending: false });
 
   if (sellerId) productsQuery = productsQuery.eq('vendor_id', sellerId);
   if (categoryId) productsQuery = productsQuery.eq('category_id', categoryId);
@@ -170,9 +166,18 @@ export async function getProducts(options = {}) {
 
   let total = null;
   try {
+    // first attempt count with variants+ratings; if the relation doesn't exist, retry without ratings
     const { error: countErr, count } = await productsQuery.select('id', { count: 'exact', head: true });
     if (countErr) {
-      console.warn('Failed to retrieve products count', countErr);
+      console.warn('Count with variants/ratings failed, retrying without ratings relation', countErr.message || countErr);
+  // fallback: keep product_variants but drop product_ratings (ratings table often missing in some environments)
+  productsQuery = supabase.from('products').select(`${baseSelect}, product_variants(id,name,images,price_in_cents,price_formatted)`).order('created_at', { ascending: false });
+      const { error: cErr2, count: c2 } = await productsQuery.select('id', { count: 'exact', head: true });
+      if (cErr2) {
+        console.warn('Failed to retrieve products count (fallback)', cErr2);
+      } else {
+        total = c2 || 0;
+      }
     } else {
       total = count || 0;
     }
@@ -193,7 +198,27 @@ export async function getProducts(options = {}) {
     return { products: [], total: total ?? 0 };
   }
 
-  return { products: data || [], total: total ?? (Array.isArray(data) ? data.length : 0) };
+  // Post-process: ensure variant images exist so UI can resolve a thumbnail.
+  // If a variant has no images but the product has a main image, copy that into the variant
+  const products = (data || []).map(p => {
+    try {
+      if (Array.isArray(p.product_variants) && Array.isArray(p.images) && p.images.length > 0) {
+        p.product_variants = p.product_variants.map(v => {
+          if (!v) return v;
+          if (!v.images || (Array.isArray(v.images) && v.images.length === 0)) {
+            return { ...v, images: p.images };
+          }
+          return v;
+        });
+      }
+    } catch (e) {
+      // swallow mapping errors to avoid breaking listings
+      console.warn('Variant image mapping failed for product', p?.id, e?.message || e);
+    }
+    return p;
+  });
+
+  return { products, total: total ?? (Array.isArray(products) ? products.length : 0) };
 }
 
 export async function getVendors() {
@@ -202,20 +227,42 @@ export async function getVendors() {
     return [];
   }
   try {
-    const { data, error } = await supabase
-      .from('vendors')
-      .select(`
-        id, 
-        owner_id, 
-        business_name, 
-        slug, 
-        description, 
-        created_at, 
-        products!products_vendor_id_fkey(id, title, slug, description, base_price, is_published, image_url, images, gallery_images),
-        profile:profiles(avatar_url),
-        vendor_ratings(*)
-      `)
-      .order('business_name', { ascending: true });
+    // Try vendor query including vendor_ratings relation. If the relation/table is missing
+    // we retry without it so the vendor listing still works.
+    let data, error;
+    try {
+      const res = await supabase
+        .from('vendors')
+        .select(`
+          id, 
+          owner_id, 
+          business_name, 
+          slug, 
+          description, 
+          created_at, 
+          products!products_vendor_id_fkey(id, title, slug, description, base_price, is_published, image_url, images, gallery_images),
+          profile:profiles(avatar_url),
+          vendor_ratings(*)
+        `)
+        .order('business_name', { ascending: true });
+      data = res.data; error = res.error;
+    } catch (err) {
+      console.warn('Vendor query with ratings failed, retrying without vendor_ratings:', err?.message || err);
+      const res2 = await supabase
+        .from('vendors')
+        .select(`
+          id, 
+          owner_id, 
+          business_name, 
+          slug, 
+          description, 
+          created_at, 
+          products!products_vendor_id_fkey(id, title, slug, description, base_price, is_published, image_url, images, gallery_images),
+          profile:profiles(avatar_url)
+        `)
+        .order('business_name', { ascending: true });
+      data = res2.data; error = res2.error;
+    }
 
     if (error) {
       console.error('Error fetching vendors:', error);
@@ -329,7 +376,7 @@ export async function getProductById(productId) {
     console.warn('Supabase not initialized, returning null');
     return null;
   }
-  const { data, error } = await supabase.from('products').select('*, product_variants(*), product_images(url, alt)').eq('id', productId).single();
+  const { data, error } = await supabase.from('products').select('*, product_variants(*)').eq('id', productId).single();
 
   if (error) {
     console.error(`Error fetching product with id ${productId}:`, error);
@@ -368,8 +415,8 @@ export async function uploadImageFile(file) {
 
   try {
     const fileExt = file.name?.split('.').pop() || 'png';
-    const fileName = `listings-images/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
-    const bucket = 'listings-images';
+    const fileName = `product-images/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+    const bucket = 'product-images';
 
     const { data, error: uploadError } = await supabase.storage.from(bucket).upload(fileName, file, {
       cacheControl: '3600',

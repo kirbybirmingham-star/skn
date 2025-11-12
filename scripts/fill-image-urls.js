@@ -50,13 +50,13 @@ async function main() {
       const imageUrl = `${supabaseUrl}/storage/v1/object/public/${bucket}/products/${slug}/main.jpg`;
       const { data, error: updateErr } = await supabase
         .from('products')
-        .update({ images: images })
+        .update({ images: image_url })
         .eq('slug', slug)
         .select();
       if (updateErr) {
         console.warn(`Failed to update product ${slug}:`, updateErr.message || updateErr);
       } else {
-        console.log(`Updated product ${slug} -> image_url set to ${images}`);
+        console.log(`Updated product ${slug} -> image_url set to ${image_url}`);
       }
     } catch (err) {
       console.error(`Error processing ${slug}:`, err.message || err);

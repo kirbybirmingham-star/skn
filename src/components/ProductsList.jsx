@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, ShoppingCart } from 'lucide-react';
 import { getProducts, formatCurrency } from '@/api/EcommerceApi';
-import ProductCard from './ProductCard';
+import MarketplaceProductCard from './products/MarketplaceProductCard';
 
 
 const ProductsList = ({ sellerId = null, categoryId = null, searchQuery = '', priceRange = 'all' }) => {
@@ -91,7 +91,7 @@ const ProductsList = ({ sellerId = null, categoryId = null, searchQuery = '', pr
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 xl:gap-10">
       {products.map((product, index) => (
-        <ProductCard key={product.id} product={product} index={index} />
+        <MarketplaceProductCard key={product.id} product={product} index={index} />
       ))}
       {/* Pagination controls */}
       {total > perPage && (
