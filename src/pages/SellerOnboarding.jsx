@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { SupabaseAuthContext } from '@/contexts/SupabaseAuthContext';
 import SellerSignupForm from '@/components/auth/SellerSignupForm';
 
 export default function SellerOnboarding() {
   const { token } = useParams();
   const navigate = useNavigate();
+  const { session } = useContext(SupabaseAuthContext);
   const [vendor, setVendor] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -33,10 +35,17 @@ export default function SellerOnboarding() {
   };
 
   const startKyc = async () => {
-    if (!vendor) return;
+    if (!vendor || !session?.access_token) return;
     setLoading(true);
     try {
-      const res = await fetch('/api/onboarding/start-kyc', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ vendor_id: vendor.id }) });
+      const res = await fetch('/api/onboarding/start-kyc', { 
+        method: 'POST', 
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        }, 
+        body: JSON.stringify({ vendor_id: vendor.id }) 
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'KYC start failed');
       // redirect to provider

@@ -1,13 +1,27 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
+import { SupabaseAuthContext } from '@/contexts/SupabaseAuthContext';
 
 export default function OnboardingDashboard() {
+  const { session } = useContext(SupabaseAuthContext);
   const [vendor, setVendor] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     // Load vendor for current user - endpoint should return vendor owned by user
-    fetch('/api/onboarding/me')
+    const token = session?.access_token;
+    if (!token) {
+      setError('Not authenticated');
+      setLoading(false);
+      return;
+    }
+
+    fetch('/api/onboarding/me', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
       .then(r => r.json())
       .then(data => {
         if (data?.vendor) setVendor(data.vendor);
@@ -15,7 +29,7 @@ export default function OnboardingDashboard() {
       })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [session?.access_token]);
 
   if (loading) return <div>Loading…</div>;
   if (error) return <div className="text-red-600">{error}</div>;

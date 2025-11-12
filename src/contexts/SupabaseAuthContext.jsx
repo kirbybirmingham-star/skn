@@ -5,6 +5,8 @@ import { useToast } from '../components/ui/use-toast';
 
 const AuthContext = createContext(undefined);
 
+export const SupabaseAuthContext = AuthContext;
+
 export const AuthProvider = ({ children }) => {
   const { toast } = useToast();
 
