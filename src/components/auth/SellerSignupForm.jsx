@@ -1,10 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Button } from '@/components/ui/button';
+import { SupabaseAuthContext } from '@/contexts/SupabaseAuthContext';
 
 export default function SellerSignupForm({ onSuccess }) {
-  const [form, setForm] = useState({ owner_id: '', name: '', slug: '', description: '', website: '', contact_email: '' });
+  const { user } = useContext(SupabaseAuthContext);
+  const [form, setForm] = useState({ name: '', slug: '', description: '', website: '', contact_email: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Require user to be logged in
+  if (!user) {
+    return (
+      <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <p className="text-yellow-800">Please log in to become a seller.</p>
+      </div>
+    );
+  }
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -16,7 +27,10 @@ export default function SellerSignupForm({ onSuccess }) {
       const res = await fetch('/api/onboarding/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
+        body: JSON.stringify({
+          owner_id: user.id,  // Use authenticated user's ID
+          ...form
+        })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Signup failed');
@@ -30,10 +44,6 @@ export default function SellerSignupForm({ onSuccess }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Owner ID</label>
-        <input name="owner_id" value={form.owner_id} onChange={handleChange} className="mt-1 block w-full border rounded p-2" />
-      </div>
       <div>
         <label className="block text-sm font-medium text-gray-700">Store Name</label>
         <input name="name" value={form.name} onChange={handleChange} className="mt-1 block w-full border rounded p-2" required />
