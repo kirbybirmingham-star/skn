@@ -18,7 +18,7 @@ const StorePage = () => {
       try {
         const seller = await getVendorById(sellerId);
         if (mounted && seller) {
-          setSellerName(seller.name || 'Seller');
+          setSellerName(seller.name);
         }
       } catch (err) {
         // ignore — ProductsList will handle empty state

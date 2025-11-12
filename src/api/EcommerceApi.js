@@ -198,7 +198,7 @@ export async function getVendors() {
         .select(`
           id, 
           owner_id, 
-          business_name, 
+          name:business_name, 
           slug, 
           description, 
           created_at, 
@@ -215,7 +215,7 @@ export async function getVendors() {
         .select(`
           id, 
           owner_id, 
-          business_name, 
+          name:business_name, 
           slug, 
           description, 
           created_at, 
@@ -246,8 +246,8 @@ export async function getVendors() {
       return {
         id: v.id,
         owner_id: v.owner_id,
-        name: v.business_name || v.slug,
-        store_name: v.business_name || v.slug,
+        name: v.name || v.slug,
+        store_name: v.name || v.slug,
         slug: v.slug,
         description: v.description || '',
         avatar: v.profile?.avatar_url,
@@ -356,7 +356,7 @@ export async function getVendorById(vendorId) {
   try {
     const { data, error } = await supabase
       .from('vendors')
-      .select('*')
+      .select('id, owner_id, name:business_name, slug, description, created_at')
       .eq('id', vendorId)
       .single();
 
@@ -410,7 +410,7 @@ export async function getVendorByOwner(ownerId) {
   try {
     const { data, error } = await supabase
       .from('vendors')
-      .select('*')
+      .select('id, owner_id, name:business_name, slug, description, created_at')
       .eq('owner_id', ownerId)
       .single();
 
