@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import ProductsList from '@/components/ProductsList';
 import VendorCard from '@/components/VendorCard';
-import { getProducts, getVendors, getVendorById } from '@/api/EcommerceApi';
+import { getProducts, getVendors, getVendorById } from '@/api/EcommerceApi.js';
 
 const StorePage = () => {
   const { sellerId } = useParams();
@@ -18,7 +18,7 @@ const StorePage = () => {
       try {
         const seller = await getVendorById(sellerId);
         if (mounted && seller) {
-          setSellerName(seller.name || 'Seller');
+          setSellerName(seller.name);
         }
       } catch (err) {
         // ignore — ProductsList will handle empty state

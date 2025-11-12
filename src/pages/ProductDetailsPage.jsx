@@ -70,13 +70,7 @@ const ProductDetailsPage = () => {
   }
 
   const currentVariant = product.product_variants?.[selectedVariantIndex] || null;
-  const imageUrl =
-    product.product_images?.[selectedImage]?.url ||
-    currentVariant?.images?.[0] ||
-    product.image_url ||
-    (product.images && product.images[0]) ||
-    (product.gallery_images && product.gallery_images[0]) ||
-    'https://picsum.photos/600/600?grayscale&blur=2';
+  const imageUrl = currentVariant?.images?.[0] || product.image_url || (product.images && product.images[0]) || (product.gallery_images && product.gallery_images[0]) || 'https://picsum.photos/600/600?grayscale&blur=2';
 
 
   return (
@@ -98,7 +92,7 @@ const ProductDetailsPage = () => {
               <label className="block text-sm mb-2">Variant</label>
               <select value={selectedVariantIndex} onChange={e => setSelectedVariantIndex(Number(e.target.value))} className="p-2 border rounded w-full">
                 {product.product_variants.map((v, idx) => (
-                  <option key={v.id || idx} value={idx}>{v.title || `Variant ${idx+1}`} — {v.price_formatted || `$${((v.price_in_cents||0)/100).toFixed(2)}`}</option>
+                  <option key={v.id || idx} value={idx}>{(v.name || v.title) || `Variant ${idx+1}`} — {v.price_formatted || `$${((v.price_in_cents||0)/100).toFixed(2)}`}</option>
                 ))}
               </select>
             </div>
