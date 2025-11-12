@@ -22,13 +22,16 @@ const router = express.Router();
 // Body: { owner_id, name, slug, description, website, contact_email }
 router.post('/signup', async (req, res) => {
   try {
+    console.log('POST /signup called with body:', req.body);
     if (!supabase) return res.status(503).json({ error: 'Server not configured for onboarding' });
     const { owner_id, name, slug, description, website, contact_email } = req.body;
+    console.log('Extracted params - owner_id:', owner_id, 'name:', name, 'slug:', slug);
     if (!owner_id || !name || !slug) return res.status(400).json({ error: 'owner_id, name and slug are required' });
 
     // Create vendor row with onboarding status
     const onboardingToken = uuidv4();
 
+    console.log('Attempting to insert vendor:', { owner_id, name, slug });
     const { data, error } = await supabase
       .from('vendors')
       .insert({
@@ -45,10 +48,16 @@ router.post('/signup', async (req, res) => {
       .select();
 
     if (error) {
-      console.error('Error creating vendor during onboarding signup:', error);
-      return res.status(500).json({ error: 'Failed to create vendor' });
+      console.error('Error creating vendor during onboarding signup:', JSON.stringify(error, null, 2));
+      return res.status(500).json({ 
+        error: error.message || 'Failed to create vendor', 
+        code: error.code,
+        hint: error.hint,
+        details: error.details 
+      });
     }
 
+    console.log('Vendor created successfully:', data);
     const vendor = data && data[0];
 
     // Build next steps response — in future this would integrate with a KYC provider

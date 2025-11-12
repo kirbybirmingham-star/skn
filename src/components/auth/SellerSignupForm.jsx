@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { SupabaseAuthContext } from '@/contexts/SupabaseAuthContext';
 
 export default function SellerSignupForm({ onSuccess }) {
-  const { user } = useContext(SupabaseAuthContext);
+  const { user, session } = useContext(SupabaseAuthContext);
   const [form, setForm] = useState({ name: '', slug: '', description: '', website: '', contact_email: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -24,9 +24,13 @@ export default function SellerSignupForm({ onSuccess }) {
     setError(null);
     setLoading(true);
     try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
       const res = await fetch('/api/onboarding/signup', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           owner_id: user.id,  // Use authenticated user's ID
           ...form

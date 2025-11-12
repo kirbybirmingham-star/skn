@@ -13,7 +13,7 @@ import React, { useState } from 'react';
       const location = useLocation();
 
       const paypalOptions = {
-        "client-id": import.meta.env.VITE_PAYPAL_CLIENT_ID,
+        "client-id": import.meta.env.VITE_PAYPAL_CLIENT_ID || "AYN6jrGvJkzSYVtGAz_-k5ZhL7zRSEQPLp_qVcvJ_RBs8YqXQCWTXEQMX1xVW4gYSHMvq_IzF0WvKg9g",
         currency: "USD",
         intent: "capture",
         components: "buttons",
