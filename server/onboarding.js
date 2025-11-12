@@ -42,8 +42,7 @@ router.post('/signup', async (req, res) => {
         website: website || null,
         metadata: { contact_email: contact_email || null },
         onboarding_status: 'started',
-        onboarding_token: onboardingToken,
-        created_at: new Date().toISOString()
+        onboarding_token: onboardingToken
       })
       .select();
 
