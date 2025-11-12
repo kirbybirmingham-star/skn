@@ -1,0 +1,76 @@
+# QUICKSTART - Supabase RLS Fix
+# November 11, 2025
+
+Write-Host ""
+Write-Host "===============================================================================" -ForegroundColor Cyan
+Write-Host "                    SUPABASE SETUP - QUICK FIX GUIDE" -ForegroundColor Cyan
+Write-Host "===============================================================================" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "All patches applied! Ready to test." -ForegroundColor Green
+Write-Host ""
+Write-Host "STEP 1: Apply RLS Fix (5 minutes)" -ForegroundColor Yellow
+Write-Host "---" -ForegroundColor Gray
+Write-Host "1. Go to: https://app.supabase.com/project" -ForegroundColor White
+Write-Host "2. SQL Editor -> New Query" -ForegroundColor White
+Write-Host "3. Paste SQL from RLS_FIX_GUIDE.md (or see SETUP_COMPLETE.md)" -ForegroundColor White
+Write-Host "4. Click RUN" -ForegroundColor White
+Write-Host ""
+Write-Host "STEP 2: Test Immediately" -ForegroundColor Yellow
+Write-Host "---" -ForegroundColor Gray
+Write-Host "Run this in PowerShell:" -ForegroundColor White
+Write-Host ""
+Write-Host "  node .\scripts\test-supabase.js" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "Expected: All tests should pass with check marks" -ForegroundColor Green
+Write-Host ""
+Write-Host "STEP 3: Run Diagnostics" -ForegroundColor Yellow
+Write-Host "---" -ForegroundColor Gray
+Write-Host "  node .\scripts\diagnose-service-role.js" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "Expected:" -ForegroundColor White
+Write-Host "  - SUCCESS: Can list users" -ForegroundColor Green
+Write-Host "  - SUCCESS: Can query profiles" -ForegroundColor Green
+Write-Host "  - SUCCESS: Can query products" -ForegroundColor Green
+Write-Host ""
+Write-Host "DOCUMENTATION" -ForegroundColor Yellow
+Write-Host "---" -ForegroundColor Gray
+Write-Host "1. SETUP_COMPLETE.md       <- START HERE (complete overview)" -ForegroundColor Cyan
+Write-Host "2. RLS_FIX_GUIDE.md        <- Profiles RLS fix details" -ForegroundColor Cyan
+Write-Host "3. SERVICE_ROLE_GUIDE.md   <- Service role troubleshooting" -ForegroundColor Cyan
+Write-Host "4. PATCHES_APPLIED.md      <- Code quality improvements" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "SCRIPTS CREATED" -ForegroundColor Yellow
+Write-Host "---" -ForegroundColor Gray
+Write-Host "1. scripts/diagnose-service-role.js" -ForegroundColor Cyan
+Write-Host "   Complete diagnostics of Supabase setup" -ForegroundColor Gray
+Write-Host ""
+Write-Host "2. scripts/upload-sample-images.js" -ForegroundColor Cyan
+Write-Host "   Updated with 6 code quality patches" -ForegroundColor Gray
+Write-Host ""
+Write-Host "STATUS BEFORE FIX" -ForegroundColor Yellow
+Write-Host "---" -ForegroundColor Gray
+Write-Host "WORKING:" -ForegroundColor Green
+Write-Host "  - Service role key (valid)" -ForegroundColor Green
+Write-Host "  - Auth operations" -ForegroundColor Green
+Write-Host "  - Storage buckets" -ForegroundColor Green
+Write-Host ""
+Write-Host "BLOCKED:" -ForegroundColor Red
+Write-Host "  - Profiles table (RLS too restrictive)" -ForegroundColor Red
+Write-Host "  - Products table (RLS too restrictive)" -ForegroundColor Red
+Write-Host ""
+Write-Host "WHAT THE FIX DOES" -ForegroundColor Yellow
+Write-Host "---" -ForegroundColor Gray
+Write-Host "Relaxes RLS policies to:" -ForegroundColor White
+Write-Host "  + Allow everyone to read profiles (for user discovery)" -ForegroundColor Green
+Write-Host "  + Allow authenticated users to create own profile" -ForegroundColor Green
+Write-Host "  + Allow users to update own profile" -ForegroundColor Green
+Write-Host "  + Allow service role (backend) to manage profiles" -ForegroundColor Green
+Write-Host ""
+Write-Host "This is SAFE because:" -ForegroundColor Yellow
+Write-Host "  - Data privacy maintained (can only update own)" -ForegroundColor Gray
+Write-Host "  - Service role only used by backend scripts" -ForegroundColor Gray
+Write-Host "  - Public read is normal for user directories" -ForegroundColor Gray
+Write-Host ""
+Write-Host "===============================================================================" -ForegroundColor Cyan
+Write-Host "Ready? Apply the SQL fix in Supabase and run: node .\scripts\test-supabase.js" -ForegroundColor Green
+Write-Host "===============================================================================" -ForegroundColor Cyan

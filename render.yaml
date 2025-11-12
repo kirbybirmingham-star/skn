@@ -1,0 +1,46 @@
+# Render blueprint for deploying frontend (static site) and backend (web service)
+# Frontend: build with `npm run build` and publish the `dist` folder
+# Backend: start with `npm start` which runs `node server/index.js`
+
+services:
+  - type: web_service
+    name: sknbridgetrade-server
+    env: node
+    plan: free
+    region: oregon
+    repo: .
+    buildCommand: "npm install && npm run build"
+    startCommand: "npm start"
+    branch: main
+    envVars:
+      - key: VITE_SUPABASE_URL
+        value: https://ebvlniuzrttvvgilccui.supabase.co
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: VITE_PAYPAL_CLIENT_ID
+        sync: false
+      - key: VITE_PAYPAL_SECRET
+        sync: false
+      - key: PAYPAL_WEBHOOK_ID
+        sync: false
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3001"
+
+  - type: static_site
+    name: sknbridgetrade-frontend
+    env: static
+    plan: free
+    region: oregon
+    repo: .
+    buildCommand: "npm install && npm run build"
+    publishPath: "dist"
+    branch: main
+    envVars:
+      - key: VITE_SUPABASE_URL
+        value: https://ebvlniuzrttvvgilccui.supabase.co
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: VITE_API_URL
+        value: https://sknbridgetrade-server.onrender.com
