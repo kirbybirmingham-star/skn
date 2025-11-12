@@ -19,7 +19,6 @@ const MarketplacePage = () => {
   const [featured, setFeatured] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
   const [showFloatingAd, setShowFloatingAd] = useState(false);
-  const [showFeatureDebug, setShowFeatureDebug] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -191,14 +190,6 @@ const MarketplacePage = () => {
                     {featured.map((p, i) => (
                       <ProductCard key={p.id} product={p} index={i} />
                     ))}
-                  </div>
-                  <div className="mt-4">
-                    <button className="text-sm text-indigo-600 underline" onClick={() => setShowFeatureDebug(s => !s)}>
-                      {showFeatureDebug ? 'Hide' : 'Show'} featured debug
-                    </button>
-                    {showFeatureDebug && (
-                      <pre className="mt-2 p-3 bg-slate-50 border rounded text-xs max-h-64 overflow-auto">{JSON.stringify(featured, null, 2)}</pre>
-                    )}
                   </div>
                 </section>
               )}
