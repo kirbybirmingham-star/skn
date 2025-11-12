@@ -126,7 +126,22 @@ export async function getProducts(options = {}) {
 
   const { sellerId, categoryId, searchQuery, priceRange, page = 1, perPage = 24 } = options;
 
-  let productsQuery = supabase.from('products').select('id, vendor_id, title, slug, description, base_price, currency, is_published, images, gallery_images, created_at, vendors(name)', { count: 'exact' });
+  let productsQuery = supabase.from('products').select(`
+      id,
+      vendor_id,
+      title,
+      slug,
+      description,
+      base_price,
+      currency,
+      is_published,
+      image_url,
+      gallery_images,
+      featured,
+      ribbon_text,
+      vendors!inner(business_name),
+      images (url, alt)
+    `).order('created_at', { ascending: false });
 
   if (sellerId) productsQuery = productsQuery.eq('vendor_id', sellerId);
   if (categoryId) productsQuery = productsQuery.eq('category_id', categoryId);
@@ -153,21 +168,32 @@ export async function getProducts(options = {}) {
     }
   }
 
+  let total = null;
+  try {
+    const { error: countErr, count } = await productsQuery.select('id', { count: 'exact', head: true });
+    if (countErr) {
+      console.warn('Failed to retrieve products count', countErr);
+    } else {
+      total = count || 0;
+    }
+  } catch (e) {
+    console.warn('Count query failed', e);
+  }
+
   const per = Number.isInteger(perPage) ? perPage : 24;
   const pg = Math.max(1, parseInt(page, 10) || 1);
   const start = (pg - 1) * per;
   const end = pg * per - 1;
-  
-  productsQuery = productsQuery.order('created_at', { ascending: false }).range(start, end);
+  productsQuery = productsQuery.range(start, end);
 
-  const { data, error, count } = await productsQuery;
+  const { data, error } = await productsQuery;
 
   if (error) {
     console.error('Error fetching products:', error);
-    return { products: [], total: 0 };
+    return { products: [], total: total ?? 0 };
   }
 
-  return { products: data || [], total: count ?? 0 };
+  return { products: data || [], total: total ?? (Array.isArray(data) ? data.length : 0) };
 }
 
 export async function getVendors() {
@@ -303,7 +329,7 @@ export async function getProductById(productId) {
     console.warn('Supabase not initialized, returning null');
     return null;
   }
-  const { data, error } = await supabase.from('products').select('*, product_variants(*)').eq('id', productId).single();
+  const { data, error } = await supabase.from('products').select('*, product_variants(*), product_images(url, alt)').eq('id', productId).single();
 
   if (error) {
     console.error(`Error fetching product with id ${productId}:`, error);
@@ -342,8 +368,8 @@ export async function uploadImageFile(file) {
 
   try {
     const fileExt = file.name?.split('.').pop() || 'png';
-    const fileName = `product-images/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
-    const bucket = 'product-images';
+    const fileName = `listings-images/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+    const bucket = 'listings-images';
 
     const { data, error: uploadError } = await supabase.storage.from(bucket).upload(fileName, file, {
       cacheControl: '3600',

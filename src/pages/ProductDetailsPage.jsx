@@ -70,7 +70,13 @@ const ProductDetailsPage = () => {
   }
 
   const currentVariant = product.product_variants?.[selectedVariantIndex] || null;
-  const imageUrl = currentVariant?.images?.[0] || product.image_url || (product.images && product.images[0]) || (product.gallery_images && product.gallery_images[0]) || 'https://picsum.photos/600/600?grayscale&blur=2';
+  const imageUrl =
+    product.product_images?.[selectedImage]?.url ||
+    currentVariant?.images?.[0] ||
+    product.image_url ||
+    (product.images && product.images[0]) ||
+    (product.gallery_images && product.gallery_images[0]) ||
+    'https://picsum.photos/600/600?grayscale&blur=2';
 
 
   return (
