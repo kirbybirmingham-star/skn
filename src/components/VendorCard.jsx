@@ -4,6 +4,7 @@ import { Star, Tag } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const VendorCard = ({ vendor, index }) => {
+  console.log('[VendorCard] Rendering vendor:', vendor.store_name || vendor.name);
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -28,11 +29,17 @@ const VendorCard = ({ vendor, index }) => {
         )}
         <div className="p-6">
           <div className="flex items-start space-x-4">
-            <img
-              src={vendor.avatar}
-              alt={vendor.name}
-              className="w-16 h-16 rounded-full object-cover flex-shrink-0 border-2 border-white shadow-md"
-            />
+            {vendor.avatar ? (
+              <img
+                src={vendor.avatar}
+                alt={vendor.name}
+                className="w-16 h-16 rounded-full object-cover flex-shrink-0 border-2 border-white shadow-md"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center flex-shrink-0 border-2 border-white shadow-md">
+                <span className="text-white font-bold text-lg">{vendor.name?.charAt(0)?.toUpperCase()}</span>
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <h2 className="text-xl font-bold text-gray-900 truncate">
                 {vendor.store_name}

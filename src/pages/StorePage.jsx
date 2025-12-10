@@ -35,10 +35,14 @@ const StorePage = () => {
     const fetchVendors = async () => {
       if (sellerId) return;
       try {
+        console.log('[StorePage] Fetching vendors...');
         const data = await getVendors();
-        if (mounted) setVendors(data || []);
+        console.log('[StorePage] Got vendors:', data);
+        if (mounted) {
+          setVendors(data || []);
+        }
       } catch (err) {
-        console.warn('Failed to fetch vendors', err);
+        console.warn('[StorePage] Failed to fetch vendors', err);
       }
     };
     fetchVendors();
@@ -74,10 +78,15 @@ const StorePage = () => {
               transition={{ duration: 0.8, delay: 0.2 }}
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {vendors.length ? vendors.map((v, idx) => (
-                  <VendorCard key={v.id} vendor={v} index={idx} />
+                {Array.isArray(vendors) && vendors.length ? vendors.map((v, idx) => (
+                  <VendorCard key={v.id || idx} vendor={v} index={idx} />
                 )) : (
-                  <div className="col-span-full text-center text-slate-600 py-12">No stores found</div>
+                  <div className="col-span-full text-center text-slate-600 py-12">
+                    No stores found.<br />
+                    {(!vendors || vendors.length === 0) && (
+                      <span className="block mt-2 text-yellow-700">No vendor data was returned from the API. This may mean the database is empty or not connected.<br />Check your database setup and try again.</span>
+                    )}
+                  </div>
                 )}
               </div>
             </motion.div>

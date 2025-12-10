@@ -15,8 +15,17 @@ const MarketplacePage = () => {
   const [categories, setCategories] = useState([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [priceRange, setPriceRange] = useState('all');
-  const priceRanges = ['All', 'Under $50', '$50-$200', '$200-$500', 'Over $500'];
+  const [selectedCategorySlug, setSelectedCategorySlug] = useState(null);
+  const [sortBy, setSortBy] = useState('newest');
+  const priceRanges = [
+    { label: 'All', value: 'all' },
+    { label: 'Under $50', value: 'under-50' },
+    { label: '$50-$200', value: '50-200' },
+    { label: '$200-$500', value: '200-500' },
+    { label: 'Over $500', value: 'over-500' },
+  ];
   const [featured, setFeatured] = useState([]);
+  // Live filters (no apply button) — we pass these directly to ProductsList
   const [showPopup, setShowPopup] = useState(false);
   const [showFloatingAd, setShowFloatingAd] = useState(false);
 
@@ -41,7 +50,26 @@ const MarketplacePage = () => {
       try {
         const resp = await getProducts();
         if (!mounted) return;
-        const items = (resp.products || []).slice(0, 3);
+        let items = (resp.products || []).slice(0, 3);
+        
+        // Compute __effective_price for featured products (same as ProductsList does) for consistent price display
+        items = items.map(p => {
+          const base = Number(p.base_price || 0);
+          let minVariant = null;
+          if (Array.isArray(p.product_variants) && p.product_variants.length > 0) {
+            for (const v of p.product_variants) {
+              if (!v) continue;
+              let vPrice = null;
+              if (typeof v.price_in_cents === 'number' && v.price_in_cents > 0) vPrice = Number(v.price_in_cents);
+              else if (typeof v.price === 'number' && v.price > 0) vPrice = Math.round(Number(v.price) * 100);
+              else if (typeof v.base_price === 'number' && v.base_price > 0) vPrice = Number(v.base_price);
+              if (vPrice !== null && (minVariant === null || vPrice < minVariant)) minVariant = vPrice;
+            }
+          }
+          const effective = (minVariant !== null && minVariant > 0) ? minVariant : base;
+          return { ...p, __effective_price: Number(effective || 0) };
+        });
+        
         setFeatured(items);
       } catch (err) {
         console.warn('Failed to load featured products', err);
@@ -133,7 +161,7 @@ const MarketplacePage = () => {
                   />
                 </div>
                 <div className="mt-3 sm:mt-0">
-                  <Button onClick={() => {}} className="bg-indigo-600">Search</Button>
+                  <Button onClick={() => { /* filters are live; Search button is a convenience */ }} className="bg-indigo-600">Search</Button>
                 </div>
               </div>
             </div>
@@ -143,7 +171,7 @@ const MarketplacePage = () => {
               <div className="bg-white rounded-lg p-4 shadow">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold">Filters</h3>
-                  <button className="text-indigo-600 text-sm" onClick={() => { setSelectedCategory('all'); setSelectedCategoryId(null); setPriceRange('all'); setSearchQuery(''); }}>Clear</button>
+                  <button className="text-indigo-600 text-sm" onClick={() => { setSelectedCategory('all'); setSelectedCategoryId(null); setPriceRange('all'); setSearchQuery(''); setSortBy('newest'); }}>Clear</button>
                 </div>
 
                 <div className="mb-4">
@@ -153,27 +181,69 @@ const MarketplacePage = () => {
                     onChange={(e) => {
                       const val = e.target.value;
                       setSelectedCategory(val);
-                      if (val === 'all') setSelectedCategoryId(null);
-                      else {
-                        const cat = categories.find(c => c.slug === val || c.name.toLowerCase() === val);
-                        setSelectedCategoryId(cat ? cat.id : null);
+                      if (val === 'all') {
+                        setSelectedCategoryId(null);
+                        setSelectedCategorySlug(null);
+                      } else {
+                        // If the option value is an id (UUID), set the category id
+                        const catById = categories.find(c => String(c.id) === String(val));
+                        if (catById) {
+                          // If the returned id looks like a UUID, treat it as a DB id; otherwise it's likely a slug
+                          const idStr = String(catById.id);
+                          const looksLikeUUID = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/.test(idStr);
+                          if (looksLikeUUID) {
+                            setSelectedCategoryId(catById.id);
+                            setSelectedCategorySlug(catById.slug || String(catById.name).toLowerCase());
+                          } else {
+                            setSelectedCategoryId(null);
+                            setSelectedCategorySlug(idStr);
+                          }
+                        } else {
+                          const cat = categories.find(c => c.slug === val || String(c.name).toLowerCase() === String(val));
+                          if (cat) {
+                            const idStr = String(cat.id);
+                            const looksLikeUUID = /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/.test(idStr);
+                            if (looksLikeUUID) {
+                              setSelectedCategoryId(cat.id);
+                              setSelectedCategorySlug(cat.slug || String(cat.name).toLowerCase());
+                            } else {
+                              setSelectedCategoryId(null);
+                              setSelectedCategorySlug(idStr);
+                            }
+                          } else {
+                            setSelectedCategoryId(null);
+                            setSelectedCategorySlug(val);
+                          }
+                        }
                       }
                     }}
                     className="mt-2 w-full border rounded px-3 py-2"
                   >
                     <option value="all">All</option>
-                    {categories.map(cat => <option key={cat.id} value={cat.slug || cat.name.toLowerCase()}>{cat.name}</option>)}
+                    {categories.map(cat => <option key={cat.id || cat.slug} value={(cat.id) ? String(cat.id) : (cat.slug || String(cat.name).toLowerCase())}>{cat.name}</option>)}
                   </select>
                 </div>
 
                 <div className="mb-4">
                   <label className="text-sm font-medium">Price Range</label>
                   <select value={priceRange} onChange={(e) => setPriceRange(e.target.value)} className="mt-2 w-full border rounded px-3 py-2">
-                    {priceRanges.map(range => <option key={range} value={range.toLowerCase()}>{range}</option>)}
+                    {priceRanges.map(range => <option key={range.value} value={range.value}>{range.label}</option>)}
                   </select>
                 </div>
 
-                <button className="apply-filters-btn w-full mt-2 bg-indigo-600 text-white py-2 rounded" onClick={() => { /* no-op, filters are live */ }}>Apply Filters</button>
+                <div className="mb-4">
+                  <label className="text-sm font-medium">Sort By</label>
+                  <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="mt-2 w-full border rounded px-3 py-2">
+                    <option value="newest">Newest</option>
+                    <option value="oldest">Oldest</option>
+                    <option value="price_asc">Price: Low → High</option>
+                    <option value="price_desc">Price: High → Low</option>
+                    <option value="rating_desc">Rating: High → Low</option>
+                    <option value="rating_asc">Rating: Low → High</option>
+                    <option value="title_asc">Title A → Z</option>
+                    <option value="title_desc">Title Z → A</option>
+                  </select>
+                </div>
               </div>
             </aside>
 
@@ -197,7 +267,7 @@ const MarketplacePage = () => {
               {/* All items list */}
               <section>
                 <h3 className="text-xl font-semibold mb-4">All Items</h3>
-                <ProductsList categoryId={selectedCategoryId} searchQuery={searchQuery} priceRange={priceRange} />
+                <ProductsList categoryId={selectedCategoryId} categorySlug={selectedCategorySlug} searchQuery={searchQuery} priceRange={priceRange} sortBy={sortBy} />
               </section>
             </main>
           </div>

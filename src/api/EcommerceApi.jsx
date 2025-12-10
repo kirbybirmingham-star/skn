@@ -1,4 +1,6 @@
 import { supabase } from '../lib/customSupabaseClient';
+import { selectProductWithVariants, variantSelectCandidates } from '../lib/variantSelectHelper.js';
+import { productRatingsExist } from '../lib/ratingsChecker.js';
 
 // PayPal API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -124,7 +126,7 @@ export async function getProducts(options = {}) {
     return { products: [], total: 0 };
   }
 
-  const { sellerId, categoryId, searchQuery, priceRange, page = 1, perPage = 24 } = options;
+  const { sellerId, categoryId, searchQuery, priceRange, page = 1, perPage = 24, sortBy = 'newest' } = options;
 
   let total = 0;
 
@@ -134,52 +136,138 @@ export async function getProducts(options = {}) {
   // Explicitly request the fields we need to render cards to avoid accidental omission
   // of the `images` field when using '*' with nested relations.
   const baseSelect = 'id, title, slug, vendor_id, base_price, currency, image_url, images, gallery_images, is_published, ribbon_text, created_at';
-  // product_variants uses 'name' as the variant label column in this schema (not 'title')
-  // Include variant price fields so listings can display a price without extra requests.
-  let productsQuery = supabase
-    .from('products')
-    .select(`${baseSelect}, product_variants(id,name,images,price_in_cents,price_formatted), product_ratings(*)`)
-    .order('created_at', { ascending: false });
+  // product_variants may use different label columns across schemas (e.g., 'name' or 'title').
+  // Try a few variant-select shapes until one succeeds.
+  // Use shared `variantSelectCandidates` imported from `variantSelectHelper.js`
 
-  if (sellerId) productsQuery = productsQuery.eq('vendor_id', sellerId);
-  if (categoryId) productsQuery = productsQuery.eq('category_id', categoryId);
+  let productsQuery = null;
+  let usedVariantSelect = null;
+  // We'll prefer to include product_ratings when possible; check once to avoid failing queries
+  const ratingsAvailable = await productRatingsExist(supabase).catch(() => false);
+  const tryBuildQuery = (variantSelect, includeRatings = true) => {
+    const relations = includeRatings ? `${variantSelect}, product_ratings(*)` : `${variantSelect}`;
+    // default ordering, may be overridden later with explicit sortBy
+    return supabase.from('products').select(`${baseSelect}, ${relations}`).order('created_at', { ascending: false });
+  };
+  
+  // Helper function to apply all filters to a query
+  const applyFilters = (query) => {
+    if (sellerId) query = query.eq('vendor_id', sellerId);
+    if (categoryId) {
+      const cid = Number.isInteger(Number(categoryId)) ? Number(categoryId) : categoryId;
+      query = query.eq('category_id', cid);
+    }
+    else if (options.categorySlug) {
+      const slug = String(options.categorySlug).trim();
+      query = query.or(`metadata->>category.ilike.%${slug}%,title.ilike.%${slug}%`);
+    }
 
-  if (searchQuery && String(searchQuery).trim().length > 0) {
-    const searchQueryStr = String(searchQuery).trim();
-    productsQuery = productsQuery.or(`title.ilike.%${searchQueryStr}%,description.ilike.%${searchQueryStr}%`);
-  }
+    if (searchQuery && String(searchQuery).trim().length > 0) {
+      const searchQueryStr = String(searchQuery).trim();
+      query = query.or(`title.ilike.%${searchQueryStr}%,description.ilike.%${searchQueryStr}%`);
+    }
 
-  if (priceRange && priceRange !== 'all') {
-    const pr = String(priceRange).toLowerCase();
-    if (pr.startsWith('under')) {
-      const max = parseInt(pr.replace(/[^0-9]/g, ''), 10) * 100;
-      productsQuery = productsQuery.lte('base_price', max);
-    } else if (pr.startsWith('over')) {
-      const min = parseInt(pr.replace(/[^0-9]/g, ''), 10) * 100;
-      productsQuery = productsQuery.gte('base_price', min);
-    } else if (pr.includes('-')) {
-      const parts = pr.split('-').map(p => parseInt(p.replace(/[^0-9]/g, ''), 10));
-      if (parts.length === 2) {
-        productsQuery = productsQuery.gte('base_price', parts[0] * 100);
-        productsQuery = productsQuery.lte('base_price', parts[1] * 100);
+    if (priceRange && priceRange !== 'all') {
+      const pr = String(priceRange).toLowerCase();
+      if (pr.startsWith('under')) {
+        const max = parseInt(pr.replace(/[^0-9]/g, ''), 10) * 100;
+        query = query.lte('base_price', max);
+      } else if (pr.startsWith('over')) {
+        const min = parseInt(pr.replace(/[^0-9]/g, ''), 10) * 100;
+        query = query.gte('base_price', min);
+      } else if (pr.includes('-')) {
+        const parts = pr.split('-').map(p => parseInt(p.replace(/[^0-9]/g, ''), 10));
+        if (parts.length === 2) {
+          query = query.gte('base_price', parts[0] * 100);
+          query = query.lte('base_price', parts[1] * 100);
+        }
       }
     }
+    
+    // Apply sort-by param (server-side when possible).
+    const sb = String(sortBy || 'newest').toLowerCase();
+    let serverSortField = null;
+    let serverSortAsc = false;
+    switch (sb) {
+      case 'oldest': serverSortField = 'created_at'; serverSortAsc = true; break;
+      case 'title_asc': serverSortField = 'title'; serverSortAsc = true; break;
+      case 'title_desc': serverSortField = 'title'; serverSortAsc = false; break;
+      case 'newest':
+      default:
+        serverSortField = 'created_at';
+        serverSortAsc = false;
+        break;
+    }
+    if (serverSortField) {
+      try {
+        query = query.order(serverSortField, { ascending: serverSortAsc });
+      } catch (e) {
+        console.warn('Applying sort failed', e?.message || e);
+      }
+    }
+    
+    return query;
+  };
+  
+  // Initialize with the first candidate; prefer including ratings only if available
+  for (const vs of variantSelectCandidates) {
+    try {
+      productsQuery = tryBuildQuery(vs, ratingsAvailable);
+      usedVariantSelect = vs;
+      break;
+    } catch (e) {
+      console.warn('Variant select candidate failed to build:', vs, e?.message || e);
+    }
+  }
+  // If none built above, fall back to selecting products without variant/detail projection
+  if (!productsQuery) {
+    productsQuery = supabase.from('products').select(`${baseSelect}`).order('created_at', { ascending: false });
+    usedVariantSelect = null;
   }
 
-  let total = null;
+  // Apply all filters to the query
+  productsQuery = applyFilters(productsQuery);
+  total = null;
   try {
-    // first attempt count with variants+ratings; if the relation doesn't exist, retry without ratings
-    const { error: countErr, count } = await productsQuery.select('id', { count: 'exact', head: true });
-    if (countErr) {
-      console.warn('Count with variants/ratings failed, retrying without ratings relation', countErr.message || countErr);
-  // fallback: keep product_variants but drop product_ratings (ratings table often missing in some environments)
-  productsQuery = supabase.from('products').select(`${baseSelect}, product_variants(id,name,images,price_in_cents,price_formatted)`).order('created_at', { ascending: false });
-      const { error: cErr2, count: c2 } = await productsQuery.select('id', { count: 'exact', head: true });
-      if (cErr2) {
-        console.warn('Failed to retrieve products count (fallback)', cErr2);
-      } else {
-        total = c2 || 0;
+    // Attempt count; if it errors due to unknown column in relation projection, retry with alternative variant selects
+    let countAttempt = await productsQuery.select('id', { count: 'exact', head: true });
+    let countErr = countAttempt.error;
+    let count = countAttempt.count;
+    if (countErr && (String(countErr.message).includes('does not exist') || countErr.code === '42703')) {
+      // try alternative variant selects
+      let succeeded = false;
+      for (const vs of variantSelectCandidates) {
+        try {
+          let altQuery = tryBuildQuery(vs, true);
+          altQuery = applyFilters(altQuery);
+          const res = await altQuery.select('id', { count: 'exact', head: true });
+          if (!res.error) {
+            count = res.count; countErr = null; usedVariantSelect = vs; succeeded = true; break;
+          }
+        } catch (e) {
+          // ignore and try next
+        }
       }
+      if (!succeeded) {
+        // try without ratings
+        for (const vs of variantSelectCandidates) {
+          try {
+            let altQuery = tryBuildQuery(vs, false);
+            altQuery = applyFilters(altQuery);
+            const res = await altQuery.select('id', { count: 'exact', head: true });
+            if (!res.error) {
+              count = res.count; countErr = null; usedVariantSelect = vs; break;
+            }
+          } catch (e) {}
+        }
+      }
+      if (countErr) {
+        console.warn('Count with variants/ratings failed, and fallback attempts did not succeed', countErr.message || countErr);
+      } else {
+        total = count || 0;
+      }
+    } else if (countErr) {
+      console.warn('Count query failed', countErr);
     } else {
       total = count || 0;
     }
@@ -193,7 +281,39 @@ export async function getProducts(options = {}) {
   const end = pg * per - 1;
   productsQuery = productsQuery.range(start, end);
 
-  const { data, error } = await productsQuery;
+  // Execute the final products query. If it fails due to column mismatch, try alternative variant selects.
+  let data, error;
+  try {
+    const res = await productsQuery;
+    data = res.data; error = res.error;
+    if (error && (String(error.message).includes('does not exist') || error.code === '42703')) {
+      // try alternatives
+      let succeeded = false;
+      for (const vs of variantSelectCandidates) {
+        try {
+          let altQuery = tryBuildQuery(vs, true);
+          altQuery = applyFilters(altQuery);
+          altQuery = altQuery.range(start, end);
+          const r2 = await altQuery;
+          if (!r2.error) { data = r2.data; error = null; usedVariantSelect = vs; succeeded = true; break; }
+        } catch (e) {}
+      }
+      if (!succeeded) {
+        for (const vs of variantSelectCandidates) {
+          try {
+            let altQuery = tryBuildQuery(vs, false);
+            altQuery = applyFilters(altQuery);
+            altQuery = altQuery.range(start, end);
+            const r2 = await altQuery;
+            if (!r2.error) { data = r2.data; error = null; usedVariantSelect = vs; break; }
+          } catch (e) {}
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Error executing products query:', e);
+    return { products: [], total: total ?? 0 };
+  }
 
   if (error) {
     console.error('Error fetching products:', error);
@@ -220,77 +340,111 @@ export async function getProducts(options = {}) {
     return p;
   });
 
+  if (usedVariantSelect) console.debug('Used variant select:', usedVariantSelect);
+
   return { products, total: total ?? (Array.isArray(products) ? products.length : 0) };
 }
 
 export async function getVendors() {
+  console.log('[getVendors] Starting...');
+  
   if (!supabase) {
-    console.warn('Supabase not initialized, returning empty vendors array');
+    console.error('[getVendors] Supabase not initialized!');
     return [];
   }
+  
   try {
-    // Try vendor query including vendor_ratings relation. If the relation/table is missing
-    // we retry without it so the vendor listing still works.
-    let data, error;
-    try {
-      const res = await supabase
-        .from('vendors')
-        .select(`
-          id, 
-          owner_id, 
-          business_name, 
-          slug, 
-          description, 
-          created_at, 
-          products!products_vendor_id_fkey(id, title, slug, description, base_price, is_published, image_url, images, gallery_images),
-          profile:profiles(avatar_url),
-          vendor_ratings(*)
-        `)
-        .order('business_name', { ascending: true });
-      data = res.data; error = res.error;
-    } catch (err) {
-      console.warn('Vendor query with ratings failed, retrying without vendor_ratings:', err?.message || err);
-      const res2 = await supabase
-        .from('vendors')
-        .select(`
-          id, 
-          owner_id, 
-          business_name, 
-          slug, 
-          description, 
-          created_at, 
-          products!products_vendor_id_fkey(id, title, slug, description, base_price, is_published, image_url, images, gallery_images),
-          profile:profiles(avatar_url)
-        `)
-        .order('business_name', { ascending: true });
-      data = res2.data; error = res2.error;
-    }
-
-    if (error) {
-      console.error('Error fetching vendors:', error);
+    console.log('[getVendors] Fetching vendors from database...');
+    
+    // Fetch vendors - simplified query
+    const res = await supabase
+      .from('vendors')
+      .select('id, owner_id, name, store_name, slug, description, created_at')
+      .order('name', { ascending: true });
+    
+    if (res.error) {
+      console.error('[getVendors] Error fetching vendors:', res.error);
       return [];
     }
 
-    const mapped = (data || []).map(v => {
+    const vendorsData = res.data || [];
+    console.log('[getVendors] Got', vendorsData.length, 'vendors');
+    
+    if (vendorsData.length === 0) {
+      console.warn('[getVendors] No vendors found');
+      return [];
+    }
+
+    // Fetch products for each vendor
+    console.log('[getVendors] Fetching products for vendors...');
+    const vendorsWithProducts = await Promise.all(
+      vendorsData.map(async (vendor) => {
+        try {
+          const { data: products, error: prodError } = await supabase
+            .from('products')
+            .select('id, title, base_price, image_url, gallery_images, is_published')
+            .eq('vendor_id', vendor.id);
+          
+          if (prodError) {
+            console.warn(`[getVendors] Error fetching products for vendor ${vendor.id}:`, prodError);
+            return { ...vendor, products: [] };
+          }
+          
+          console.log(`[getVendors] Got ${products?.length || 0} products for vendor ${vendor.store_name}`);
+          return { ...vendor, products: products || [] };
+        } catch (err) {
+          console.error(`[getVendors] Exception fetching products for vendor ${vendor.id}:`, err);
+          return { ...vendor, products: [] };
+        }
+      })
+    );
+
+    // Fetch avatars
+    console.log('[getVendors] Fetching avatars...');
+    const ownerIds = vendorsWithProducts.map(v => v.owner_id).filter(Boolean);
+    let profilesMap = {};
+    
+    if (ownerIds.length > 0) {
+      try {
+        const { data: profiles, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, avatar_url')
+          .in('id', ownerIds);
+        
+        if (profileError) {
+          console.warn('[getVendors] Error fetching profiles:', profileError);
+        } else if (profiles) {
+          profilesMap = profiles.reduce((acc, p) => {
+            acc[p.id] = p.avatar_url;
+            return acc;
+          }, {});
+          console.log('[getVendors] Got', profiles.length, 'avatars');
+        }
+      } catch (err) {
+        console.warn('[getVendors] Exception fetching avatars:', err);
+      }
+    }
+
+    // Map vendors to final format
+    const mapped = vendorsWithProducts.map(v => {
       const prods = v.products || [];
       const published = prods.filter(p => p.is_published !== false);
       const featured = published.length ? published[0] : (prods[0] || null);
       const featured_product = featured ? {
         id: featured.id,
         title: featured.title,
-        image: featured.image_url || (featured.images && featured.images[0]) || (featured.gallery_images && featured.gallery_images[0]),
+        image: featured.image_url || (featured.gallery_images && featured.gallery_images[0]),
         price: formatCurrency(Number(featured.base_price || 0))
       } : null;
-      const rating = v.vendor_ratings?.[0];
 
       return {
         id: v.id,
         owner_id: v.owner_id,
-        name: v.business_name || v.slug,
-        store_name: v.business_name || v.slug,
+        name: v.store_name || v.name || v.slug,
+        store_name: v.store_name || v.name || v.slug,
         slug: v.slug,
         description: v.description || '',
-        avatar: v.profile?.avatar_url,
+        avatar: profilesMap[v.owner_id] || null,
         cover_url: null,
         website: null,
         location: null,
@@ -298,14 +452,15 @@ export async function getVendors() {
         created_at: v.created_at,
         featured_product,
         categories: [],
-        rating: rating?.avg_rating,
+        rating: undefined,
         total_products: prods.length || 0
       };
     });
 
+    console.log('[getVendors] Returning', mapped.length, 'vendors');
     return mapped;
   } catch (err) {
-    console.error('Failed to load vendors', err);
+    console.error('[getVendors] Exception:', err);
     return [];
   }
 }
@@ -320,6 +475,31 @@ export async function getCategories() {
   if (error) {
     console.error('Error fetching categories:', error);
     return [];
+  }
+
+  // If categories table is empty, derive category names from product metadata to avoid a blank dropdown
+  if (!data || data.length === 0) {
+    try {
+      const { data: products } = await supabase.from('products').select('id, title, category_id, metadata');
+      if (products && products.length > 0) {
+        const names = new Map();
+        for (const p of products) {
+          // Prefer stored category text, then metadata.category
+          let name = (p?.metadata && (p.metadata.category || p.metadata?.category)) || null;
+          if (!name) continue;
+          name = String(name).trim();
+          if (!names.has(name)) {
+            const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+            names.set(name, { id: slug, name, slug });
+          }
+        }
+        if (names.size > 0) {
+          return Array.from(names.values());
+        }
+      }
+    } catch (e) {
+      console.warn('Deriving categories from products failed', e?.message || e);
+    }
   }
 
   return data || [];
@@ -373,18 +553,47 @@ export async function deleteProduct(productId) {
   return true;
 }
 
-export async function getProductById(productId) {
+export async function getProductById(productIdOrSlug) {
   if (!supabase) {
     console.warn('Supabase not initialized, returning null');
     return null;
   }
-  const { data, error } = await supabase.from('products').select('*, product_variants(*)').eq('id', productId).single();
+  console.debug('[getProductById] param:', productIdOrSlug);
+  // Use shared helper to attempt multiple variant-select shapes (handles schema differences)
+  let data = null;
+  let error = null;
+
+  const resId = await selectProductWithVariants(supabase, 'id', productIdOrSlug);
+  if (resId.error) {
+    console.warn('[getProductById] variant-select by id failed:', resId.error?.message || resId.error);
+    try {
+      const r = await supabase.from('products').select('*').eq('id', productIdOrSlug).maybeSingle();
+      data = r.data; error = r.error;
+    } catch (e) { error = e; }
+  } else {
+    data = resId.data; if (resId.used) console.debug('[getProductById] used variant select:', resId.used);
+  }
+
+  if (!data) {
+    console.debug(`[getProductById] Not found by id, trying slug: ${productIdOrSlug}`);
+    const resSlug = await selectProductWithVariants(supabase, 'slug', productIdOrSlug);
+    if (resSlug.error) {
+      console.warn('[getProductById] variant-select by slug failed:', resSlug.error?.message || resSlug.error);
+      try {
+        const r2 = await supabase.from('products').select('*').eq('slug', productIdOrSlug).maybeSingle();
+        data = r2.data; error = r2.error;
+      } catch (e) { error = e; }
+    } else {
+      data = resSlug.data; if (resSlug.used) console.debug('[getProductById] used variant select:', resSlug.used);
+    }
+  }
 
   if (error) {
-    console.error(`Error fetching product with id ${productId}:`, error);
+    console.error(`[getProductById] Error fetching product with id/slug ${productIdOrSlug}:`, error);
     return null;
   }
 
+  console.debug('[getProductById] result:', data);
   return data;
 }
 

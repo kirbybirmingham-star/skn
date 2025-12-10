@@ -13,11 +13,32 @@ if (!supabaseUrl || !supabaseKey) { console.error('Missing SUPABASE env'); proce
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function main() {
-  const { data, error } = await supabase
-    .from('products')
-    .select('id, title, images, gallery_images, product_variants(id, name, images)')
-    .limit(5);
-  if (error) { console.error('Fetch failed:', error); process.exit(1); }
+  const variantSelectCandidates = [
+    'product_variants(id, name, images)',
+    'product_variants(id, title, images)',
+    'product_variants(*)'
+  ];
+
+  let data = null;
+  let used = null;
+  for (const vs of variantSelectCandidates) {
+    try {
+      const res = await supabase.from('products').select(`id, title, images, gallery_images, ${vs}`).limit(5);
+      if (!res.error) {
+        data = res.data; used = vs; break;
+      }
+      const msg = String(res.error?.message || '');
+      if (msg.includes('does not exist') || msg.includes('Could not find a relationship') || msg.includes('column')) {
+        continue;
+      } else {
+        console.error('Fetch failed:', res.error); process.exit(1);
+      }
+    } catch (e) {
+      // try next
+    }
+  }
+  if (!data) { console.error('All variant select candidates failed'); process.exit(1); }
+  console.log('Used variant select:', used);
 
   const mapped = data.map(p => {
     if (Array.isArray(p.product_variants) && Array.isArray(p.images) && p.images.length > 0) {

@@ -1,7 +1,8 @@
-import { supabase } from '../lib/customSupabaseClient';
+import { supabase } from '../lib/customSupabaseClient.js';
+import { selectProductWithVariants } from '../lib/variantSelectHelper.js';
 
 // PayPal API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) || process.env.VITE_API_URL || 'http://localhost:3001';
 
 // PayPal config will be handled by the backend
 const API_ENDPOINTS = {
@@ -124,7 +125,7 @@ export async function getProducts(options = {}) {
     return { products: [], total: 0 };
   }
 
-  const { sellerId, categoryId, searchQuery, priceRange, page = 1, perPage = 24 } = options;
+  const { sellerId, categoryId, searchQuery, priceRange, page = 1, perPage = 24, sortBy = 'newest' } = options;
 
   const per = Number.isInteger(perPage) ? perPage : 24;
   const pg = Math.max(1, parseInt(page, 10) || 1);
@@ -135,17 +136,57 @@ export async function getProducts(options = {}) {
   let query = supabase
     .from('vendor_products')
     .select('*', { count: 'exact' })
-    .order('created_at', { ascending: false })
     .range(start, end);
+
+  // Apply sort-by param
+  const sb = String(sortBy || 'newest').toLowerCase();
+  switch (sb) {
+    case 'oldest': query = query.order('created_at', { ascending: true }); break;
+    // price sorts are applied client-side for variant/based price consistency
+    case 'title_asc': query = query.order('title', { ascending: true }); break;
+    case 'title_desc': query = query.order('title', { ascending: false }); break;
+    case 'newest':
+    default:
+      query = query.order('created_at', { ascending: false });
+      break;
+  }
 
   // Add filters if they are provided
   if (sellerId) {
     query = query.eq('vendor_id', sellerId);
   }
   if (categoryId) {
-    query = query.eq('category_id', categoryId);
+    const cid = Number.isInteger(Number(categoryId)) ? Number(categoryId) : categoryId;
+    query = query.eq('category_id', cid);
+  } else if (options.categorySlug) {
+    const slug = String(options.categorySlug).trim();
+    // metadata->>category is the Postgres JSON extract, use ilike for case-insensitive match
+    query = query.or(`metadata->>category.ilike.%${slug}%,title.ilike.%${slug}%`);
   }
-  // Note: Add other filters like searchQuery and priceRange here if needed
+  
+  // Add search query filter
+  if (searchQuery && String(searchQuery).trim().length > 0) {
+    const searchQueryStr = String(searchQuery).trim();
+    query = query.or(`title.ilike.%${searchQueryStr}%,description.ilike.%${searchQueryStr}%`);
+  }
+  
+  // Add price range filter
+  if (priceRange && priceRange !== 'all') {
+    const pr = String(priceRange).toLowerCase();
+    if (pr.startsWith('under')) {
+      const max = parseInt(pr.replace(/[^0-9]/g, ''), 10) * 100;
+      query = query.lte('base_price', max);
+    } else if (pr.startsWith('over')) {
+      const min = parseInt(pr.replace(/[^0-9]/g, ''), 10) * 100;
+      query = query.gte('base_price', min);
+    } else if (pr.includes('-')) {
+      const parts = pr.split('-').map(p => parseInt(p.replace(/[^0-9]/g, ''), 10));
+      if (parts.length === 2) {
+        query = query.gte('base_price', parts[0] * 100);
+        query = query.lte('base_price', parts[1] * 100);
+      }
+    }
+  }
 
   const { data, error, count } = await query;
 
@@ -154,17 +195,70 @@ export async function getProducts(options = {}) {
     return { products: [], total: 0 };
   }
 
+  // Helper: resolve image references (path or full url) to a public URL
+  const resolveImageRef = (ref) => {
+    if (!ref) return null;
+    // If it's already a full URL, return as-is
+    if (typeof ref === 'string' && (ref.startsWith('http') || ref.includes('/storage/v1/object/public/'))) return ref;
+    // If it's an array of paths/urls, resolve each
+    if (Array.isArray(ref)) {
+      const buckets = ['skn-bridge-assets', 'listings-images', 'product-images'];
+      return ref.map(r => {
+        if (!r) return null;
+        if (typeof r === 'string' && (r.startsWith('http') || r.includes('/storage/v1/object/public/'))) return r;
+        for (const b of buckets) {
+          try {
+            const res = supabase.storage.from(b).getPublicUrl(r) || {};
+            const publicUrl = res?.data?.publicUrl || (res && res.publicUrl);
+            if (publicUrl) return publicUrl;
+          } catch (e) {
+            // ignore and try next
+          }
+        }
+        return r;
+      }).filter(Boolean);
+    }
+
+    // Single path string: try common buckets
+    if (typeof ref === 'string') {
+      const buckets = ['skn-bridge-assets', 'listings-images', 'product-images'];
+      for (const b of buckets) {
+        try {
+          const res = supabase.storage.from(b).getPublicUrl(ref) || {};
+          const publicUrl = res?.data?.publicUrl || (res && res.publicUrl);
+          if (publicUrl) return publicUrl;
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
+    return ref;
+  };
+
   // Post-process: ensure variant images exist so UI can resolve a thumbnail.
   const products = (data || []).map(p => {
     try {
-      if (Array.isArray(p.product_variants) && Array.isArray(p.images) && p.images.length > 0) {
+      // Normalize arrays/strings to public URLs when possible
+      if (Array.isArray(p.images) && p.images.length > 0) {
+        p.images = resolveImageRef(p.images);
+      }
+      if (Array.isArray(p.gallery_images) && p.gallery_images.length > 0) {
+        p.gallery_images = resolveImageRef(p.gallery_images);
+      }
+
+      if (Array.isArray(p.product_variants)) {
         p.product_variants = p.product_variants.map(v => {
           if (!v) return v;
           if (!v.images || (Array.isArray(v.images) && v.images.length === 0)) {
-            return { ...v, images: p.images };
+            // copy product-level images into variant if missing
+            return { ...v, images: p.images || [] };
           }
-          return v;
+          return { ...v, images: resolveImageRef(v.images) };
         });
+      }
+
+      if (p.image_url && typeof p.image_url === 'string') {
+        p.image_url = resolveImageRef(p.image_url) || p.image_url;
       }
 
       if (!p.image_url) {
@@ -198,15 +292,14 @@ export async function getVendors() {
         .select(`
           id, 
           owner_id, 
-          name:business_name, 
+          name, 
           slug, 
           description, 
           created_at, 
-          products!products_vendor_id_fkey(id, title, slug, description, base_price, is_published, image_url, images, gallery_images),
-          profile:profiles(avatar_url),
+          products!products_vendor_id_fkey(id, title, slug, description, base_price, is_published, image_url, gallery_images),
           vendor_ratings(*)
         `)
-        .order('business_name', { ascending: true });
+        .order('name', { ascending: true });
       data = res.data; error = res.error;
     } catch (err) {
       console.warn('Vendor query with ratings failed, retrying without vendor_ratings:', err?.message || err);
@@ -215,20 +308,39 @@ export async function getVendors() {
         .select(`
           id, 
           owner_id, 
-          name:business_name, 
+          name, 
           slug, 
           description, 
           created_at, 
-          products!products_vendor_id_fkey(id, title, slug, description, base_price, is_published, image_url, images, gallery_images),
-          profile:profiles(avatar_url)
+          products!products_vendor_id_fkey(id, title, slug, description, base_price, is_published, image_url, gallery_images)
         `)
-        .order('business_name', { ascending: true });
+        .order('name', { ascending: true });
       data = res2.data; error = res2.error;
     }
 
     if (error) {
       console.error('Error fetching vendors:', error);
       return [];
+    }
+
+    // Fetch profile avatars separately by owner_id to avoid relying on foreign key relationships
+    const ownerIds = (data || []).map(v => v.owner_id).filter(Boolean);
+    let profilesMap = {};
+    if (ownerIds.length > 0) {
+      try {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, avatar_url')
+          .in('id', ownerIds);
+        if (profiles) {
+          profilesMap = profiles.reduce((acc, p) => {
+            acc[p.id] = p.avatar_url;
+            return acc;
+          }, {});
+        }
+      } catch (err) {
+        console.warn('Failed to fetch profile avatars:', err?.message || err);
+      }
     }
 
     const mapped = (data || []).map(v => {
@@ -250,7 +362,7 @@ export async function getVendors() {
         store_name: v.name || v.slug,
         slug: v.slug,
         description: v.description || '',
-        avatar: v.profile?.avatar_url,
+        avatar: profilesMap[v.owner_id] || null,
         cover_url: null,
         website: null,
         location: null,
@@ -280,6 +392,28 @@ export async function getCategories() {
   if (error) {
     console.error('Error fetching categories:', error);
     return [];
+  }
+
+  if (!data || data.length === 0) {
+    try {
+      const { data: products } = await supabase.from('products').select('id, title, category_id, metadata');
+      if (products && products.length > 0) {
+        const names = new Map();
+        for (const p of products) {
+          let name = (p && p.metadata && (p.metadata.category || p.metadata?.category)) || null;
+          if (!name) continue;
+          name = String(name).trim();
+          const titleCased = name.split(/[-_\s]+/).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
+          if (!names.has(name)) {
+            const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+            names.set(name, { id: slug, name: titleCased, slug });
+          }
+        }
+        if (names.size > 0) return Array.from(names.values());
+      }
+    } catch (e) {
+      console.warn('Deriving categories from products failed', e?.message || e);
+    }
   }
 
   return data || [];
@@ -333,18 +467,49 @@ export async function deleteProduct(productId) {
   return true;
 }
 
-export async function getProductById(productId) {
+export async function getProductById(productIdOrSlug) {
   if (!supabase) {
     console.warn('Supabase not initialized, returning null');
     return null;
   }
-  const { data, error } = await supabase.from('products').select('*, product_variants(*)').eq('id', productId).single();
+  console.debug('[getProductById] param:', productIdOrSlug);
+  // Use helper to try multiple variant-select shapes and include ratings when possible
+  let data = null;
+  let error = null;
+
+  const resId = await selectProductWithVariants(supabase, 'id', productIdOrSlug);
+  if (resId.error) {
+    // Fallback to product-only select if helper failed due to relation/column problems
+    console.warn('[getProductById] variant-select by id failed:', resId.error?.message || resId.error);
+    try {
+      const r = await supabase.from('products').select('*').eq('id', productIdOrSlug).maybeSingle();
+      data = r.data; error = r.error;
+    } catch (e) { error = e; }
+  } else {
+    data = resId.data; if (resId.used) console.debug('[getProductById] used variant select:', resId.used);
+  }
+
+  // If not found by id, try by slug with same approach
+  if (!data) {
+    console.debug(`[getProductById] Not found by id, trying slug: ${productIdOrSlug}`);
+    const resSlug = await selectProductWithVariants(supabase, 'slug', productIdOrSlug);
+    if (resSlug.error) {
+      console.warn('[getProductById] variant-select by slug failed:', resSlug.error?.message || resSlug.error);
+      try {
+        const r2 = await supabase.from('products').select('*').eq('slug', productIdOrSlug).maybeSingle();
+        data = r2.data; error = r2.error;
+      } catch (e) { error = e; }
+    } else {
+      data = resSlug.data; if (resSlug.used) console.debug('[getProductById] used variant select:', resSlug.used);
+    }
+  }
 
   if (error) {
-    console.error(`Error fetching product with id ${productId}:`, error);
+    console.error(`[getProductById] Error fetching product with id/slug ${productIdOrSlug}:`, error);
     return null;
   }
 
+  console.debug('[getProductById] result:', data);
   return data;
 }
 
@@ -356,7 +521,7 @@ export async function getVendorById(vendorId) {
   try {
     const { data, error } = await supabase
       .from('vendors')
-      .select('id, owner_id, name:business_name, slug, description, created_at')
+      .select('id, owner_id, name, slug, description, created_at')
       .eq('id', vendorId)
       .single();
 
@@ -410,7 +575,7 @@ export async function getVendorByOwner(ownerId) {
   try {
     const { data, error } = await supabase
       .from('vendors')
-      .select('id, owner_id, name:business_name, slug, description, created_at')
+      .select('id, owner_id, name, slug, description, created_at')
       .eq('owner_id', ownerId)
       .single();
 

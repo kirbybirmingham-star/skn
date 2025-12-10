@@ -1,4 +1,4 @@
-import { supabase } from './customSupabaseClient';
+import { supabase } from './customSupabaseClient.js';
 
 /**
  * Uploads a file to Supabase Storage

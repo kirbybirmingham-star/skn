@@ -4,13 +4,18 @@ import { getProducts, formatCurrency } from '@/api/EcommerceApi';
 import MarketplaceProductCard from './products/MarketplaceProductCard';
 
 
-const ProductsList = ({ sellerId = null, categoryId = null, searchQuery = '', priceRange = 'all' }) => {
+const ProductsList = ({ sellerId = null, categoryId = null, categorySlug = null, searchQuery = '', priceRange = 'all', sortBy = 'newest' }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [perPage] = useState(24);
   const [total, setTotal] = useState(null);
+
+  // When filters or sort change, reset page to 1
+  useEffect(() => {
+    setPage(1);
+  }, [sellerId, categoryId, categorySlug, searchQuery, priceRange, sortBy]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -31,7 +36,7 @@ const ProductsList = ({ sellerId = null, categoryId = null, searchQuery = '', pr
         };
 
         const prToken = normalizePriceRange(priceRange);
-        const resp = await getProducts({ sellerId, categoryId, searchQuery, priceRange: prToken, page, perPage });
+        const resp = await getProducts({ sellerId, categoryId, categorySlug, searchQuery, priceRange: prToken, page, perPage, sortBy });
 
         if (!resp.products || resp.products.length === 0) {
           setProducts([]);
@@ -39,7 +44,84 @@ const ProductsList = ({ sellerId = null, categoryId = null, searchQuery = '', pr
           return;
         }
 
-        setProducts(resp.products);
+        let results = (resp.products || []).map(p => ({ ...p }));
+        // Compute effective price for each product (base_price or min variant price)
+        results = results.map(p => {
+          const base = Number(p.base_price || p.base_price_in_cents || 0);
+          let minVariant = null;
+          if (Array.isArray(p.product_variants)) {
+            for (const v of p.product_variants) {
+              const vPrice = Number(v?.price || v?.price_in_cents || 0);
+              if (vPrice > 0 && (minVariant === null || vPrice < minVariant)) minVariant = vPrice;
+            }
+          }
+          const effective = (minVariant !== null && minVariant > 0) ? minVariant : base;
+          return { ...p, __effective_price: Number(effective || 0) };
+        });
+
+        // Client-side price range filtering using __effective_price
+        if (prToken && prToken !== 'all') {
+          const pr = String(prToken).toLowerCase();
+          let min = null, max = null;
+          if (pr.startsWith('under')) {
+            const num = parseInt(pr.replace(/[^0-9]/g, ''), 10);
+            min = 0;
+            max = isNaN(num) ? null : num * 100;
+          } else if (pr.startsWith('over')) {
+            const num = parseInt(pr.replace(/[^0-9]/g, ''), 10);
+            min = isNaN(num) ? null : num * 100;
+            max = null;
+          } else if (pr.includes('-')) {
+            const parts = pr.match(/(\d+)/g);
+            if (parts && parts.length >= 2) {
+              min = parseInt(parts[0], 10) * 100;
+              max = parseInt(parts[1], 10) * 100;
+            }
+          }
+          if (min !== null || max !== null) {
+            results = results.filter(p => {
+              const price = Number(p.__effective_price || 0);
+              if (min !== null && price < min) return false;
+              if (max !== null && price > max) return false;
+              return true;
+            });
+          }
+        }
+
+        // Client-side sorting by rating and price
+        const s = String(sortBy).toLowerCase();
+        if (s === 'rating_desc' || s === 'rating_asc') {
+          results = results.map(p => {
+            const ratings = p.product_ratings || [];
+            const avg = ratings.length ? (ratings.reduce((sum, r) => sum + (r.rating || 0), 0) / ratings.length) : 0;
+            return { ...p, __avg_rating: avg };
+          });
+          results.sort((a, b) => {
+            const diff = (b.__avg_rating || 0) - (a.__avg_rating || 0);
+            return s === 'rating_desc' ? diff : -diff;
+          });
+        } else if (s === 'price_asc' || s === 'price_desc') {
+          results.sort((a, b) => {
+            const diff = (a.__effective_price || 0) - (b.__effective_price || 0);
+            return s === 'price_asc' ? diff : -diff;
+          });
+        }
+
+        // Client-side category slug filter: ensure products using metadata-based categories are included
+        // When categorySlug is not set (showing 'all'), include all products including those with no category
+        if (categorySlug) {
+          const slug = String(categorySlug).toLowerCase();
+          results = results.filter(p => {
+            if (p.category_id && String(p.category_id) === String(categoryId)) return true;
+            // metadata may have a category field
+            const metaCat = p?.metadata?.category || p?.metadata?.subcategory || null;
+            if (metaCat && String(metaCat).toLowerCase().includes(slug)) return true;
+            if (String(p?.title || '').toLowerCase().includes(slug)) return true;
+            return String(p?.slug || '').toLowerCase().includes(slug);
+          });
+        }
+        // When no category filter is applied (categorySlug is null), include all products including uncategorized ones
+        setProducts(results);
         setTotal(resp.total ?? null);
       } catch (err) {
         setError(err.message || 'Failed to load products');
@@ -49,7 +131,7 @@ const ProductsList = ({ sellerId = null, categoryId = null, searchQuery = '', pr
     };
 
     fetchProducts();
-  }, [sellerId, categoryId, searchQuery, priceRange, page]);
+  }, [sellerId, categoryId, categorySlug, searchQuery, priceRange, page, sortBy]);
 
   if (loading) {
     return (

@@ -30,11 +30,14 @@ const MarketplaceProductCard = ({ product, index }) => {
   const navigate = useNavigate();
   const [imgLoaded, setImgLoaded] = useState(false);
 
-  // Debug: Log the entire product object
-  console.log('MarketplaceProductCard received product:', product);
-
-  // Prefer variant price (first variant) if present, then product.base_price.
+  // If __effective_price was computed by ProductsList for filtering/sorting, use it; otherwise compute from variants/base_price
   const displayPrice = (() => {
+    // Prefer __effective_price (from ProductsList client-side filtering/sorting) which is in cents
+    if (product?.__effective_price != null && !Number.isNaN(Number(product.__effective_price))) {
+      const cents = Number(product.__effective_price);
+      return formatPrice(cents, product?.currency || 'USD');
+    }
+
     const firstVariant = Array.isArray(product?.product_variants) && product.product_variants.length > 0
       ? product.product_variants[0]
       : null;
