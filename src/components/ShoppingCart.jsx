@@ -70,26 +70,40 @@ const ShoppingCart = ({ isCartOpen, setIsCartOpen }) => {
                   <p>Your cart is empty.</p>
                 </div>
               ) : (
-                cartItems.map(item => (
+                cartItems.map((item, index) => {
+                  // Defensive: handle items without variant (old cart structure)
+                  if (!item.variant) {
+                    console.warn(`Cart item ${index} missing variant:`, item);
+                    return null;
+                  }
+                  
+                  const priceInCents = item.variant?.sale_price_in_cents ?? item.variant?.price_in_cents ?? item.product?.base_price;
+                  const priceFormatted = new Intl.NumberFormat('en-US', { 
+                    style: 'currency', 
+                    currency: 'USD' 
+                  }).format((priceInCents ?? 0) / 100);
+                  
+                  return (
                   <div key={item.variant.id} className="flex items-center gap-4 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                    <img src={item.product.image} alt={item.product.title} className="w-20 h-20 object-cover rounded-md" />
+                    <img src={item.product?.image || item.product?.image_url} alt={item.product?.title} className="w-20 h-20 object-cover rounded-md" />
                     <div className="flex-grow">
-                      <h3 className="font-semibold text-slate-800">{item.product.title}</h3>
-                      <p className="text-sm text-slate-600">{item.variant.title}</p>
+                      <h3 className="font-semibold text-slate-800">{item.product?.title}</h3>
+                      <p className="text-sm text-slate-600">{item.variant?.title}</p>
                       <p className="text-sm text-blue-600 font-bold">
-                        {item.variant.sale_price_formatted || item.variant.price_formatted}
+                        {priceFormatted}
                       </p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <div className="flex items-center border border-slate-300 rounded-md">
-                        <Button onClick={() => handleUpdateQuantity(item.variant.id, item.quantity - 1)} size="sm" variant="ghost" className="px-2 text-slate-600 hover:bg-slate-200">-</Button>
+                        <Button onClick={() => handleUpdateQuantity(item.variant.id, item.quantity - 1)} size="sm" variant="ghost" className="px-2 text-slate-600 hover:bg-slate-200">−</Button>
                         <span className="px-2 text-slate-800">{item.quantity}</span>
                         <Button onClick={() => handleUpdateQuantity(item.variant.id, item.quantity + 1, item.variant.inventory_quantity, item.variant.manage_inventory)} size="sm" variant="ghost" className="px-2 text-slate-600 hover:bg-slate-200">+</Button>
                       </div>
                       <Button onClick={() => removeFromCart(item.variant.id)} size="sm" variant="ghost" className="text-red-500 hover:text-red-600 text-xs">Remove</Button>
                     </div>
                   </div>
-                ))
+                  );
+                }).filter(Boolean)
               )}
             </div>
             {cartItems.length > 0 && (

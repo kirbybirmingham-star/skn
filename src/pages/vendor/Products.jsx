@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
-import { getVendorByOwner, listProductsByVendor, createProduct, updateProduct, deleteProduct } from '@/api/EcommerceApi';
+import { getVendorByOwner, listProductsByVendor, createProduct, updateProduct, deleteProduct, formatCurrency } from '@/api/EcommerceApi';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import ProductForm from '@/components/products/ProductForm';
@@ -63,12 +63,12 @@ const VendorProducts = () => {
     try {
       if (editingId) {
         // normalize variants: ensure ids and formatted price
-        const variantsToSave = (form.variants && form.variants.length) ? form.variants.map((v, i) => ({ id: v.id || `${editingId}-v${i+1}`, title: v.title || `Variant ${i+1}`, price_in_cents: Number(v.price_in_cents || 0), price_formatted: `$${((Number(v.price_in_cents)||0)/100).toFixed(2)}`, inventory_quantity: Number(v.inventory_quantity || 0) })) : [{ id: `${editingId}-v1`, title: 'Default', price_in_cents: form.price_in_cents, price_formatted: `$${(form.price_in_cents/100).toFixed(2)}`, inventory_quantity: form.inventory_quantity }];
+        const variantsToSave = (form.variants && form.variants.length) ? form.variants.map((v, i) => ({ id: v.id || `${editingId}-v${i+1}`, title: v.title || `Variant ${i+1}`, price_in_cents: Number(v.price_in_cents || 0), price_formatted: formatCurrency(Number(v.price_in_cents || 0)), inventory_quantity: Number(v.inventory_quantity || 0) })) : [{ id: `${editingId}-v1`, title: 'Default', price_in_cents: form.price_in_cents, price_formatted: formatCurrency(Number(form.price_in_cents || 0)), inventory_quantity: form.inventory_quantity }];
         const updated = await updateProduct(editingId, { title: form.title, description: form.description, image: form.image, category: form.category, variants: variantsToSave });
         setProducts(prev => prev.map(p => p.id === editingId ? { ...p, ...updated } : p));
         toast({ title: 'Product updated' });
       } else {
-        const variantsToSave = (form.variants && form.variants.length) ? form.variants.map((v, i) => ({ id: v.id || `${Date.now()}-v${i+1}`, title: v.title || `Variant ${i+1}`, price_in_cents: Number(v.price_in_cents || 0), price_formatted: `$${((Number(v.price_in_cents)||0)/100).toFixed(2)}`, inventory_quantity: Number(v.inventory_quantity || 0) })) : [{ id: `${Date.now()}-v1`, title: 'Default', price_in_cents: form.price_in_cents, price_formatted: `$${(form.price_in_cents/100).toFixed(2)}`, inventory_quantity: form.inventory_quantity }];
+        const variantsToSave = (form.variants && form.variants.length) ? form.variants.map((v, i) => ({ id: v.id || `${Date.now()}-v${i+1}`, title: v.title || `Variant ${i+1}`, price_in_cents: Number(v.price_in_cents || 0), price_formatted: formatCurrency(Number(v.price_in_cents || 0)), inventory_quantity: Number(v.inventory_quantity || 0) })) : [{ id: `${Date.now()}-v1`, title: 'Default', price_in_cents: form.price_in_cents, price_formatted: formatCurrency(Number(form.price_in_cents || 0)), inventory_quantity: form.inventory_quantity }];
         const p = await createProduct(vendor.id, { ...form, variants: variantsToSave });
         setProducts(prev => [p, ...prev]);
         toast({ title: 'Product created' });

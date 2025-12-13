@@ -5,38 +5,27 @@ import { productRatingsExist } from '../lib/ratingsChecker.js';
 // PayPal API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
-// PayPal config will be handled by the backend
+// API endpoints (non-PayPal)
 const API_ENDPOINTS = {
-  createOrder: `${API_BASE_URL}/api/paypal/create-order`,
-  captureOrder: `${API_BASE_URL}/api/paypal/capture-order`,
-  config: `${API_BASE_URL}/api/paypal/config`,
   reviews: `${API_BASE_URL}/api/reviews`,
 };
 
 export function formatCurrency(amountInCents, currencyInfo = { code: 'USD', symbol: '$' }) {
   const amount = typeof amountInCents === 'number' ? amountInCents / 100 : 0;
-  const symbol = (currencyInfo && currencyInfo.symbol) || '$';
-  return `${symbol}${amount.toFixed(2)}`;
-}
-
-// We'll use the backend to handle PayPal authentication
-async function checkBackendConfig() {
+  const currencyCode = (currencyInfo && currencyInfo.code) || 'USD';
   try {
-    const response = await fetch(API_ENDPOINTS.config);
-    if (!response.ok) {
-      throw new Error(`Backend config check failed: ${response.status}`);
-    }
-    const data = await response.json();
-    if (!data.clientIdPresent || !data.secretPresent) {
-      throw new Error('PayPal configuration is incomplete on the backend');
-    }
-    return true;
-  } catch (error) {
-    console.error("Backend config check failed:", error);
-    throw error;
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency: currencyCode }).format(amount);
+  } catch (e) {
+    const symbol = (currencyInfo && currencyInfo.symbol) || '$';
+    return `${symbol}${amount.toFixed(2)}`;
   }
 }
 
+/**
+ * Create a PayPal order using the PayPal Orders API
+ * This is called from the frontend PayPal button's createOrder callback
+ * Uses the PayPal Client ID (public) with the Orders API
+ */
 export async function createPayPalOrder(cartItems) {
   try {
     // Validate cart items before sending
@@ -46,73 +35,110 @@ export async function createPayPalOrder(cartItems) {
 
     // Ensure each item has required fields
     cartItems.forEach(item => {
-      if (!item?.variant?.price) {
+      if (!item?.variant?.price_in_cents) {
         throw new Error('Invalid item in cart');
       }
     });
 
-    // Send the order creation request to our backend
-    const response = await fetch(API_ENDPOINTS.createOrder, {
+    // Calculate order total for validation
+    const orderTotal = cartItems.reduce((total, item) => {
+      const price = (item.variant.sale_price_in_cents ?? item.variant.price_in_cents) / 100;
+      return total + (price * item.quantity);
+    }, 0);
+
+    if (orderTotal <= 0) {
+      throw new Error('Invalid order total');
+    }
+
+    // Call our backend to create the PayPal order securely
+    // Backend will use Client ID and Secret to authenticate with PayPal
+    const response = await fetch(`${API_BASE_URL}/api/paypal/create-order`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({ cartItems })
     });
 
-    // First get the raw text
-    const text = await response.text();
-    
-    // Try to parse as JSON
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch (e) {
-      console.error('Invalid JSON response:', text);
-      throw new Error('Invalid server response');
-    }
+    const data = await response.json();
 
     if (!response.ok) {
-      console.error('Server create-order failed:', data);
-      throw new Error(data.error || 'Failed to create order on server');
+      console.error('Backend create-order failed:', { status: response.status, body: data });
+      throw new Error(data?.error || data?.message || 'Failed to create PayPal order');
     }
 
     if (!data.id) {
       console.error('Missing order ID in response:', data);
-      throw new Error('Invalid order response from server');
+      throw new Error('Invalid order response');
     }
 
-    // Return the order id expected by the PayPal buttons
+    console.log('PayPal order created successfully:', data.id);
     return data.id;
   } catch (error) {
-    console.error("Failed to create PayPal order (client):", error);
+    console.error("Failed to create PayPal order:", error);
     throw error;
   }
 }
 
+/**
+ * Capture a PayPal order using the backend server
+ * This is called from the frontend PayPal button's onApprove callback
+ */
 export async function capturePayPalOrder(orderID) {
   try {
+    if (!orderID) {
+      throw new Error('Order ID is required');
+    }
+
+    // Call our backend to capture the payment securely
+    // Backend will use Client ID and Secret to authenticate with PayPal
     const response = await fetch(`${API_BASE_URL}/api/paypal/capture-order/${orderID}`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json"
+        'Content-Type': 'application/json',
       }
     });
 
-    // First get the raw text
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Backend capture-order failed:', { status: response.status, body: data });
+      throw new Error(data?.error || data?.message || 'Failed to capture payment');
+    }
+
+    console.log('PayPal order captured successfully:', data.id);
+    return data;
+  } catch (error) {
+    console.error("Failed to capture PayPal order:", error);
+    throw error;
+  }
+}
+
+    // Use Basic Auth with Client ID and an empty secret (public key scenario)
+    const auth = btoa(`${clientId}:`);
+    const response = await fetch(`https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderID}/capture`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${auth}`
+      }
+    });
+
     const text = await response.text();
-    
-    // Try to parse as JSON
     let data;
     try {
       data = JSON.parse(text);
     } catch (e) {
-      console.error('Invalid JSON response:', text);
-      throw new Error('Invalid server response');
+      console.error('Invalid JSON response from PayPal:', text);
+      throw new Error('Invalid response from PayPal');
     }
-    if (data.error) {
-      throw new Error(data.error.message);
+
+    if (!response.ok) {
+      console.error('PayPal capture-order failed:', { status: response.status, body: data });
+      throw new Error(data?.message || data?.error?.message || 'Failed to capture PayPal order');
     }
+
+    console.log('PayPal order captured successfully:', data.id);
     return data;
   } catch (error) {
     console.error("Failed to capture PayPal order:", error);
@@ -145,13 +171,13 @@ export async function getProducts(options = {}) {
   // We'll prefer to include product_ratings when possible; check once to avoid failing queries
   const ratingsAvailable = await productRatingsExist(supabase).catch(() => false);
   const tryBuildQuery = (variantSelect, includeRatings = true) => {
-    const relations = includeRatings ? `${variantSelect}, product_ratings(*)` : `${variantSelect}`;
+    const relations = includeRatings ? `${variantSelect}, product_ratings` : `${variantSelect}`;
     // default ordering, may be overridden later with explicit sortBy
     return supabase.from('products').select(`${baseSelect}, ${relations}`).order('created_at', { ascending: false });
   };
   
   // Helper function to apply all filters to a query
-  const applyFilters = (query) => {
+  const applyFilters = (query, opts = { applyPrice: true }) => {
     if (sellerId) query = query.eq('vendor_id', sellerId);
     if (categoryId) {
       const cid = Number.isInteger(Number(categoryId)) ? Number(categoryId) : categoryId;
@@ -167,20 +193,108 @@ export async function getProducts(options = {}) {
       query = query.or(`title.ilike.%${searchQueryStr}%,description.ilike.%${searchQueryStr}%`);
     }
 
-    if (priceRange && priceRange !== 'all') {
+    if (opts.applyPrice && priceRange && priceRange !== 'all') {
+      // We need to ensure we include products that either have a matching base_price
+      // or have variants where the variant price falls within the requested range.
       const pr = String(priceRange).toLowerCase();
-      if (pr.startsWith('under')) {
-        const max = parseInt(pr.replace(/[^0-9]/g, ''), 10) * 100;
-        query = query.lte('base_price', max);
-      } else if (pr.startsWith('over')) {
-        const min = parseInt(pr.replace(/[^0-9]/g, ''), 10) * 100;
-        query = query.gte('base_price', min);
-      } else if (pr.includes('-')) {
-        const parts = pr.split('-').map(p => parseInt(p.replace(/[^0-9]/g, ''), 10));
-        if (parts.length === 2) {
-          query = query.gte('base_price', parts[0] * 100);
-          query = query.lte('base_price', parts[1] * 100);
+      const parseRange = () => {
+        let min = null, max = null;
+        if (pr.startsWith('under')) {
+          const num = parseInt(pr.replace(/[^0-9]/g, ''), 10);
+          max = isNaN(num) ? null : num * 100;
+        } else if (pr.startsWith('over')) {
+          const num = parseInt(pr.replace(/[^0-9]/g, ''), 10);
+          min = isNaN(num) ? null : num * 100;
+        } else if (pr.includes('-')) {
+          const parts = pr.match(/(\d+)/g);
+          if (parts && parts.length >= 2) {
+            min = parseInt(parts[0], 10) * 100;
+            max = parseInt(parts[1], 10) * 100;
+          }
         }
+        return { min, max };
+      };
+      const range = parseRange();
+
+      // Build a list of product ids from product_variants that match the price range
+      // to ensure products whose pricing lives in variants are included.
+      const buildVariantProducts = async () => {
+        try {
+          let vQuery = supabase.from('product_variants').select('product_id');
+          // Filter by variant price fields that we support
+          const priceFilters = [];
+          if (range.min != null && range.max != null) {
+            // price_in_cents in range OR numeric price in dollars in range
+            priceFilters.push(`price_in_cents.gte.${range.min}`);
+            priceFilters.push(`price_in_cents.lte.${range.max}`);
+            priceFilters.push(`price.gte.${(range.min / 100)}`);
+            priceFilters.push(`price.lte.${(range.max / 100)}`);
+          } else if (range.min != null) {
+            priceFilters.push(`price_in_cents.gte.${range.min}`);
+            priceFilters.push(`price.gte.${(range.min / 100)}`);
+          } else if (range.max != null) {
+            priceFilters.push(`price_in_cents.lte.${range.max}`);
+            priceFilters.push(`price.lte.${(range.max / 100)}`);
+          }
+
+          if (priceFilters.length === 0) return [];
+
+          // join filters using OR: we can pass the or() syntax to PostgREST-like API
+          // which Supabase uses. Use comma to separate expressions.
+          const orExpr = priceFilters.join(',');
+          const res = await vQuery.or(orExpr);
+          if (res.error) return [];
+          // unique product ids
+          const ids = Array.from(new Set((res.data || []).map(r => r.product_id).filter(Boolean)));
+          return ids;
+        } catch (e) {
+          console.warn('Variant price lookup failed:', e?.message || e);
+          return [];
+        }
+      };
+
+      // We'll precompute variant product ids here and then if any are found, add an "id.in" constraint.
+      // Note: applyFilters can be used by both count and normal query builders; it's safe to run an async step here
+      // but it means productsQuery building needs to handle that case. We'll instead attach a marker property
+      // to the query to be replaced later. To keep it straightforward, if we are already inside an async function
+      // building the query, we can compute these ids synchronously via awaiting here.
+      // This function is called where supabase is available (top-level of file), so it's safe.
+      (async () => {
+        const variantIds = await buildVariantProducts();
+        if (variantIds && variantIds.length > 0) {
+          try {
+            // Combine the variantIds into the existing base_price filter logic by requiring the returned product id
+            // to be either within the base_price constraints (if specified) or present in variantIds.
+            // If base_price filters already applied above, additional 'or' statements would be required, but
+            // Supabase doesn't support mixing 'in' inside or expressions easily. So we just ensure we restrict
+            // the query to any products whose id is among variantIds OR match existing filters.
+            // Here we add a supplemental constraint: include products in variantIds, the final query will be
+            // intersection of previously applied constraints and this id set which may be more strict than desired.
+            // To avoid excluding base_price matches, if base price filters are present, perform a separate base query,
+            // but for simplicity we in this pass will add an `or` clause with `id.in` to include these variant matches.
+            const idStr = variantIds.map(id => String(id)).join(',');
+            const orExpr = `id.in.(${idStr})`;
+            try {
+              query = query.or(orExpr);
+            } catch (e) {
+              // Some Supabase clients accept or(...), but to be defensive, if this fails, fall back to in()
+              query = query.in('id', variantIds);
+            }
+          } catch (e) {
+            // ignore failures here; we'll still have base_price filter
+            console.warn('Failed to add variant id filter to products query', e?.message || e);
+          }
+        }
+      })();
+
+      // Apply the base_price constraints as before. This ensures products with base_price match are included.
+      if (range.max != null && range.min == null) {
+        query = query.lte('base_price', range.max);
+      } else if (range.min != null && range.max == null) {
+        query = query.gte('base_price', range.min);
+      } else if (range.min != null && range.max != null) {
+        query = query.gte('base_price', range.min);
+        query = query.lte('base_price', range.max);
       }
     }
     
@@ -225,12 +339,91 @@ export async function getProducts(options = {}) {
     usedVariantSelect = null;
   }
 
-  // Apply all filters to the query
-  productsQuery = applyFilters(productsQuery);
+  // If priceRange is supplied, we'll build two queries so we can include products
+  // matched by base_price or matched by variant prices. Otherwise apply filters normally.
+  let variantMatchedIds = [];
+  const parsePriceRange = (prToken) => {
+    if (!prToken) return { min: null, max: null };
+    const pr = String(prToken).toLowerCase();
+    let min = null, max = null;
+    if (pr.startsWith('under')) {
+      const num = parseInt(pr.replace(/[^0-9]/g, ''), 10);
+      max = isNaN(num) ? null : num * 100;
+    } else if (pr.startsWith('over')) {
+      const num = parseInt(pr.replace(/[^0-9]/g, ''), 10);
+      min = isNaN(num) ? null : num * 100;
+    } else if (pr.includes('-')) {
+      const parts = pr.match(/(\d+)/g);
+      if (parts && parts.length >= 2) {
+        min = parseInt(parts[0], 10) * 100;
+        max = parseInt(parts[1], 10) * 100;
+      }
+    }
+    return { min, max };
+  };
+
+  const parsedRange = parsePriceRange(priceRange);
+  if (priceRange && priceRange !== 'all') {
+    try {
+      // Query product_variants for product_id matches for this range
+      let vq = supabase.from('product_variants').select('product_id');
+      const pfs = [];
+      if (parsedRange.min != null && parsedRange.max != null) {
+        pfs.push(`price_in_cents.gte.${parsedRange.min}`);
+        pfs.push(`price_in_cents.lte.${parsedRange.max}`);
+        pfs.push(`price.gte.${(parsedRange.min / 100)}`);
+        pfs.push(`price.lte.${(parsedRange.max / 100)}`);
+      } else if (parsedRange.min != null) {
+        pfs.push(`price_in_cents.gte.${parsedRange.min}`);
+        pfs.push(`price.gte.${(parsedRange.min / 100)}`);
+      } else if (parsedRange.max != null) {
+        pfs.push(`price_in_cents.lte.${parsedRange.max}`);
+        pfs.push(`price.lte.${(parsedRange.max / 100)}`);
+      }
+      if (pfs.length > 0) {
+        try {
+          const orExpr = pfs.join(',');
+          const vr = await vq.or(orExpr);
+          if (!vr.error && Array.isArray(vr.data)) {
+            variantMatchedIds = Array.from(new Set(vr.data.map(r => r.product_id).filter(Boolean)));
+          }
+        } catch (e) {
+          console.warn('Variant price product_id lookup failed:', e?.message || e);
+        }
+      }
+    } catch (e) {
+      console.warn('Error fetching variant product ids for priceRange:', e?.message || e);
+    }
+  }
+
+  // If we have a price range and variantMatchedIds, we'll build base and variant queries separately
+  if (priceRange && priceRange !== 'all' && variantMatchedIds && variantMatchedIds.length > 0) {
+    // Build base_price query with price filter
+    const baseProductsQuery = applyFilters(tryBuildQuery(usedVariantSelect, ratingsAvailable), { applyPrice: true });
+    // Build variant products query; apply other filters but do not apply base_price here
+    const variantProductsQuery = applyFilters(tryBuildQuery(usedVariantSelect, ratingsAvailable), { applyPrice: false }).in('id', variantMatchedIds);
+    // We'll set productsQuery to a union placeholder; final execution will fetch both
+    productsQuery = { baseQuery: baseProductsQuery, variantQuery: variantProductsQuery, isUnion: true };
+  } else {
+    productsQuery = applyFilters(productsQuery);
+  }
   total = null;
   try {
     // Attempt count; if it errors due to unknown column in relation projection, retry with alternative variant selects
-    let countAttempt = await productsQuery.select('id', { count: 'exact', head: true });
+    let countAttempt = null;
+    if (productsQuery && productsQuery.isUnion) {
+      const baseCount = await productsQuery.baseQuery.select('id', { count: 'exact', head: true });
+      const variantCount = await productsQuery.variantQuery.select('id', { count: 'exact', head: true });
+      // Combine unique ids across both queries to estimate total
+      const bIdsRes = await productsQuery.baseQuery.select('id');
+      const vIdsRes = await productsQuery.variantQuery.select('id');
+      const bIds = (bIdsRes.data || []).map(r => r.id).filter(Boolean);
+      const vIds = (vIdsRes.data || []).map(r => r.id).filter(Boolean);
+      const unionIds = Array.from(new Set([...bIds, ...vIds]));
+      countAttempt = { count: unionIds.length, error: null };
+    } else {
+      countAttempt = await productsQuery.select('id', { count: 'exact', head: true });
+    }
     let countErr = countAttempt.error;
     let count = countAttempt.count;
     if (countErr && (String(countErr.message).includes('does not exist') || countErr.code === '42703')) {
@@ -279,12 +472,39 @@ export async function getProducts(options = {}) {
   const pg = Math.max(1, parseInt(page, 10) || 1);
   const start = (pg - 1) * per;
   const end = pg * per - 1;
-  productsQuery = productsQuery.range(start, end);
+  if (productsQuery && productsQuery.isUnion) {
+    productsQuery.baseQuery = productsQuery.baseQuery.range(start, end);
+    productsQuery.variantQuery = productsQuery.variantQuery.range(start, end);
+  } else {
+    productsQuery = productsQuery.range(start, end);
+  }
 
   // Execute the final products query. If it fails due to column mismatch, try alternative variant selects.
   let data, error;
   try {
-    const res = await productsQuery;
+    let res;
+    if (productsQuery && productsQuery.isUnion) {
+      // execute both
+      const [rBase, rVariant] = await Promise.all([productsQuery.baseQuery, productsQuery.variantQuery]);
+      const baseErr = rBase.error;
+      const variantErr = rVariant.error;
+      if (baseErr && variantErr && (String(baseErr.message).includes('does not exist') || baseErr.code === '42703') && (String(variantErr.message).includes('does not exist') || variantErr.code === '42703')) {
+        res = { data: [], error: baseErr || variantErr };
+      } else {
+        const baseData = rBase.data || [];
+        const varData = rVariant.data || [];
+        // merge de-dup by id
+        const merged = [];
+        const seen = new Set();
+        for (const p of baseData.concat(varData)) {
+          if (!p || !p.id) continue;
+          if (!seen.has(p.id)) { seen.add(p.id); merged.push(p); }
+        }
+        res = { data: merged, error: null };
+      }
+    } else {
+      res = await productsQuery;
+    }
     data = res.data; error = res.error;
     if (error && (String(error.message).includes('does not exist') || error.code === '42703')) {
       // try alternatives
@@ -340,9 +560,35 @@ export async function getProducts(options = {}) {
     return p;
   });
 
+  // Ensure every returned product has a normalized __effective_price (in cents)
+  const normalizeToCents = (val) => {
+    if (val == null) return 0;
+    const n = Number(val);
+    if (!Number.isFinite(n)) return 0;
+    return Number.isInteger(n) ? Math.round(n) : Math.round(n * 100);
+  };
+
+  const productsWithEffective = products.map(p => {
+    try {
+      const base = normalizeToCents(p.base_price ?? p.base_price_in_cents ?? 0);
+      let minVariant = null;
+      if (Array.isArray(p.product_variants)) {
+        for (const v of p.product_variants) {
+          const vpRaw = v?.price_in_cents ?? v?.price ?? v?.price_cents ?? 0;
+          const vPrice = normalizeToCents(vpRaw);
+          if (vPrice > 0 && (minVariant === null || vPrice < minVariant)) minVariant = vPrice;
+        }
+      }
+      const effective = (minVariant !== null && minVariant > 0) ? minVariant : base;
+      return { ...p, __effective_price: Number(effective || 0) };
+    } catch (e) {
+      return { ...p, __effective_price: 0 };
+    }
+  });
+
   if (usedVariantSelect) console.debug('Used variant select:', usedVariantSelect);
 
-  return { products, total: total ?? (Array.isArray(products) ? products.length : 0) };
+  return { products: productsWithEffective, total: total ?? (Array.isArray(productsWithEffective) ? productsWithEffective.length : 0) };
 }
 
 export async function getVendors() {
@@ -426,15 +672,57 @@ export async function getVendors() {
     }
 
     // Map vendors to final format
+    const normalizeToCentsLocal = (val) => {
+      if (val == null) return 0;
+      const n = Number(val);
+      if (!Number.isFinite(n)) return 0;
+      return Number.isInteger(n) ? Math.round(n) : Math.round(n * 100);
+    };
+
     const mapped = vendorsWithProducts.map(v => {
-      const prods = v.products || [];
+      const origProds = v.products || [];
+      // normalize vendor products: attach formatted price and effective cents price
+      const prods = origProds.map(p => {
+        try {
+          const baseCents = normalizeToCentsLocal(p.base_price ?? p.base_price_in_cents ?? 0);
+          // try to compute min variant price if variants exist
+          let minVariant = null;
+          if (Array.isArray(p.product_variants)) {
+            for (const vv of p.product_variants) {
+              const vpRaw = vv?.price_in_cents ?? vv?.price ?? vv?.price_cents ?? 0;
+              const vPrice = normalizeToCentsLocal(vpRaw);
+              if (vPrice > 0 && (minVariant === null || vPrice < minVariant)) minVariant = vPrice;
+            }
+          }
+          const effective = (minVariant !== null && minVariant > 0) ? minVariant : baseCents;
+          return { ...p, price_formatted: (baseCents ? formatCurrency(baseCents) : null), __effective_price: Number(effective || 0) };
+        } catch (e) {
+          return { ...p, price_formatted: null, __effective_price: 0 };
+        }
+      });
       const published = prods.filter(p => p.is_published !== false);
       const featured = published.length ? published[0] : (prods[0] || null);
       const featured_product = featured ? {
         id: featured.id,
         title: featured.title,
         image: featured.image_url || (featured.gallery_images && featured.gallery_images[0]),
-        price: formatCurrency(Number(featured.base_price || 0))
+        price: formatCurrency(Number(featured.base_price || 0)),
+        __effective_price: (() => {
+          try {
+            const baseC = normalizeToCentsLocal(featured.base_price ?? featured.base_price_in_cents ?? 0);
+            // if featured has variants, prefer lowest variant
+            let minV = null;
+            if (Array.isArray(featured.product_variants)) {
+              for (const vv of featured.product_variants) {
+                const vp = vv?.price_in_cents ?? vv?.price ?? vv?.price_cents ?? 0;
+                const vpc = normalizeToCentsLocal(vp);
+                if (vpc > 0 && (minV === null || vpc < minV)) minV = vpc;
+              }
+            }
+            const eff = (minV !== null && minV > 0) ? minV : baseC;
+            return Number(eff || 0);
+          } catch (e) { return 0; }
+        })()
       } : null;
 
       return {
@@ -708,18 +996,32 @@ export async function getReviews(productId) {
 
 export async function createReview(reviewData) {
   try {
-    const response = await fetch(API_ENDPOINTS.reviews, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(reviewData),
-    });
-    if (!response.ok) {
-      throw new Error(`Failed to create review: ${response.status}`);
-    }
-    const data = await response.json();
-    return data;
+    // Insert into product_ratings table directly
+    const { product_id, user_id, rating, title, body } = reviewData;
+    
+    const { data, error } = await supabase
+      .from('product_ratings')
+      .insert([{
+        product_id,
+        user_id,
+        rating: parseInt(rating),
+        comment: body || title || ''
+      }])
+      .select('*')
+      .single();
+
+    if (error) throw error;
+
+    // Transform response to review format
+    return {
+      id: data.id,
+      product_id: data.product_id,
+      user_id: data.user_id,
+      rating: data.rating,
+      title: data.comment || `${data.rating}-star review`,
+      body: data.comment || '',
+      created_at: data.created_at
+    };
   } catch (error) {
     console.error('Error creating review:', error);
     throw error;

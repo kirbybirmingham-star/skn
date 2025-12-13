@@ -4,38 +4,27 @@ import { selectProductWithVariants } from '../lib/variantSelectHelper.js';
 // PayPal API Configuration
 const API_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) || process.env.VITE_API_URL || 'http://localhost:3001';
 
-// PayPal config will be handled by the backend
+// API endpoints (non-PayPal)
 const API_ENDPOINTS = {
-  createOrder: `${API_BASE_URL}/api/paypal/create-order`,
-  captureOrder: `${API_BASE_URL}/api/paypal/capture-order`,
-  config: `${API_BASE_URL}/api/paypal/config`,
   reviews: `${API_BASE_URL}/api/reviews`,
 };
 
 export function formatCurrency(amountInCents, currencyInfo = { code: 'USD', symbol: '$' }) {
   const amount = typeof amountInCents === 'number' ? amountInCents / 100 : 0;
-  const symbol = (currencyInfo && currencyInfo.symbol) || '$';
-  return `${symbol}${amount.toFixed(2)}`;
-}
-
-// We'll use the backend to handle PayPal authentication
-async function checkBackendConfig() {
+  const currencyCode = (currencyInfo && currencyInfo.code) || 'USD';
   try {
-    const response = await fetch(API_ENDPOINTS.config);
-    if (!response.ok) {
-      throw new Error(`Backend config check failed: ${response.status}`);
-    }
-    const data = await response.json();
-    if (!data.clientIdPresent || !data.secretPresent) {
-      throw new Error('PayPal configuration is incomplete on the backend');
-    }
-    return true;
-  } catch (error) {
-    console.error("Backend config check failed:", error);
-    throw error;
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency: currencyCode }).format(amount);
+  } catch (e) {
+    const symbol = (currencyInfo && currencyInfo.symbol) || '$';
+    return `${symbol}${amount.toFixed(2)}`;
   }
 }
 
+/**
+ * Create a PayPal order using the PayPal Orders API
+ * This is called from the frontend PayPal button's createOrder callback
+ * Uses the PayPal Client ID (public) with the Orders API
+ */
 export async function createPayPalOrder(cartItems) {
   try {
     // Validate cart items before sending
@@ -45,73 +34,145 @@ export async function createPayPalOrder(cartItems) {
 
     // Ensure each item has required fields
     cartItems.forEach(item => {
-      if (!item?.variant?.price) {
+      if (!item?.variant?.price_in_cents) {
         throw new Error('Invalid item in cart');
       }
     });
 
-    // Send the order creation request to our backend
-    const response = await fetch(API_ENDPOINTS.createOrder, {
+    // Calculate order total
+    const orderTotal = cartItems.reduce((total, item) => {
+      const price = (item.variant.sale_price_in_cents ?? item.variant.price_in_cents) / 100;
+      return total + (price * item.quantity);
+    }, 0);
+
+    if (orderTotal <= 0) {
+      throw new Error('Invalid order total');
+    }
+
+    // Build the PayPal order payload
+    const payload = {
+      intent: 'CAPTURE',
+      purchase_units: [
+        {
+          reference_id: `order_${Date.now()}`,
+          description: 'SKN Bridge Trade Purchase',
+          amount: {
+            currency_code: 'USD',
+            value: orderTotal.toFixed(2),
+            breakdown: {
+              item_total: {
+                currency_code: 'USD',
+                value: orderTotal.toFixed(2)
+              }
+            }
+          },
+          items: cartItems.map(item => {
+            const unitPrice = (item.variant.price_in_cents / 100).toFixed(2);
+            return {
+              name: item.product?.name || 'Item',
+              description: item.product?.description || '',
+              sku: item.product?.id || '',
+              unit_amount: {
+                currency_code: 'USD',
+                value: unitPrice
+              },
+              quantity: String(item.quantity),
+              category: 'PHYSICAL_GOODS'
+            };
+          })
+        }
+      ],
+      application_context: {
+        brand_name: 'SKN Bridge Trade',
+        user_action: 'PAY_NOW'
+      }
+    };
+
+    // Call PayPal API directly from the client
+    // Note: This uses the Client ID in the Authorization header
+    const clientId = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_PAYPAL_CLIENT_ID) || process.env.VITE_PAYPAL_CLIENT_ID;
+    if (!clientId) {
+      throw new Error('PayPal Client ID is not configured');
+    }
+
+    // Use Basic Auth with Client ID and an empty secret (public key scenario)
+    const auth = btoa(`${clientId}:`);
+    const response = await fetch('https://api-m.sandbox.paypal.com/v2/checkout/orders', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${auth}`
       },
-      body: JSON.stringify({ cartItems })
+      body: JSON.stringify(payload)
     });
 
-    // First get the raw text
     const text = await response.text();
-    
-    // Try to parse as JSON
     let data;
     try {
       data = JSON.parse(text);
     } catch (e) {
-      console.error('Invalid JSON response:', text);
-      throw new Error('Invalid server response');
+      console.error('Invalid JSON response from PayPal:', text);
+      throw new Error('Invalid response from PayPal');
     }
 
     if (!response.ok) {
-      console.error('Server create-order failed:', data);
-      throw new Error(data.error || 'Failed to create order on server');
+      console.error('PayPal create-order failed:', { status: response.status, body: data });
+      throw new Error(data?.message || data?.error?.message || 'Failed to create PayPal order');
     }
 
     if (!data.id) {
-      console.error('Missing order ID in response:', data);
-      throw new Error('Invalid order response from server');
+      console.error('Missing order ID in PayPal response:', data);
+      throw new Error('Invalid order response from PayPal');
     }
 
-    // Return the order id expected by the PayPal buttons
+    console.log('PayPal order created successfully:', data.id);
     return data.id;
   } catch (error) {
-    console.error("Failed to create PayPal order (client):", error);
+    console.error("Failed to create PayPal order:", error);
     throw error;
   }
 }
 
+/**
+ * Capture a PayPal order using the PayPal Orders API
+ * This is called from the frontend PayPal button's onApprove callback
+ */
 export async function capturePayPalOrder(orderID) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/paypal/capture-order/${orderID}`, {
-      method: "POST",
+    if (!orderID) {
+      throw new Error('Order ID is required');
+    }
+
+    const clientId = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_PAYPAL_CLIENT_ID) || process.env.VITE_PAYPAL_CLIENT_ID;
+    if (!clientId) {
+      throw new Error('PayPal Client ID is not configured');
+    }
+
+    // Use Basic Auth with Client ID and an empty secret (public key scenario)
+    const auth = btoa(`${clientId}:`);
+    const response = await fetch(`https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderID}/capture`, {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json"
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${auth}`
       }
     });
 
-    // First get the raw text
     const text = await response.text();
-    
-    // Try to parse as JSON
     let data;
     try {
       data = JSON.parse(text);
     } catch (e) {
-      console.error('Invalid JSON response:', text);
-      throw new Error('Invalid server response');
+      console.error('Invalid JSON response from PayPal:', text);
+      throw new Error('Invalid response from PayPal');
     }
-    if (data.error) {
-      throw new Error(data.error.message);
+
+    if (!response.ok) {
+      console.error('PayPal capture-order failed:', { status: response.status, body: data });
+      throw new Error(data?.message || data?.error?.message || 'Failed to capture PayPal order');
     }
+
+    console.log('PayPal order captured successfully:', data.id);
     return data;
   } catch (error) {
     console.error("Failed to capture PayPal order:", error);
@@ -132,23 +193,32 @@ export async function getProducts(options = {}) {
   const start = (pg - 1) * per;
   const end = pg * per - 1;
 
+  // Determine if we need to do client-side sorting
+  // For price_asc/price_desc, we fetch all results then sort and paginate client-side
+  const sb = String(sortBy || 'newest').toLowerCase();
+  const isClientSideSort = sb === 'price_asc' || sb === 'price_desc' || sb === 'rating_asc' || sb === 'rating_desc';
+
   // Correctly chain query modifiers after select()
   let query = supabase
     .from('vendor_products')
-    .select('*', { count: 'exact' })
-    .range(start, end);
+    .select('*', { count: 'exact' });
 
-  // Apply sort-by param
-  const sb = String(sortBy || 'newest').toLowerCase();
-  switch (sb) {
-    case 'oldest': query = query.order('created_at', { ascending: true }); break;
-    // price sorts are applied client-side for variant/based price consistency
-    case 'title_asc': query = query.order('title', { ascending: true }); break;
-    case 'title_desc': query = query.order('title', { ascending: false }); break;
-    case 'newest':
-    default:
-      query = query.order('created_at', { ascending: false });
-      break;
+  // Apply pagination only if server-side sorting; otherwise defer pagination to after client-side sort
+  if (!isClientSideSort) {
+    query = query.range(start, end);
+  }
+
+  // Apply sort-by param (only server-side sorts that apply here)
+  if (!isClientSideSort) {
+    switch (sb) {
+      case 'oldest': query = query.order('created_at', { ascending: true }); break;
+      case 'title_asc': query = query.order('title', { ascending: true }); break;
+      case 'title_desc': query = query.order('title', { ascending: false }); break;
+      case 'newest':
+      default:
+        query = query.order('created_at', { ascending: false });
+        break;
+    }
   }
 
   // Add filters if they are provided
@@ -171,24 +241,116 @@ export async function getProducts(options = {}) {
   }
   
   // Add price range filter
-  if (priceRange && priceRange !== 'all') {
-    const pr = String(priceRange).toLowerCase();
+  const parsePriceRange = (prToken) => {
+    if (!prToken) return { min: null, max: null };
+    const pr = String(prToken).toLowerCase();
+    let min = null, max = null;
     if (pr.startsWith('under')) {
-      const max = parseInt(pr.replace(/[^0-9]/g, ''), 10) * 100;
-      query = query.lte('base_price', max);
+      const num = parseInt(pr.replace(/[^0-9]/g, ''), 10);
+      max = isNaN(num) ? null : num * 100;
     } else if (pr.startsWith('over')) {
-      const min = parseInt(pr.replace(/[^0-9]/g, ''), 10) * 100;
-      query = query.gte('base_price', min);
+      const num = parseInt(pr.replace(/[^0-9]/g, ''), 10);
+      min = isNaN(num) ? null : num * 100;
     } else if (pr.includes('-')) {
-      const parts = pr.split('-').map(p => parseInt(p.replace(/[^0-9]/g, ''), 10));
-      if (parts.length === 2) {
-        query = query.gte('base_price', parts[0] * 100);
-        query = query.lte('base_price', parts[1] * 100);
+      const parts = pr.match(/(\d+)/g);
+      if (parts && parts.length >= 2) {
+        min = parseInt(parts[0], 10) * 100;
+        max = parseInt(parts[1], 10) * 100;
       }
+    }
+    return { min, max };
+  };
+
+  const parsedRange = parsePriceRange(priceRange);
+    // We'll consider priceRange: build variant ids first, then either constrain base price or union with variant-matched products
+    let variantMatchedIds = [];
+    if (priceRange && priceRange !== 'all') {
+    const pr = String(priceRange).toLowerCase();
+    // We'll implement server-side variant-based matching similar to products API.
+    try {
+      let variantIds = [];
+      const pfs = [];
+      if (parsedRange.min != null && parsedRange.max != null) {
+        pfs.push(`price_in_cents.gte.${parsedRange.min}`);
+        pfs.push(`price_in_cents.lte.${parsedRange.max}`);
+        pfs.push(`price.gte.${(parsedRange.min / 100)}`);
+        pfs.push(`price.lte.${(parsedRange.max / 100)}`);
+      } else if (parsedRange.min != null) {
+        pfs.push(`price_in_cents.gte.${parsedRange.min}`);
+        pfs.push(`price.gte.${(parsedRange.min / 100)}`);
+      } else if (parsedRange.max != null) {
+        pfs.push(`price_in_cents.lte.${parsedRange.max}`);
+        pfs.push(`price.lte.${(parsedRange.max / 100)}`);
+      }
+      if (pfs.length > 0) {
+        const orExpr = pfs.join(',');
+        const vr = await supabase.from('product_variants').select('product_id').or(orExpr);
+        if (!vr.error && Array.isArray(vr.data)) {
+          variantIds = Array.from(new Set(vr.data.map(r => r.product_id).filter(Boolean)));
+        }
+      }
+
+      // Build base price constraints
+      if (parsedRange.max != null && parsedRange.min == null) {
+        query = query.lte('base_price', parsedRange.max);
+      } else if (parsedRange.min != null && parsedRange.max == null) {
+        query = query.gte('base_price', parsedRange.min);
+      } else if (parsedRange.min != null && parsedRange.max != null) {
+        query = query.gte('base_price', parsedRange.min);
+        query = query.lte('base_price', parsedRange.max);
+      }
+
+          if (variantIds.length > 0) {
+            variantMatchedIds = variantIds;
+          }
+    } catch (e) {
+      console.warn('Failed to apply variant-based price filtering for vendor_products', e?.message || e);
     }
   }
 
-  const { data, error, count } = await query;
+    // If we have variantMatchedIds, build union between base price results and variant-matched products
+    let data, error, count;
+    if (variantMatchedIds && variantMatchedIds.length > 0) {
+      // Build base query
+      let baseQ = query;
+      // baseQ is already restricted by base price above
+      try {
+        const baseRes = await baseQ;
+        const baseData = baseRes.error ? [] : (baseRes.data || []);
+        // Build variant query, but re-apply usual non-price filters (sellerId/category/search)
+        let variantQ = supabase.from('vendor_products').select('*', { count: 'exact' });
+        if (sellerId) variantQ = variantQ.eq('vendor_id', sellerId);
+        if (categoryId) variantQ = variantQ.eq('category_id', Number.isInteger(Number(categoryId)) ? Number(categoryId) : categoryId);
+        else if (options.categorySlug) {
+          const slug = String(options.categorySlug).trim();
+          variantQ = variantQ.or(`metadata->>category.ilike.%${slug}%,title.ilike.%${slug}%`);
+        }
+        if (searchQuery && String(searchQuery).trim().length > 0) {
+          const searchQueryStr = String(searchQuery).trim();
+          variantQ = variantQ.or(`title.ilike.%${searchQueryStr}%,description.ilike.%${searchQueryStr}%`);
+        }
+        // now restrict to ids
+        variantQ = variantQ.in('id', variantMatchedIds);
+        const variantRes = await variantQ;
+        const variantData = variantRes.error ? [] : (variantRes.data || []);
+        const merged = [];
+        const seen = new Set();
+        for (const p of baseData.concat(variantData)) {
+          if (!p || !p.id) continue;
+          if (!seen.has(p.id)) { seen.add(p.id); merged.push(p); }
+        }
+        data = merged;
+        // approximate total
+        count = merged.length;
+        error = null;
+      } catch (e) {
+        console.error('Error running union vendor_products queries:', e);
+        data = []; count = 0; error = e;
+      }
+    } else {
+      const res = await query;
+      data = res.data; error = res.error; count = res.count;
+    }
 
   if (error) {
     console.error('Error fetching products:', error);
@@ -274,7 +436,61 @@ export async function getProducts(options = {}) {
     return p;
   });
 
-  return { products, total: count || 0 };
+  // Ensure every returned product has a normalized __effective_price (in cents)
+  const normalizeToCents = (val) => {
+    if (val == null) return 0;
+    const n = Number(val);
+    if (!Number.isFinite(n)) return 0;
+    return Number.isInteger(n) ? Math.round(n) : Math.round(n * 100);
+  };
+
+  const productsWithEffective = products.map(p => {
+    try {
+      const base = normalizeToCents(p.base_price ?? p.base_price_in_cents ?? 0);
+      let minVariant = null;
+      if (Array.isArray(p.product_variants)) {
+        for (const v of p.product_variants) {
+          const vpRaw = v?.price_in_cents ?? v?.price ?? v?.price_cents ?? 0;
+          const vPrice = normalizeToCents(vpRaw);
+          if (vPrice > 0 && (minVariant === null || vPrice < minVariant)) minVariant = vPrice;
+        }
+      }
+      const effective = (minVariant !== null && minVariant > 0) ? minVariant : base;
+      return { ...p, __effective_price: Number(effective || 0) };
+    } catch (e) {
+      return { ...p, __effective_price: 0 };
+    }
+  });
+
+  // Apply client-side sorting and pagination for price/rating sorts
+  let finalProducts = productsWithEffective;
+  let finalCount = count || productsWithEffective.length;
+  
+  if (isClientSideSort) {
+    // For price/rating sorts, sort all results then paginate
+    if (sb === 'price_asc' || sb === 'price_desc') {
+      finalProducts.sort((a, b) => {
+        const diff = (a.__effective_price || 0) - (b.__effective_price || 0);
+        return sb === 'price_asc' ? diff : -diff;
+      });
+    } else if (sb === 'rating_asc' || sb === 'rating_desc') {
+      finalProducts = finalProducts.map(p => {
+        const ratings = p.product_ratings || [];
+        const avg = ratings.length ? (ratings.reduce((sum, r) => sum + (r.rating || 0), 0) / ratings.length) : 0;
+        return { ...p, __avg_rating: avg };
+      });
+      finalProducts.sort((a, b) => {
+        const diff = (b.__avg_rating || 0) - (a.__avg_rating || 0);
+        return sb === 'rating_desc' ? diff : -diff;
+      });
+    }
+    
+    // Now apply pagination
+    finalCount = finalProducts.length;
+    finalProducts = finalProducts.slice(start, end + 1);
+  }
+
+  return { products: finalProducts, total: finalCount };
 }
 
 export async function getVendors() {

@@ -5,6 +5,7 @@
 
 import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
+import { formatCurrency } from '../src/api/EcommerceApi.js';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -58,7 +59,7 @@ async function testVendorDisplay() {
           id: featured.id,
           title: featured.title,
           image: featured.image_url || (featured.gallery_images && featured.gallery_images[0]),
-          price: featured.base_price ? `$${(featured.base_price / 100).toFixed(2)}` : null,
+          price: featured.base_price ? formatCurrency(Number(featured.base_price)) : null,
         } : null,
         total_products: prods.length,
       };

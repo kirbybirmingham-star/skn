@@ -47,11 +47,18 @@ const ProductsList = ({ sellerId = null, categoryId = null, categorySlug = null,
         let results = (resp.products || []).map(p => ({ ...p }));
         // Compute effective price for each product (base_price or min variant price)
         results = results.map(p => {
-          const base = Number(p.base_price || p.base_price_in_cents || 0);
+          const normalizeToCents = (val) => {
+            if (val == null) return 0;
+            const n = Number(val);
+            if (!Number.isFinite(n)) return 0;
+            return Number.isInteger(n) ? Math.round(n) : Math.round(n * 100);
+          };
+          const base = normalizeToCents(p.base_price ?? p.base_price_in_cents ?? 0);
           let minVariant = null;
           if (Array.isArray(p.product_variants)) {
             for (const v of p.product_variants) {
-              const vPrice = Number(v?.price || v?.price_in_cents || 0);
+              const vpRaw = v?.price_in_cents ?? v?.price ?? v?.price_cents ?? 0;
+              const vPrice = normalizeToCents(vpRaw);
               if (vPrice > 0 && (minVariant === null || vPrice < minVariant)) minVariant = vPrice;
             }
           }

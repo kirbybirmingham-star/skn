@@ -49,20 +49,19 @@ const ProductCard = ({ product, index }) => {
     const variantPrice = firstVariant && (firstVariant.price_in_cents ?? firstVariant.price ?? firstVariant.price_cents);
     if (variantPrice != null && !Number.isNaN(Number(variantPrice))) {
       const num = Number(variantPrice);
-      // If value looks like cents (large > 1000) treat as cents, otherwise convert units to cents
-      const cents = num > 1000 ? Math.round(num) : Math.round(num * 100);
+      // Normalize heuristic: treat integer values as cents, and values with decimals as dollars
+      const cents = Number.isInteger(num) ? Math.round(num) : Math.round(num * 100);
       return formatPrice(cents, product.currency || currency);
     }
 
     if (product.base_price != null && !Number.isNaN(Number(product.base_price))) {
       const bp = Number(product.base_price);
-      const cents = bp > 1000 ? Math.round(bp) : Math.round(bp * 100);
+      const cents = Number.isInteger(bp) ? Math.round(bp) : Math.round(bp * 100);
       return formatPrice(cents, product.currency || currency);
     }
 
     return null;
   })();
-  const rating = product.product_ratings?.[0];
   const resolvedImage = getImageUrl(product);
 
   React.useEffect(() => {
@@ -83,7 +82,13 @@ const ProductCard = ({ product, index }) => {
     e.stopPropagation();
 
     try {
-      await addToCart(product, 1);
+      const variant = product.product_variants?.[0] || {
+        id: product.id,
+        title: product.title,
+        price_in_cents: product.base_price,
+        currency: product.currency
+      };
+      await addToCart(product, variant, 1);
       toast({
         title: "Added to Cart! 🛒",
         description: `${product.title} has been added to your cart.`,
@@ -139,10 +144,10 @@ const ProductCard = ({ product, index }) => {
           </div>
 
           <div className="flex items-center mb-2">
-            {rating ? (
+            {product.product_ratings && product.product_ratings.length > 0 ? (
               <>
-                <StarRating rating={rating.avg_rating} />
-                <span className="text-sm text-gray-500 ml-1">({rating.review_count})</span>
+                <StarRating rating={Math.round(product.product_ratings[0].rating)} />
+                <span className="text-sm text-gray-500 ml-1">({product.product_ratings.length})</span>
               </>
             ) : (
               <div className="flex text-yellow-400">

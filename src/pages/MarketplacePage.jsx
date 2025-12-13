@@ -52,18 +52,22 @@ const MarketplacePage = () => {
         if (!mounted) return;
         let items = (resp.products || []).slice(0, 3);
         
-        // Compute __effective_price for featured products (same as ProductsList does) for consistent price display
+        // Compute __effective_price for featured products (same normalization as ProductsList)
+        const normalizeToCents = (val) => {
+          if (val == null) return 0;
+          const n = Number(val);
+          if (!Number.isFinite(n)) return 0;
+          return Number.isInteger(n) ? Math.round(n) : Math.round(n * 100);
+        };
         items = items.map(p => {
-          const base = Number(p.base_price || 0);
+          const base = normalizeToCents(p.base_price ?? p.base_price_in_cents ?? 0);
           let minVariant = null;
           if (Array.isArray(p.product_variants) && p.product_variants.length > 0) {
             for (const v of p.product_variants) {
               if (!v) continue;
-              let vPrice = null;
-              if (typeof v.price_in_cents === 'number' && v.price_in_cents > 0) vPrice = Number(v.price_in_cents);
-              else if (typeof v.price === 'number' && v.price > 0) vPrice = Math.round(Number(v.price) * 100);
-              else if (typeof v.base_price === 'number' && v.base_price > 0) vPrice = Number(v.base_price);
-              if (vPrice !== null && (minVariant === null || vPrice < minVariant)) minVariant = vPrice;
+              const vpRaw = v?.price_in_cents ?? v?.price ?? v?.price_cents ?? 0;
+              const vPrice = normalizeToCents(vpRaw);
+              if (vPrice > 0 && (minVariant === null || vPrice < minVariant)) minVariant = vPrice;
             }
           }
           const effective = (minVariant !== null && minVariant > 0) ? minVariant : base;

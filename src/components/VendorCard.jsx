@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatCurrency } from '@/api/EcommerceApi';
 import { Link } from 'react-router-dom';
 import { Star, Tag } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -20,9 +21,14 @@ const VendorCard = ({ vendor, index }) => {
               alt={vendor.featured_product.title}
               className="w-full h-full object-cover"
             />
-            {vendor.featured_product.price && (
+            {vendor.featured_product?.price && (
               <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white px-3 py-1 rounded-full text-sm">
-                From {vendor.featured_product.price}
+                {(() => {
+                  const p = vendor.featured_product.price;
+                  // If API returned a number accidentally (raw cents), normalize here; otherwise pass through string
+                  const dp = (typeof p === 'number') ? formatCurrency(Number(p)) : p;
+                  return `From ${dp}`;
+                })()}
               </div>
             )}
           </div>
@@ -64,9 +70,6 @@ const VendorCard = ({ vendor, index }) => {
                 <div className="flex items-center">
                   <Star className="w-5 h-5 text-yellow-400 mr-1" fill="currentColor" />
                   <span className="text-sm font-medium text-gray-900">{vendor.rating ? vendor.rating.toFixed(1) : 'N/A'}</span>
-                </div>
-                <div className="text-sm text-gray-500">
-                  {vendor.total_products} products
                 </div>
               </div>
             </div>

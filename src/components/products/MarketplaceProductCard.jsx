@@ -45,20 +45,20 @@ const MarketplaceProductCard = ({ product, index }) => {
     const variantPrice = firstVariant && (firstVariant.price_in_cents ?? firstVariant.price ?? firstVariant.price_cents);
     if (variantPrice != null && !Number.isNaN(Number(variantPrice))) {
       const num = Number(variantPrice);
-      const cents = num > 1000 ? Math.round(num) : Math.round(num * 100);
+      // Treat integer as cents, decimal as dollars
+      const cents = Number.isInteger(num) ? Math.round(num) : Math.round(num * 100);
       return formatPrice(cents, product?.currency || 'USD');
     }
 
     if (product?.base_price != null && !Number.isNaN(Number(product.base_price))) {
       const bp = Number(product.base_price);
-      const cents = bp > 1000 ? Math.round(bp) : Math.round(bp * 100);
+      const cents = Number.isInteger(bp) ? Math.round(bp) : Math.round(bp * 100);
       return formatPrice(cents, product?.currency || 'USD');
     }
 
     return null;
   })();
 
-  const rating = product?.product_ratings?.[0] || null;
   const resolvedImage = getImageUrl(product);
 
   React.useEffect(() => {
@@ -73,7 +73,13 @@ const MarketplaceProductCard = ({ product, index }) => {
     e.preventDefault();
     e.stopPropagation();
     try {
-      await addToCart(product, 1);
+      const variant = product.product_variants?.[0] || {
+        id: product.id,
+        title: product.title,
+        price_in_cents: product.base_price,
+        currency: product.currency
+      };
+      await addToCart(product, variant, 1);
       toast({ title: 'Added to Cart', description: `${product.title} added to cart.` });
     } catch (err) {
       toast({ variant: 'destructive', title: 'Could not add to cart', description: err.message || String(err) });
@@ -112,10 +118,10 @@ const MarketplaceProductCard = ({ product, index }) => {
         </div>
 
         <div className="flex items-center mb-2">
-          {rating ? (
+          {product?.product_ratings && product.product_ratings.length > 0 ? (
             <>
-              <StarRating rating={rating.avg_rating} />
-              <span className="text-sm text-gray-500 ml-1">({rating.review_count})</span>
+              <StarRating rating={Math.round(product.product_ratings[0].rating)} />
+              <span className="text-sm text-gray-500 ml-1">({product.product_ratings.length})</span>
             </>
           ) : (
             <div className="flex text-yellow-400">

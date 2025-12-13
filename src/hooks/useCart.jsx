@@ -11,8 +11,17 @@ export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState(() => {
     try {
       const storedCart = localStorage.getItem(CART_STORAGE_KEY);
-      return storedCart ? JSON.parse(storedCart) : [];
+      if (!storedCart) return [];
+      
+      const parsed = JSON.parse(storedCart);
+      // Migration: filter out old items without variant structure
+      const validItems = Array.isArray(parsed) 
+        ? parsed.filter(item => item.variant && item.product)
+        : [];
+      
+      return validItems;
     } catch (error) {
+      console.error('Error loading cart from localStorage:', error);
       return [];
     }
   });
@@ -21,33 +30,49 @@ export const CartProvider = ({ children }) => {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
   }, [cartItems]);
 
-  const addToCart = useCallback((product, quantity) => {
+  const addToCart = useCallback((product, variant, quantity = 1) => {
     return new Promise((resolve) => {
       setCartItems(prevItems => {
-        const existingItem = prevItems.find(item => item.product.id === product.id);
+        // Use variant.id as the unique identifier for cart items
+        const variantId = variant?.id;
+        if (!variantId) {
+          console.error('Cannot add to cart: variant.id is missing', { product, variant });
+          return prevItems;
+        }
+        
+        const existingItem = prevItems.find(item => item.variant?.id === variantId);
+        let newItems;
         if (existingItem) {
-          return prevItems.map(item =>
-            item.product.id === product.id
+          newItems = prevItems.map(item =>
+            item.variant?.id === variantId
               ? { ...item, quantity: item.quantity + quantity }
               : item
           );
+        } else {
+          newItems = [...prevItems, { product, variant, quantity }];
         }
-        return [...prevItems, { product, quantity }];
+        
+        console.log('Cart updated:', { product: product?.title, variant: variant?.title, quantity, totalItems: newItems.length });
+        return newItems;
       });
       resolve();
     });
-  }, [cartItems]);
-
-  const removeFromCart = useCallback((productId) => {
-    setCartItems(prevItems => prevItems.filter(item => item.product.id !== productId));
   }, []);
 
-  const updateQuantity = useCallback((productId, newQuantity) => {
+  const removeFromCart = useCallback((variantId) => {
+    setCartItems(prevItems => prevItems.filter(item => item.variant?.id !== variantId));
+  }, []);
+
+  const updateQuantity = useCallback((variantId, newQuantity, availableQuantity, manageInventory) => {
     setCartItems(prevItems =>
       prevItems.map(item => {
-        if (item.product.id === productId) {
+        if (item.variant?.id === variantId) {
           let quantityToSet = newQuantity;
           if (quantityToSet < 1) quantityToSet = 1;
+          // Respect inventory limits if manage_inventory is enabled
+          if (manageInventory && availableQuantity && quantityToSet > availableQuantity) {
+            quantityToSet = availableQuantity;
+          }
           return { ...item, quantity: quantityToSet };
         }
         return item;
@@ -62,10 +87,21 @@ export const CartProvider = ({ children }) => {
   const getCartTotal = useCallback(() => {
     if (cartItems.length === 0) return formatCurrency(0, { code: 'USD', symbol: '$' });
 
-    return formatCurrency(cartItems.reduce((total, item) => {
-      const price = item.product.base_price;
-      return total + price * item.quantity;
-    }, 0), { code: cartItems[0]?.product?.currency || 'USD', symbol: '$' });
+    const normalizeToCents = (val) => {
+      if (val == null) return 0;
+      const n = Number(val);
+      if (!Number.isFinite(n)) return 0;
+      return Number.isInteger(n) ? Math.round(n) : Math.round(n * 100);
+    };
+
+    const totalCents = cartItems.reduce((total, item) => {
+      // Use variant's sale price if available, otherwise use regular price
+      const priceCents = normalizeToCents(
+        item.variant?.sale_price_in_cents ?? item.variant?.price_in_cents ?? item.product?.base_price
+      );
+      return total + (Number(priceCents) * (Number(item.quantity) || 0));
+    }, 0);
+    return formatCurrency(totalCents, { code: 'USD', symbol: '$' });
   }, [cartItems]);
 
   const value = useMemo(() => ({

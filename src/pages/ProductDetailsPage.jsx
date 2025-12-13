@@ -44,7 +44,7 @@ const ProductDetailsPage = () => {
     }
 
     try {
-      addToCart(product, variant, quantity, variant.inventory_quantity);
+      addToCart(product, variant, quantity);
       toast({ title: 'Success', description: 'Product added to cart' });
     } catch (err) {
       toast({ title: 'Add failed', description: String(err), variant: 'destructive' });
@@ -52,14 +52,15 @@ const ProductDetailsPage = () => {
     
   };
 
-  // Format a price (accepts various price fields used across API)
-  const formatPrice = (price, currency = product?.currency || 'USD') => {
-    if (price == null) return null;
+  // Format a price in cents to a currency string
+  const formatPrice = (cents, currency = product?.currency || 'USD') => {
+    if (cents == null) return null;
     try {
-      const cents = Number(price) > 1000 ? Math.round(Number(price)) : Math.round(Number(price) * 100);
-      return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(cents / 100);
+      const numCents = Number(cents);
+      return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(numCents / 100);
     } catch (e) {
-      return `$${(Number(price) / 100).toFixed(2)}`;
+      const numCents = Number(cents);
+      return `$${(numCents / 100).toFixed(2)}`;
     }
   };
 
@@ -142,8 +143,11 @@ const ProductDetailsPage = () => {
               <select value={selectedVariantIndex} onChange={e => { setSelectedVariantIndex(Number(e.target.value)); setSelectedImage(0); }} className="p-2 border rounded w-full">
                 {product.product_variants.map((v, idx) => {
                   const priceVal = v.price_in_cents ?? v.price ?? v.price_cents ?? v.base_price ?? null;
+                  // Normalize: treat integers as cents and decimals as dollars
+                  const parsedPrice = priceVal != null ? Number(priceVal) : null;
+                  const cents = parsedPrice != null ? (Number.isInteger(parsedPrice) ? Math.round(parsedPrice) : Math.round(parsedPrice * 100)) : null;
                   return (
-                    <option key={v.id || idx} value={idx}>{(v.name || v.title) || `Variant ${idx+1}`} — {formatPrice(priceVal)}</option>
+                    <option key={v.id || idx} value={idx}>{(v.name || v.title) || `Variant ${idx+1}`} — {formatPrice(cents)}</option>
                   );
                 })}
               </select>
@@ -160,19 +164,17 @@ const ProductDetailsPage = () => {
           </div>
 
           <div className="text-2xl font-bold mb-6">{(() => {
-            // Use MarketplaceProductCard logic for price selection
-            const firstVariant = Array.isArray(product?.product_variants) && product.product_variants.length > 0
-              ? product.product_variants[0]
-              : null;
-            const variantPrice = firstVariant && (firstVariant.price_in_cents ?? firstVariant.price ?? firstVariant.price_cents);
+            // Display price for the currently selected variant
+            const variant = currentVariant;
+            const variantPrice = variant && (variant.price_in_cents ?? variant.price ?? variant.price_cents);
             if (variantPrice != null && !Number.isNaN(Number(variantPrice))) {
               const num = Number(variantPrice);
-              const cents = num > 1000 ? Math.round(num) : Math.round(num * 100);
+              const cents = Number.isInteger(num) ? Math.round(num) : Math.round(num * 100);
               return formatPrice(cents, product?.currency || 'USD');
             }
             if (product?.base_price != null && !Number.isNaN(Number(product.base_price))) {
               const bp = Number(product.base_price);
-              const cents = bp > 1000 ? Math.round(bp) : Math.round(bp * 100);
+              const cents = Number.isInteger(bp) ? Math.round(bp) : Math.round(bp * 100);
               return formatPrice(cents, product?.currency || 'USD');
             }
             return '$0.00';
@@ -186,7 +188,8 @@ const ProductDetailsPage = () => {
           </button>
         </div>
       </div>
-      <Reviews productId={productId} />
+      {/* Pass the resolved product ID when available (falls back to route param) */}
+      <Reviews productId={product?.id || productId} />
     </div>
   );
 };
