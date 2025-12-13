@@ -33,17 +33,19 @@ export async function createPayPalOrder(cartItems) {
       throw new Error('Cart is empty');
     }
 
-    // Ensure each item has required fields
+    // Ensure each item has required fields (allow products without variants using base_price)
     cartItems.forEach(item => {
-      if (!item?.variant?.price_in_cents) {
+      const hasPrice = (item?.variant?.price_in_cents ?? item?.product?.base_price) != null;
+      if (!hasPrice) {
         throw new Error('Invalid item in cart');
       }
     });
 
     // Calculate order total for validation
     const orderTotal = cartItems.reduce((total, item) => {
-      const price = (item.variant.sale_price_in_cents ?? item.variant.price_in_cents) / 100;
-      return total + (price * item.quantity);
+      const priceCents = item.variant?.sale_price_in_cents ?? item.variant?.price_in_cents ?? item.product?.base_price ?? 0;
+      const price = Number(priceCents) / 100;
+      return total + (price * (item.quantity || 0));
     }, 0);
 
     if (orderTotal <= 0) {

@@ -102,7 +102,7 @@ export default function PayPalCheckout({ cartItems, onSuccess }) {
 
   // Properly encode the client ID and other values
   const paypalConfig = {
-    "client-id": encodeURIComponent(import.meta.env.VITE_PAYPAL_CLIENT_ID || ''),
+    "client-id": import.meta.env.VITE_PAYPAL_CLIENT_ID || '',
     currency: "USD",
     intent: "capture",
     components: "buttons",
@@ -144,8 +144,9 @@ export default function PayPalCheckout({ cartItems, onSuccess }) {
 
           // Calculate order total (move this to a utility function if used elsewhere)
           const orderTotal = cartItems.reduce((total, item) => {
-            const price = (item.variant.sale_price_in_cents ?? item.variant.price_in_cents) / 100;
-            return total + (price * item.quantity);
+            const priceCents = item.variant?.sale_price_in_cents ?? item.variant?.price_in_cents ?? item.product?.base_price ?? 0;
+            const price = Number(priceCents) / 100;
+            return total + (price * (item.quantity || 0));
           }, 0);
 
           if (orderTotal <= 0) {
