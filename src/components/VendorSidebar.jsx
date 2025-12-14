@@ -10,6 +10,7 @@ const VendorSidebar = () => {
         <NavLink to="/dashboard/vendor" end className={linkClass}>Overview</NavLink>
         <NavLink to="/dashboard/vendor/products" className={linkClass}>Products</NavLink>
         <NavLink to="/dashboard/vendor/orders" className={linkClass}>Orders</NavLink>
+        <NavLink to="/dashboard/vendor/edit" className={linkClass}>Edit Store</NavLink>
       </nav>
     </aside>
   );

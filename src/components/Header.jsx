@@ -25,19 +25,23 @@ import React, { useState } from 'react';
       const location = useLocation();
       const navigate = useNavigate();
       const { cartItems } = useCart();
-      const { user, signOut } = useAuth();
+      const { user, signOut, vendor } = useAuth();
+
+      const isSeller = vendor?.onboarding_status === 'approved' || vendor?.onboarding_status === 'pending' || vendor?.onboarding_status === 'kyc_in_progress';
 
       const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
       const navItems = [
         { path: '/', label: 'Home' },
         { path: '/marketplace', label: 'Marketplace' },
-        { path: '/become-seller', label: 'Become a Seller' },
+        isSeller
+          ? { path: '/dashboard/vendor', label: 'Seller Dashboard' }
+          : { path: '/become-seller', label: 'Become a Seller' },
         { path: '/trust-safety', label: 'Trust & Safety' },
         { path: '/about', label: 'About Us' },
         { path: '/faq', label: 'FAQ' },
         { path: '/contact', label: 'Contact' },
-      ];
+      ].filter(Boolean);
 
       const handleSignOut = async () => {
         try {
@@ -131,7 +135,7 @@ import React, { useState } from 'react';
                             <User className="mr-2 h-4 w-4" />
                             Account Settings
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate('/dashboard')}
+                          <DropdownMenuItem onClick={() => navigate(isSeller ? '/dashboard/vendor' : '/dashboard')}
                             className="cursor-pointer">
                             <LayoutDashboard className="mr-2 h-4 w-4" />
                             Dashboard

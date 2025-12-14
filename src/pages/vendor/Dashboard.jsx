@@ -1,46 +1,75 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
-import { getVendorDashboardData } from '@/api/EcommerceApi';
+import { getVendorDashboardData, getVendorByOwner } from '@/api/EcommerceApi';
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [dashboardData, setDashboardData] = useState(null);
+  const [vendor, setVendor] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-      if (user?.id) {
-        // TODO: We need a reliable way to get the vendor_id from the user's profile.
-        // For now, we'll assume the user's id is the vendor_id.
-        // In a real application, you would likely have a `vendors` table with a `user_id` column.
-        const vendorId = user.id;
-        try {
-          const data = await getVendorDashboardData(vendorId);
+      const ownerId = profile?.id || user?.id;
+      if (!ownerId) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const vendorData = await getVendorByOwner(ownerId);
+        setVendor(vendorData);
+        
+        if (vendorData?.id) {
+          const data = await getVendorDashboardData(vendorData.id);
           setDashboardData(data);
-        } catch (error) {
-          console.error('Failed to fetch dashboard data', error);
-        } finally {
-          setLoading(false);
         }
+      } catch (error) {
+        console.error('Failed to fetch dashboard data', error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchDashboardData();
-  }, [user]);
+  }, [user, profile]);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className="text-center py-12">Loading dashboard...</div>;
   }
 
-  if (!dashboardData) {
-    return <div>No data available.</div>;
-  }
-
-  const { totalRevenue, totalOrders, averageOrderValue } = dashboardData;
+  const totalRevenue = dashboardData?.totalRevenue || 0;
+  const totalOrders = dashboardData?.totalOrders || 0;
+  const averageOrderValue = dashboardData?.averageOrderValue || 0;
+  const onboardingStatus = vendor?.onboarding_status || 'not started';
 
   return (
-    <div>
+    <div className="space-y-6">
+      {vendor && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-100">
+          <h2 className="text-xl font-bold mb-2">{vendor.name}</h2>
+          <p className="text-slate-600 mb-3 text-sm">{vendor.description || 'No description'}</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs font-semibold text-slate-600">Onboarding Status:</span>
+              <span className={`ml-2 px-3 py-1 rounded-full text-xs font-semibold ${
+                onboardingStatus === 'completed' ? 'bg-green-100 text-green-800' :
+                onboardingStatus === 'started' ? 'bg-blue-100 text-blue-800' :
+                'bg-yellow-100 text-yellow-800'
+              }`}>
+                {onboardingStatus}
+              </span>
+            </div>
+            {onboardingStatus !== 'completed' && (
+              <a href="/dashboard/onboarding" className="text-sm text-blue-600 hover:underline font-medium">
+                Continue Onboarding →
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+      
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -87,45 +116,27 @@ const Dashboard = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Average Order Value</CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className="h-4 w-4 text-muted-foreground">
               <rect width="20" height="14" x="2" y="5" rx="2" />
               <path d="M2 10h20" />
             </svg>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">${(averageOrderValue / 100).toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground mt-1">Average per order</p>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className="h-4 w-4 text-muted-foreground">
               <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
             </svg>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">N/A</div>
-            <p className="text-xs text-muted-foreground">
-              Not yet implemented
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Coming soon</p>
           </CardContent>
         </Card>
       </div>
