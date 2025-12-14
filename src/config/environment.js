@@ -1,14 +1,21 @@
 /**
  * Global Environment Configuration
  * 
- * Centralized configuration for all environment variables and defaults.
- * This eliminates hard-coded values throughout the codebase.
+ * Centralized, unified configuration for all environment variables and defaults.
+ * Replicates the PayPal pattern globally: env var fallbacks, validation, safe defaults.
  * 
- * Pattern: All config values use environment variables with sensible defaults.
- * No hard-coded localhost or production URLs should appear in feature code.
+ * Pattern: 
+ * 1. Check VITE_* prefixed vars first (frontend build time), then fallback to non-prefixed (runtime)
+ * 2. Provide sensible defaults to prevent runtime errors
+ * 3. Validate configuration at startup and log issues (redact secrets)
+ * 4. No hard-coded localhost or production URLs in feature code
  */
 
-// Detect if running in development
+// ============================================================================
+// ENVIRONMENT DETECTION
+// ============================================================================
+
+// Detect if running in development (Vite dev server)
 const isDevelopment = import.meta.env.DEV;
 
 // Detect if running on a Render-like deployment (or other cloud providers)
@@ -20,7 +27,23 @@ const isDeployedOnRender = () => {
   return apiUrl && !apiUrl.includes('localhost') && !apiUrl.includes('127.0.0.1');
 };
 
-// API Configuration
+// ============================================================================
+// HELPER: UNIFIED ENV VAR GETTER with fallback pattern
+// ============================================================================
+// Check VITE_ prefixed first (build-time), then non-prefixed (runtime)
+const getEnvVar = (viteKey, nonViteKey) => {
+  return import.meta.env[viteKey] || import.meta.env[nonViteKey] || '';
+};
+
+// Redact secrets in logs (show first 8 and last 4 chars)
+const redactSecret = (value) => {
+  if (!value || value.length <= 12) return value ? '***' : '';
+  return `${value.substring(0, 8)}...${value.substring(value.length - 4)}`;
+};
+
+// ============================================================================
+// API CONFIGURATION
+// ============================================================================
 export const API_CONFIG = {
   // Backend API base URL
   // - Local dev (Vite): use relative '/api' path (proxied by Vite to http://localhost:3001)
@@ -40,7 +63,9 @@ export const API_CONFIG = {
   fullURL: import.meta.env.VITE_API_URL || 'http://localhost:3001'
 };
 
-// Frontend Configuration
+// ============================================================================
+// FRONTEND CONFIGURATION
+// ============================================================================
 export const FRONTEND_CONFIG = {
   // Frontend URL for internal links and redirects
   url: import.meta.env.VITE_FRONTEND_URL || 'http://localhost:3000',
@@ -52,24 +77,31 @@ export const FRONTEND_CONFIG = {
   env: import.meta.env.MODE || 'development'
 };
 
-// Supabase Configuration
+// ============================================================================
+// SUPABASE CONFIGURATION
+// ============================================================================
 export const SUPABASE_CONFIG = {
   url: import.meta.env.VITE_SUPABASE_URL || '',
   anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
   serviceRoleKey: import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || ''
 };
 
-// PayPal Configuration
+// ============================================================================
+// PAYPAL CONFIGURATION (using unified env var fallback pattern)
+// ============================================================================
 export const PAYPAL_CONFIG = {
-  clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || '',
+  clientId: getEnvVar('VITE_PAYPAL_CLIENT_ID', 'PAYPAL_CLIENT_ID'),
+  secret: getEnvVar('VITE_PAYPAL_SECRET', 'PAYPAL_SECRET'),
   mode: import.meta.env.VITE_PAYPAL_MODE || 'sandbox',
   currency: import.meta.env.VITE_PAYPAL_CURRENCY || 'USD'
 };
 
-// Feature Flags
+// ============================================================================
+// FEATURE FLAGS
+// ============================================================================
 export const FEATURE_FLAGS = {
   // Enable PayPal integration
-  enablePayPal: !!import.meta.env.VITE_PAYPAL_CLIENT_ID,
+  enablePayPal: !!(PAYPAL_CONFIG.clientId && PAYPAL_CONFIG.secret),
   
   // Enable KYC flow
   enableKYC: import.meta.env.VITE_ENABLE_KYC !== 'false',
@@ -78,13 +110,20 @@ export const FEATURE_FLAGS = {
   enableSellerOnboarding: import.meta.env.VITE_ENABLE_SELLER_ONBOARDING !== 'false',
   
   // Enable debug mode
-  debug: import.meta.env.VITE_DEBUG === 'true'
+  debug: import.meta.env.VITE_DEBUG === 'true',
+  
+  // Development mode
+  isDevelopment
 };
 
-// Validation
+// ============================================================================
+// CONFIGURATION VALIDATION
+// ============================================================================
 export const validateConfig = () => {
   const errors = [];
+  const warnings = [];
   
+  // Required: Supabase
   if (!SUPABASE_CONFIG.url) {
     errors.push('Missing VITE_SUPABASE_URL');
   }
@@ -93,25 +132,85 @@ export const validateConfig = () => {
     errors.push('Missing VITE_SUPABASE_ANON_KEY');
   }
   
-  if (FEATURE_FLAGS.enablePayPal && !PAYPAL_CONFIG.clientId) {
-    errors.push('PayPal enabled but missing VITE_PAYPAL_CLIENT_ID');
+  // Conditional: PayPal (required if enabled)
+  if (FEATURE_FLAGS.enablePayPal) {
+    if (!PAYPAL_CONFIG.clientId) {
+      errors.push('PayPal enabled but missing PAYPAL_CLIENT_ID');
+    }
+    if (!PAYPAL_CONFIG.secret) {
+      errors.push('PayPal enabled but missing PAYPAL_SECRET');
+    }
+  } else {
+    warnings.push('PayPal disabled (missing credentials)');
+  }
+  
+  // Warnings: non-critical config
+  if (!FRONTEND_CONFIG.url || FRONTEND_CONFIG.url.includes('localhost')) {
+    warnings.push('Using localhost for frontend URL (development mode)');
   }
   
   if (errors.length > 0) {
-    console.warn('Configuration warnings:', errors);
+    console.error('❌ Configuration errors:', errors);
   }
   
-  return errors;
+  if (warnings.length > 0 && FEATURE_FLAGS.debug) {
+    console.warn('⚠️ Configuration warnings:', warnings);
+  }
+  
+  return { errors, warnings };
 };
 
-// Debug output
+// ============================================================================
+// STARTUP LOGGING
+// ============================================================================
+const logConfigStartup = () => {
+  // Log environment detection
+  console.info('[Environment] isDevelopment:', isDevelopment);
+  console.info('[Environment] isDeployed:', isDeployedOnRender());
+  console.info('[Environment] API URL:', API_CONFIG.baseURL);
+  
+  // Log PayPal config (redact secrets)
+  if (FEATURE_FLAGS.enablePayPal) {
+    console.info('[PayPal] Configured:', {
+      clientId: redactSecret(PAYPAL_CONFIG.clientId),
+      mode: PAYPAL_CONFIG.mode,
+      currency: PAYPAL_CONFIG.currency
+    });
+  } else {
+    console.warn('[PayPal] ⚠️ Not configured (missing credentials)');
+  }
+  
+  // Run validation and log results
+  const { errors, warnings } = validateConfig();
+  if (errors.length > 0) {
+    console.error('Configuration validation failed:', errors);
+  } else {
+    console.info('✅ Configuration valid');
+  }
+};
+
+// Run startup checks if in debug mode or development
+if (FEATURE_FLAGS.debug || isDevelopment) {
+  logConfigStartup();
+}
+
+// ============================================================================
+// DEBUG OUTPUT (verbose logging when enabled)
+// ============================================================================
 if (FEATURE_FLAGS.debug) {
-  console.debug('App Configuration:', {
+  console.debug('Full App Configuration:', {
     api: API_CONFIG,
     frontend: FRONTEND_CONFIG,
+    supabase: {
+      url: SUPABASE_CONFIG.url,
+      hasAnonKey: !!SUPABASE_CONFIG.anonKey
+    },
+    paypal: {
+      clientId: redactSecret(PAYPAL_CONFIG.clientId),
+      hasSecret: !!PAYPAL_CONFIG.secret,
+      mode: PAYPAL_CONFIG.mode,
+      currency: PAYPAL_CONFIG.currency
+    },
     features: FEATURE_FLAGS
   });
 }
-
-// Always log the API URL being used (helps with debugging deployed vs local)
-console.info(`[Environment] API URL: ${API_CONFIG.baseURL} (isDev: ${isDevelopment}, isDeployed: ${isDeployedOnRender()})`);
