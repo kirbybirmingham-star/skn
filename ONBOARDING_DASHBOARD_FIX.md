@@ -110,7 +110,7 @@ export const SERVER_CONFIG = {
 // In OnboardingDashboard.jsx
 import { API_CONFIG } from '@/config/environment.js';
 
-fetch(`${API_CONFIG.baseURL}/api/onboarding/me`, {
+fetch(`${API_CONFIG.baseURL}/onboarding/me`, {
   headers: { 'Authorization': `Bearer ${token}` }
 });
 // Makes request to: http://localhost:3001/api/onboarding/me

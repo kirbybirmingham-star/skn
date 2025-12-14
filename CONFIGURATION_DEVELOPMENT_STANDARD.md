@@ -106,7 +106,7 @@ import { SERVER_CONFIG, SUPABASE_CONFIG, PAYPAL_CONFIG } from './config.js';
 // Frontend
 import { API_CONFIG } from '@/config/environment.js';
 
-const response = await fetch(`${API_CONFIG.baseURL}/api/endpoint`, {
+const response = await fetch(`${API_CONFIG.baseURL}/endpoint`, {
   headers: {
     'Authorization': `Bearer ${token}`
   }

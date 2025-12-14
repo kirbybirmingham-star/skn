@@ -15,9 +15,9 @@ The application supports both local development and Render cloud deployment with
 ### Render Deployment
 - **Frontend Service**: Deployed at `https://skn-2.onrender.com`
 - **Backend Service**: Deployed at a separate Render URL (e.g., `https://skn-backend-api.onrender.com`)
-- **API Route**: Frontend uses full backend URL from `VITE_API_URL`
+- **API Route**: Frontend will append `/api` to the configured backend root so calls target the server's `/api/*` handlers
 - **Detection**: `VITE_API_URL` is set to backend service URL (contains `onrender.com`, not localhost)
-- **Result**: `API_CONFIG.baseURL` = `https://skn-backend-api.onrender.com`
+- **Result**: `API_CONFIG.baseURL` = `https://skn-backend-api.onrender.com/api`
 
 ## Environment Variables to Set on Render
 
@@ -36,6 +36,8 @@ VITE_FRONTEND_URL=https://skn-2.onrender.com
 ```
 
 **Important**: Set `VITE_API_URL` to match your deployed backend service URL on Render.
+
+**Note**: Do **not** include a trailing `/api` in `VITE_API_URL` — the frontend will normalize and append `/api` automatically. For example, set `VITE_API_URL=https://skn-backend-api.onrender.com` (not `https://skn-backend-api.onrender.com/api`).
 
 ### Backend Service
 Set the following environment variables:
@@ -77,7 +79,7 @@ const isDeployedOnRender = () => {
 
 const baseURL = isDevelopment && !isDeployedOnRender()
   ? '/api'
-  : (import.meta.env.VITE_API_URL || 'http://localhost:3001');
+  : `${(import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(/\/$/, '')}/api`;
 ```
 
 ## Debugging
@@ -91,7 +93,7 @@ The frontend logs the API URL it's using on startup:
 or on Render:
 
 ```
-[Environment] API URL: https://skn-backend-api.onrender.com (isDev: false, isDeployed: true)
+[Environment] API URL: https://skn-backend-api.onrender.com/api (isDev: false, isDeployed: true)
 ```
 
 Check the browser console to verify the correct URL is being used.
@@ -155,5 +157,5 @@ app.use(cors({
 1. Push changes to main branch
 2. Check Render builds complete
 3. Navigate to `https://skn-2.onrender.com`
-4. Check console: should see `[Environment] API URL: https://skn-backend-api.onrender.com`
+4. Check console: should see `[Environment] API URL: https://skn-backend-api.onrender.com/api`
 5. Try fetching from onboarding dashboard (should work without CORS error)

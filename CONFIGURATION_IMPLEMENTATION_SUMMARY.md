@@ -88,7 +88,7 @@ Developer cheat sheet with:
 
 2. **src/pages/OnboardingDashboard.jsx**
    - ✅ Imports `API_CONFIG` from config/environment.js
-   - ✅ Uses `${API_CONFIG.baseURL}/api/onboarding/me` for API calls
+   - ✅ Uses `${API_CONFIG.baseURL}/onboarding/me` for API calls
 
 ---
 
@@ -155,7 +155,7 @@ const url = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/api/endpoint
 
 // Frontend
 import { API_CONFIG, FRONTEND_CONFIG } from '@/config/environment.js';
-fetch(`${API_CONFIG.baseURL}/api/onboarding/me`);
+fetch(`${API_CONFIG.baseURL}/onboarding/me`);
 window.location = `${FRONTEND_CONFIG.url}/dashboard`;
 
 // Backend

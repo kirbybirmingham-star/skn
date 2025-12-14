@@ -27,7 +27,7 @@ const isDeployedOnRender = () => {
 export const API_CONFIG = {
   baseURL: isDevelopment && !isDeployedOnRender()
     ? '/api'  // Local dev: use proxy
-    : (import.meta.env.VITE_API_URL || 'http://localhost:3001'),  // Deployed: use full URL
+    : `${(import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(/\/$/, '')}/api`,  // Deployed: use backend root + /api
   // ... rest of config
 };
 ```
@@ -51,6 +51,7 @@ console.info(`[Environment] API URL: ${API_CONFIG.baseURL} (isDev: ${isDevelopme
 - `VITE_API_URL = 'https://backend.onrender.com'` (set in Render dashboard)
 - `isDeployedOnRender()` returns `true` (contains onrender.com, not localhost)
 - **Result**: `API_CONFIG.baseURL = 'https://backend.onrender.com'`
+ - **Result**: `API_CONFIG.baseURL = 'https://backend.onrender.com/api'`
 - Frontend requests go directly to backend service
 
 ## Required Render Configuration
@@ -62,6 +63,8 @@ VITE_API_URL=https://skn-backend-api.onrender.com
 ```
 
 Where `skn-backend-api.onrender.com` is the URL of your backend service on Render.
+
+**Note**: Do **not** include a trailing `/api` in `VITE_API_URL` — the frontend will normalize and append `/api` automatically. For example, set `VITE_API_URL=https://skn-backend-api.onrender.com` (not `https://skn-backend-api.onrender.com/api`).
 
 ## Files Modified
 1. **src/config/environment.js** - Added deployment detection logic
@@ -79,7 +82,7 @@ Where `skn-backend-api.onrender.com` is the URL of your backend service on Rende
 ### Deployed Test (should use full backend URL)
 1. After deployment, open `https://skn-2.onrender.com`
 2. Open browser console
-3. Look for: `[Environment] API URL: https://skn-backend-api.onrender.com (isDev: false, isDeployed: true)`
+3. Look for: `[Environment] API URL: https://skn-backend-api.onrender.com/api (isDev: false, isDeployed: true)`
 4. Verify onboarding dashboard loads without CORS errors
 
 ## Backward Compatibility

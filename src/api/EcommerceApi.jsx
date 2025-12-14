@@ -5,7 +5,7 @@ import { API_CONFIG } from '../config/environment.js';
 
 // API endpoints (non-PayPal)
 // In dev: API_CONFIG.baseURL = '/api', so this becomes '/api/reviews'
-// In prod (deployed): API_CONFIG.baseURL = 'https://backend-api.onrender.com', so this becomes 'https://backend-api.onrender.com/reviews'
+// In prod (deployed): API_CONFIG.baseURL = 'https://backend-api.onrender.com/api', so this becomes 'https://backend-api.onrender.com/api/reviews'
 const API_ENDPOINTS = {
   reviews: `${API_CONFIG.baseURL}/reviews`,
 };

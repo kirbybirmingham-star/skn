@@ -155,7 +155,7 @@ const origins = ['http://localhost:3000', 'http://localhost:3001'];
 ```javascript
 // ✅ DO
 import { API_CONFIG } from '@/config/environment.js';
-fetch(`${API_CONFIG.baseURL}/api/endpoint`);
+fetch(`${API_CONFIG.baseURL}/endpoint`);
 
 import { SERVER_CONFIG } from './config.js';
 app.listen(SERVER_CONFIG.port);

@@ -49,9 +49,15 @@ export const API_CONFIG = {
   // - Local dev (Vite): use relative '/api' path (proxied by Vite to http://localhost:3001)
   // - Deployed (Render): use full URL from VITE_API_URL environment variable
   // - Fallback: use full localhost URL
-  baseURL: isDevelopment && !isDeployedOnRender()
-    ? '/api'
-    : (import.meta.env.VITE_API_URL || 'http://localhost:3001'),
+  // Local dev: use the Vite proxy path '/api'
+  // Deployed: use the backend root from VITE_API_URL and append '/api' so
+  // frontend requests like `${API_CONFIG.baseURL}/onboarding/me` map to
+  // `https://backend.example.com/api/onboarding/me` (server mounts under /api)
+  baseURL: (function () {
+    if (isDevelopment && !isDeployedOnRender()) return '/api';
+    const backendRoot = (import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(/\/$/, '');
+    return `${backendRoot}/api`;
+  })(),
   
   // Request timeout in milliseconds
   timeout: parseInt(import.meta.env.VITE_API_TIMEOUT || '30000'),
@@ -59,8 +65,8 @@ export const API_CONFIG = {
   // Enable debug logging
   debug: import.meta.env.VITE_API_DEBUG === 'true',
   
-  // Full backend URL (for production APIs that need absolute URLs)
-  fullURL: import.meta.env.VITE_API_URL || 'http://localhost:3001'
+  // Full backend root URL (without trailing /api)
+  fullURL: (import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(/\/$/, '')
 };
 
 // ============================================================================

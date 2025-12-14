@@ -8,7 +8,7 @@
 import { API_CONFIG, FRONTEND_CONFIG, FEATURE_FLAGS, PAYPAL_CONFIG } from '@/config/environment.js';
 
 // Making API calls
-fetch(`${API_CONFIG.baseURL}/api/endpoint`);
+fetch(`${API_CONFIG.baseURL}/endpoint`);
 
 // Redirecting to internal pages
 window.location.href = `${FRONTEND_CONFIG.url}/dashboard`;
@@ -53,7 +53,7 @@ const origins = ['http://localhost:3000', 'http://localhost:3001'];
 window.location = 'http://localhost:3000/dashboard';
 
 // ✅ DO
-fetch(`${API_CONFIG.baseURL}/api/endpoint`);
+fetch(`${API_CONFIG.baseURL}/endpoint`);
 app.listen(SERVER_CONFIG.port);
 const origins = SERVER_CONFIG.frontend.urls;
 window.location = `${FRONTEND_CONFIG.url}/dashboard`;
@@ -93,7 +93,7 @@ DEBUG_CONFIG=false
 ```javascript
 import { API_CONFIG } from '@/config/environment.js';
 
-const response = await fetch(`${API_CONFIG.baseURL}/api/onboarding/me`, {
+const response = await fetch(`${API_CONFIG.baseURL}/onboarding/me`, {
   headers: { 'Authorization': `Bearer ${token}` }
 });
 ```

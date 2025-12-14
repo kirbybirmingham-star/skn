@@ -36,7 +36,7 @@ Handles all frontend environment variables and feature flags.
 import { API_CONFIG } from '@/config/environment.js';
 
 // Use the configuration
-const response = await fetch(`${API_CONFIG.baseURL}/api/onboarding/me`);
+const response = await fetch(`${API_CONFIG.baseURL}/onboarding/me`);
 ```
 
 **Exported Objects:**

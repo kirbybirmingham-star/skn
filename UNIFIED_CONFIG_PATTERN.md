@@ -116,7 +116,7 @@ const mode = process.env.PAYPAL_MODE || 'sandbox';   // Defaults to sandbox (saf
 const env = process.env.NODE_ENV || 'development';   // Defaults to dev (safe)
 
 // No URL? Falls back gracefully
-const baseURL = isDevelopment ? '/api' : (import.meta.env.VITE_API_URL || 'http://localhost:3001');
+const baseURL = isDevelopment ? '/api' : `${(import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(/\/$/, '')}/api`;
 ```
 
 ## Frontend Configuration (`src/config/environment.js`)
@@ -244,7 +244,7 @@ NODE_ENV: development
 ### Production (Render)
 ```
 isDevelopment: false
-API_CONFIG.baseURL: https://backend.onrender.com
+API_CONFIG.baseURL: https://backend.onrender.com/api
 PAYPAL_CONFIG.mode: live
 Environment: production
 NODE_ENV: production
