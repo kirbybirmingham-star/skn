@@ -11,12 +11,24 @@
 // Detect if running in development
 const isDevelopment = import.meta.env.DEV;
 
+// Detect if running on a Render-like deployment (or other cloud providers)
+// On Render, VITE_API_URL will be set to the backend service URL
+// Locally, it's either not set or points to localhost
+const isDeployedOnRender = () => {
+  const apiUrl = import.meta.env.VITE_API_URL || '';
+  // If VITE_API_URL is set to a non-localhost URL, we're deployed
+  return apiUrl && !apiUrl.includes('localhost') && !apiUrl.includes('127.0.0.1');
+};
+
 // API Configuration
 export const API_CONFIG = {
   // Backend API base URL
-  // In development: use relative path (proxied by Vite)
-  // In production: use full URL from environment
-  baseURL: isDevelopment ? '/api' : (import.meta.env.VITE_API_URL || 'http://localhost:3001'),
+  // - Local dev (Vite): use relative '/api' path (proxied by Vite to http://localhost:3001)
+  // - Deployed (Render): use full URL from VITE_API_URL environment variable
+  // - Fallback: use full localhost URL
+  baseURL: isDevelopment && !isDeployedOnRender()
+    ? '/api'
+    : (import.meta.env.VITE_API_URL || 'http://localhost:3001'),
   
   // Request timeout in milliseconds
   timeout: parseInt(import.meta.env.VITE_API_TIMEOUT || '30000'),
@@ -100,3 +112,6 @@ if (FEATURE_FLAGS.debug) {
     features: FEATURE_FLAGS
   });
 }
+
+// Always log the API URL being used (helps with debugging deployed vs local)
+console.info(`[Environment] API URL: ${API_CONFIG.baseURL} (isDev: ${isDevelopment}, isDeployed: ${isDeployedOnRender()})`);
