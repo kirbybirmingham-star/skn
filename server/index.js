@@ -5,18 +5,23 @@ import { config } from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import fs from 'fs';
+import { SERVER_CONFIG, PAYPAL_CONFIG, validateServerConfig } from './config.js';
+
 // Load environment variables from root .env file
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const rootDir = join(__dirname, '..');
 config({ path: join(rootDir, '.env') });
 
+// Validate configuration
+validateServerConfig();
+
 // Debug - Print loaded environment variables
 console.log('Loaded Environment Variables:', {
-  VITE_PAYPAL_CLIENT_ID: process.env.VITE_PAYPAL_CLIENT_ID ? '✓ Present' : '✗ Missing',
-  VITE_PAYPAL_SECRET: process.env.VITE_PAYPAL_SECRET ? '✓ Present' : '✗ Missing',
-  NODE_ENV: process.env.NODE_ENV || 'not set',
-  PORT: process.env.PORT || '3001'
+  VITE_PAYPAL_CLIENT_ID: PAYPAL_CONFIG.clientId ? '✓ Present' : '✗ Missing',
+  VITE_PAYPAL_SECRET: PAYPAL_CONFIG.secret ? '✓ Present' : '✗ Missing',
+  NODE_ENV: SERVER_CONFIG.environment,
+  PORT: SERVER_CONFIG.port
 });
 
 // Dynamically import routes after env is loaded
@@ -29,6 +34,7 @@ let paypalPayoutsRoutes;
 let dashboardRoutes;
 let healthRoutes;
 let reviewRoutes;
+let vendorRoutes;
 (async () => {
   const [
     { default: webhook },
@@ -40,6 +46,7 @@ let reviewRoutes;
     { default: dashboard },
     { default: health },
     { default: review },
+    { default: vendor },
   ] = await Promise.all([
     import('./webhooks.js'),
     import('./paypal-orders.js'),
@@ -50,6 +57,7 @@ let reviewRoutes;
     import('./dashboard.js'),
     import('./health.js'),
     import('./reviews.js'),
+    import('./vendor.js'),
   ]);
   
   webhookRoutes = webhook;
@@ -61,6 +69,7 @@ let reviewRoutes;
   dashboardRoutes = dashboard;
   healthRoutes = health;
   reviewRoutes = review;
+  vendorRoutes = vendor;
 
   // Now start the server (moved inside async init)
   startServer();
@@ -91,24 +100,16 @@ function startServer() {
   // Fallback CORS for non-PayPal routes
   app.use(cors({
     origin: (origin, callback) => {
-      const allowedOrigins = [
-        'http://localhost:3000',
-        'http://localhost:3001',
-        'https://skn.onrender.com',
-        'https://skn-2.onrender.com',
-        process.env.FRONTEND_URL
-      ].filter(Boolean);
-
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin || SERVER_CONFIG.frontend.urls.includes(origin)) {
         callback(null, true);
       } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
-}));
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
+  }));
 
   app.use(express.json());
 
@@ -121,6 +122,7 @@ function startServer() {
   app.use('/api/dashboard', dashboardRoutes);
   app.use('/api/health', healthRoutes);
   app.use('/api', reviewRoutes);
+  app.use('/api/vendor', vendorRoutes);
 
   // Serve frontend static files if the build output exists (for deployments that use a single web service)
   try {
@@ -165,9 +167,7 @@ function startServer() {
     res.status(500).json({ error: 'Something went wrong!' });
   });
 
-  const PORT = process.env.PORT || 3001;
-
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  app.listen(SERVER_CONFIG.port, () => {
+    console.log(`Server running on port ${SERVER_CONFIG.port}`);
   });
 }

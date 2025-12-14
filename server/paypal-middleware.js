@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import { SERVER_CONFIG } from './config.js';
 
 // Middleware to configure PayPal for SSR compatibility
 export function configurePayPalMiddleware(app) {
@@ -7,10 +8,7 @@ export function configurePayPalMiddleware(app) {
   const corsOptions = {
     origin: (origin, callback) => {
       const allowedOrigins = [
-        'http://localhost:3000',
-        'http://localhost:3001',
-        'https://skn.onrender.com',
-        'https://skn-2.onrender.com',
+        ...SERVER_CONFIG.frontend.urls,
         'https://www.paypal.com'
       ];
 

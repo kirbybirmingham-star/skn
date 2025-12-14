@@ -3,25 +3,36 @@ import { v4 as uuidv4 } from 'uuid';
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import path from 'path';
+import { SUPABASE_CONFIG, SERVER_CONFIG } from './config.js';
 
 dotenv.config({ path: path.join(process.cwd(), '.env') });
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-let supabase = null;
-if (!supabaseUrl || !supabaseKey) {
-  console.warn('Supabase not configured for onboarding route. Onboarding endpoints will be disabled.');
-} else {
-  supabase = createClient(supabaseUrl, supabaseKey);
-}
-
 const router = express.Router();
+
+// Lazy initialize Supabase on first request
+let supabase = null;
+
+function getSupabase() {
+  if (supabase) return supabase;
+  
+  // Read directly from process.env to ensure we get the loaded values
+  const supabaseUrl = process.env.VITE_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!supabaseUrl || !supabaseKey) {
+    console.warn('Supabase not configured - missing URL or service role key');
+    return null;
+  }
+  
+  supabase = createClient(supabaseUrl, supabaseKey);
+  return supabase;
+}
 
 // POST /api/onboarding/signup
 // Body: { owner_id, name, slug, description, website, contact_email }
 router.post('/signup', async (req, res) => {
   try {
+    const supabase = getSupabase();
     console.log('POST /signup called with body:', req.body);
     if (!supabase) return res.status(503).json({ error: 'Server not configured for onboarding' });
     const { owner_id, name, slug, description, website, contact_email } = req.body;
@@ -59,8 +70,25 @@ router.post('/signup', async (req, res) => {
     console.log('Vendor created successfully:', data);
     const vendor = data && data[0];
 
+    // Update user's profile to mark them as a vendor/seller
+    if (owner_id && vendor) {
+      console.log('Updating profile role to vendor for owner_id:', owner_id);
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ role: 'vendor' })
+        .eq('id', owner_id);
+      
+      if (profileError) {
+        console.warn('Warning: Could not update profile role to vendor:', profileError);
+        // Don't fail the request, but log the warning
+      } else {
+        console.log('Successfully set profile role to vendor');
+      }
+    }
+
     // Build next steps response — in future this would integrate with a KYC provider
-    const onboardingUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/onboarding/${onboardingToken}`;
+    const frontendUrl = SERVER_CONFIG.frontend.urls[0] || 'http://localhost:3000';
+    const onboardingUrl = `${frontendUrl}/onboarding/${onboardingToken}`;
 
     return res.json({ vendor, onboardingUrl });
   } catch (err) {
@@ -69,71 +97,11 @@ router.post('/signup', async (req, res) => {
   }
 });
 
-// GET /api/onboarding/:token - retrieve vendor by onboarding token
-router.get('/:token', async (req, res) => {
-  try {
-    if (!supabase) return res.status(503).json({ error: 'Server not configured for onboarding' });
-    const token = req.params.token;
-    const { data, error } = await supabase
-      .from('vendors')
-      .select('*')
-      .eq('onboarding_token', token)
-      .limit(1);
-    if (error) return res.status(500).json({ error: 'DB error' });
-    if (!data || data.length === 0) return res.status(404).json({ error: 'Not found' });
-    return res.json({ vendor: data[0] });
-  } catch (err) {
-    console.error('Onboarding GET error:', err);
-    return res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// POST /api/onboarding/start-kyc - body: { vendor_id }
-// This starts a KYC session with the configured provider (stubbed) and returns a providerUrl
-import { verifySupabaseJwt } from './middleware/supabaseAuth.js';
-
-router.post('/start-kyc', verifySupabaseJwt, async (req, res) => {
-  try {
-    if (!supabase) return res.status(503).json({ error: 'Server not configured for onboarding' });
-    const { vendor_id } = req.body;
-    if (!vendor_id) return res.status(400).json({ error: 'vendor_id required' });
-
-    // Fetch vendor
-    const { data: vendors, error: fetchErr } = await supabase.from('vendors').select('*').eq('id', vendor_id).limit(1);
-    if (fetchErr) return res.status(500).json({ error: 'DB error' });
-    const vendor = vendors && vendors[0];
-    if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
-
-    // Authorization: only vendor owner can start KYC
-    const requesterId = req.user?.id;
-    if (!requesterId || requesterId !== vendor.owner_id) {
-      return res.status(403).json({ error: 'Only the vendor owner may start KYC' });
-    }
-
-    // Here you'd call the real KYC provider SDK/API (e.g. jewelhuq) to create a session.
-    // For now we'll create a stub provider session id and return a frontend URL to continue.
-    const providerSessionId = `stub-${Date.now()}`;
-
-    // Update vendor with kyc_provider and provisional kyc_id and status
-    const { error: updErr } = await supabase
-      .from('vendors')
-      .update({ kyc_provider: process.env.KYC_PROVIDER || 'stub', kyc_id: providerSessionId, onboarding_status: 'kyc_in_progress' })
-      .eq('id', vendor_id);
-    if (updErr) console.warn('Failed to update vendor with kyc session:', updErr);
-
-    // Construct a provider URL - in real integration this would be returned by the provider
-    const providerUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/onboarding/${vendor.onboarding_token}?provider=stub&session=${providerSessionId}`;
-
-    return res.json({ providerUrl, providerSessionId });
-  } catch (err) {
-    console.error('start-kyc error:', err);
-    return res.status(500).json({ error: 'Server error' });
-  }
-});
-
 // GET /api/onboarding/me - return vendor for the authenticated user and some helper counts
 router.get('/me', verifySupabaseJwt, async (req, res) => {
   try {
+    const supabase = getSupabase();
+    if (!supabase) return res.status(503).json({ error: 'Server not configured for onboarding' });
     const requesterId = req.user?.id;
     if (!requesterId) return res.status(401).json({ error: 'Not authenticated' });
 
@@ -188,9 +156,75 @@ router.get('/me', verifySupabaseJwt, async (req, res) => {
   }
 });
 
+// GET /api/onboarding/:token - retrieve vendor by onboarding token
+router.get('/:token', async (req, res) => {
+  try {
+    const supabase = getSupabase();
+    if (!supabase) return res.status(503).json({ error: 'Server not configured for onboarding' });
+    const token = req.params.token;
+    const { data, error } = await supabase
+      .from('vendors')
+      .select('*')
+      .eq('onboarding_token', token)
+      .limit(1);
+    if (error) return res.status(500).json({ error: 'DB error' });
+    if (!data || data.length === 0) return res.status(404).json({ error: 'Not found' });
+    return res.json({ vendor: data[0] });
+  } catch (err) {
+    console.error('Onboarding GET error:', err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /api/onboarding/start-kyc - body: { vendor_id }
+// This starts a KYC session with the configured provider (stubbed) and returns a providerUrl
+import { verifySupabaseJwt } from './middleware/supabaseAuth.js';
+
+router.post('/start-kyc', verifySupabaseJwt, async (req, res) => {
+  try {
+    const supabase = getSupabase();
+    if (!supabase) return res.status(503).json({ error: 'Server not configured for onboarding' });
+    const { vendor_id } = req.body;
+    if (!vendor_id) return res.status(400).json({ error: 'vendor_id required' });
+
+    // Fetch vendor
+    const { data: vendors, error: fetchErr } = await supabase.from('vendors').select('*').eq('id', vendor_id).limit(1);
+    if (fetchErr) return res.status(500).json({ error: 'DB error' });
+    const vendor = vendors && vendors[0];
+    if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
+
+    // Authorization: only vendor owner can start KYC
+    const requesterId = req.user?.id;
+    if (!requesterId || requesterId !== vendor.owner_id) {
+      return res.status(403).json({ error: 'Only the vendor owner may start KYC' });
+    }
+
+    // Here you'd call the real KYC provider SDK/API (e.g. jewelhuq) to create a session.
+    // For now we'll create a stub provider session id and return a frontend URL to continue.
+    const providerSessionId = `stub-${Date.now()}`;
+
+    // Update vendor with kyc_provider and provisional kyc_id and status
+    const { error: updErr } = await supabase
+      .from('vendors')
+      .update({ kyc_provider: process.env.KYC_PROVIDER || 'stub', kyc_id: providerSessionId, onboarding_status: 'kyc_in_progress' })
+      .eq('id', vendor_id);
+    if (updErr) console.warn('Failed to update vendor with kyc session:', updErr);
+
+    // Construct a provider URL - in real integration this would be returned by the provider
+    const frontendUrl = SERVER_CONFIG.frontend.urls[0] || 'http://localhost:3000';
+    const providerUrl = `${frontendUrl}/onboarding/${vendor.onboarding_token}?provider=stub&session=${providerSessionId}`;
+
+    return res.json({ providerUrl, providerSessionId });
+  } catch (err) {
+    console.error('start-kyc error:', err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // POST /api/onboarding/webhook - provider webhooks should POST verification results here
 router.post('/webhook', async (req, res) => {
   try {
+    const supabase = getSupabase();
     if (!supabase) return res.status(503).json({ error: 'Server not configured for onboarding' });
     const payload = req.body;
     // Expect { onboarding_token, vendor_id, kyc_id, status, details }
@@ -229,6 +263,7 @@ router.post('/webhook', async (req, res) => {
 // POST /api/onboarding/:id/appeal - vendor requests an appeal (must be owner)
 router.post('/:id/appeal', verifySupabaseJwt, async (req, res) => {
   try {
+    const supabase = getSupabase();
     if (!supabase) return res.status(503).json({ error: 'Server not configured for onboarding' });
     const vendorId = req.params.id;
     const { reason } = req.body;

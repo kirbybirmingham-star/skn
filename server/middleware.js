@@ -1,19 +1,13 @@
 import { NextResponse } from 'next/server';
+import { SERVER_CONFIG } from './config.js';
 
 export async function middleware(request) {
   // Apply CORS headers for PayPal integration
   const response = NextResponse.next();
 
-  // Allow specific origins - adjust based on your deployment environment
-  const allowedOrigins = [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'https://skn.onrender.com',
-    'https://skn-2.onrender.com'
-  ];
-
+  // Use centralized configuration for allowed origins
   const origin = request.headers.get('origin');
-  if (origin && allowedOrigins.includes(origin)) {
+  if (origin && SERVER_CONFIG.frontend.urls.includes(origin)) {
     response.headers.set('Access-Control-Allow-Origin', origin);
   }
 
