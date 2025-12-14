@@ -23,11 +23,11 @@ const missingVars = [];
 if (!PAYPAL_CLIENT_ID) missingVars.push('PAYPAL_CLIENT_ID');
 if (!PAYPAL_CLIENT_SECRET) missingVars.push('PAYPAL_SECRET');
 
+let configError = null;
 if (missingVars.length > 0) {
   const message = `Missing PayPal credentials: ${missingVars.join(', ')}`;
   console.error(message);
-  // Instead of throwing, we'll set an error state that routes can check
-  module.exports.configError = message;
+  configError = message;
 }
 
 async function generateAccessToken() {
@@ -79,9 +79,9 @@ router.post('/create-order', express.json(), async (req, res) => {
     console.log('Received create-order request');
 
     // Check if we have a configuration error
-    if (module.exports.configError) {
-      console.error('PayPal configuration error:', module.exports.configError);
-      return res.status(500).json({ error: 'PayPal configuration error', debug: process.env.DEBUG_PAYPAL === 'true' ? module.exports.configError : undefined });
+    if (configError) {
+      console.error('PayPal configuration error:', configError);
+      return res.status(500).json({ error: 'PayPal configuration error', debug: process.env.DEBUG_PAYPAL === 'true' ? configError : undefined });
     }
 
     const { cartItems } = req.body || {};
@@ -96,9 +96,9 @@ router.post('/create-order', express.json(), async (req, res) => {
 
     // Defensive validation of items
     for (const item of cartItems) {
-      if (!item?.product || typeof item.quantity !== 'number') {
+      if (!item?.product || !item?.variant || typeof item.quantity !== 'number') {
         console.error('Invalid item:', item);
-        return res.status(400).send(JSON.stringify({ error: 'Each cart item must have a product and numeric quantity' }));
+        return res.status(400).send(JSON.stringify({ error: 'Each cart item must have product, variant, and numeric quantity' }));
       }
     }
 
@@ -111,7 +111,8 @@ router.post('/create-order', express.json(), async (req, res) => {
     console.log('Access token generated successfully');
 
     const orderTotal = cartItems.reduce((total, item) => {
-      const priceCents = item.product.base_price ?? 0;
+      // Use variant price (with sale price priority), fallback to product base_price
+      const priceCents = item.variant?.sale_price_in_cents ?? item.variant?.price_in_cents ?? item.product?.base_price ?? 0;
       const price = priceCents / 100;
       return total + price * item.quantity;
     }, 0);
@@ -137,11 +138,13 @@ router.post('/create-order', express.json(), async (req, res) => {
             }
           },
           items: cartItems.map(item => {
-            const unitPrice = (item.product.base_price / 100).toFixed(2);
+            // Use variant price (with sale price priority), fallback to product base_price
+            const priceCents = item.variant?.sale_price_in_cents ?? item.variant?.price_in_cents ?? item.product?.base_price ?? 0;
+            const unitPrice = (priceCents / 100).toFixed(2);
             return {
-              name: item.product.title || 'Item',
-              description: item.product.description || '',
-              sku: item.product.id || '',
+              name: item.product?.title || item.variant?.title || 'Item',
+              description: item.product?.description || '',
+              sku: item.product?.id || '',
               unit_amount: { 
                 currency_code: 'USD', 
                 value: unitPrice

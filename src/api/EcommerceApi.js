@@ -1,8 +1,8 @@
 import { supabase } from '../lib/customSupabaseClient.js';
 import { selectProductWithVariants } from '../lib/variantSelectHelper.js';
 
-// PayPal API Configuration
-const API_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) || process.env.VITE_API_URL || 'http://localhost:3001';
+// API Configuration - use relative path for Vite proxy, full URL only if explicitly set in env
+const API_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) || process.env.VITE_API_URL || '';
 
 // API endpoints (non-PayPal)
 const API_ENDPOINTS = {
@@ -21,9 +21,9 @@ export function formatCurrency(amountInCents, currencyInfo = { code: 'USD', symb
 }
 
 /**
- * Create a PayPal order using the PayPal Orders API
+ * Create a PayPal order through the backend API
  * This is called from the frontend PayPal button's createOrder callback
- * Uses the PayPal Client ID (public) with the Orders API
+ * The backend handles PayPal authentication with Client Secret
  */
 export async function createPayPalOrder(cartItems) {
   try {
@@ -34,98 +34,35 @@ export async function createPayPalOrder(cartItems) {
 
     // Ensure each item has required fields
     cartItems.forEach(item => {
-      if (!item?.variant?.price_in_cents) {
-        throw new Error('Invalid item in cart');
+      if (!item?.variant?.price_in_cents && !item?.product?.base_price) {
+        throw new Error('Invalid item in cart - missing price');
       }
     });
 
-    // Calculate order total
-    const orderTotal = cartItems.reduce((total, item) => {
-      const price = (item.variant.sale_price_in_cents ?? item.variant.price_in_cents) / 100;
-      return total + (price * item.quantity);
-    }, 0);
-
-    if (orderTotal <= 0) {
-      throw new Error('Invalid order total');
-    }
-
-    // Build the PayPal order payload
-    const payload = {
-      intent: 'CAPTURE',
-      purchase_units: [
-        {
-          reference_id: `order_${Date.now()}`,
-          description: 'SKN Bridge Trade Purchase',
-          amount: {
-            currency_code: 'USD',
-            value: orderTotal.toFixed(2),
-            breakdown: {
-              item_total: {
-                currency_code: 'USD',
-                value: orderTotal.toFixed(2)
-              }
-            }
-          },
-          items: cartItems.map(item => {
-            const unitPrice = (item.variant.price_in_cents / 100).toFixed(2);
-            return {
-              name: item.product?.name || 'Item',
-              description: item.product?.description || '',
-              sku: item.product?.id || '',
-              unit_amount: {
-                currency_code: 'USD',
-                value: unitPrice
-              },
-              quantity: String(item.quantity),
-              category: 'PHYSICAL_GOODS'
-            };
-          })
-        }
-      ],
-      application_context: {
-        brand_name: 'SKN Bridge Trade',
-        user_action: 'PAY_NOW'
-      }
-    };
-
-    // Call PayPal API directly from the client
-    // Note: This uses the Client ID in the Authorization header
-    const clientId = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_PAYPAL_CLIENT_ID) || process.env.VITE_PAYPAL_CLIENT_ID;
-    if (!clientId) {
-      throw new Error('PayPal Client ID is not configured');
-    }
-
-    // Use Basic Auth with Client ID and an empty secret (public key scenario)
-    const auth = btoa(`${clientId}:`);
-    const response = await fetch('https://api-m.sandbox.paypal.com/v2/checkout/orders', {
+    // Call our backend endpoint using relative path (Vite proxy will handle routing)
+    // During development, Vite proxy routes /api to http://localhost:3001
+    // During production, it's the same domain
+    const response = await fetch(`/api/paypal/create-order`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Basic ${auth}`
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({ cartItems })
     });
 
-    const text = await response.text();
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch (e) {
-      console.error('Invalid JSON response from PayPal:', text);
-      throw new Error('Invalid response from PayPal');
-    }
+    const data = await response.json();
 
     if (!response.ok) {
-      console.error('PayPal create-order failed:', { status: response.status, body: data });
-      throw new Error(data?.message || data?.error?.message || 'Failed to create PayPal order');
+      console.error('Backend create-order failed:', { status: response.status, body: data });
+      throw new Error(data?.error || data?.message || 'Failed to create PayPal order');
     }
 
     if (!data.id) {
-      console.error('Missing order ID in PayPal response:', data);
-      throw new Error('Invalid order response from PayPal');
+      console.error('Missing order ID in response:', data);
+      throw new Error('Invalid order response - missing order ID');
     }
 
-    console.log('PayPal order created successfully:', data.id);
+    console.log('PayPal order created successfully through backend:', data.id);
     return data.id;
   } catch (error) {
     console.error("Failed to create PayPal order:", error);
@@ -134,8 +71,9 @@ export async function createPayPalOrder(cartItems) {
 }
 
 /**
- * Capture a PayPal order using the PayPal Orders API
+ * Capture a PayPal order through the backend API
  * This is called from the frontend PayPal button's onApprove callback
+ * The backend handles PayPal authentication with Client Secret
  */
 export async function capturePayPalOrder(orderID) {
   try {
@@ -143,36 +81,22 @@ export async function capturePayPalOrder(orderID) {
       throw new Error('Order ID is required');
     }
 
-    const clientId = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_PAYPAL_CLIENT_ID) || process.env.VITE_PAYPAL_CLIENT_ID;
-    if (!clientId) {
-      throw new Error('PayPal Client ID is not configured');
-    }
-
-    // Use Basic Auth with Client ID and an empty secret (public key scenario)
-    const auth = btoa(`${clientId}:`);
-    const response = await fetch(`https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderID}/capture`, {
+    // Call our backend endpoint using relative path (Vite proxy will handle routing)
+    const response = await fetch(`/api/paypal/capture-order/${orderID}`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Basic ${auth}`
+        'Content-Type': 'application/json'
       }
     });
 
-    const text = await response.text();
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch (e) {
-      console.error('Invalid JSON response from PayPal:', text);
-      throw new Error('Invalid response from PayPal');
-    }
+    const data = await response.json();
 
     if (!response.ok) {
-      console.error('PayPal capture-order failed:', { status: response.status, body: data });
-      throw new Error(data?.message || data?.error?.message || 'Failed to capture PayPal order');
+      console.error('Backend capture-order failed:', { status: response.status, body: data });
+      throw new Error(data?.error || data?.message || 'Failed to capture PayPal order');
     }
 
-    console.log('PayPal order captured successfully:', data.id);
+    console.log('PayPal order captured successfully through backend:', orderID);
     return data;
   } catch (error) {
     console.error("Failed to capture PayPal order:", error);
@@ -854,6 +778,147 @@ export async function createReview(reviewData) {
     return data;
   } catch (error) {
     console.error('Error creating review:', error);
+    throw error;
+  }
+}
+
+/**
+ * Create an order in the database after successful PayPal payment
+ * @param {Object} paymentData - Data from PayPal capture response
+ * @param {Array} cartItems - Items in the cart
+ * @param {string} userId - User ID of the buyer
+ * @returns {Object} Created order with id and status
+ */
+export async function createOrderFromPayPalPayment(paymentData, cartItems, userId) {
+  try {
+    if (!supabase) {
+      throw new Error('Supabase not initialized');
+    }
+
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
+
+    if (!Array.isArray(cartItems) || cartItems.length === 0) {
+      throw new Error('Cart items are required');
+    }
+
+    // Calculate order total - PayPal returns dollars, but database stores as integer (cents)
+    const totalAmountDollars = parseFloat(paymentData.purchase_units?.[0]?.amount?.value) || 0;
+    const totalAmountCents = Math.round(totalAmountDollars * 100);
+
+    // Prepare order data matching the actual database schema
+    // total_amount is stored as INTEGER in CENTS (e.g., 9999 = $99.99)
+    const orderData = {
+      user_id: userId,
+      status: 'paid', // PayPal payment is captured
+      total_amount: totalAmountCents, // INTEGER - amount in cents
+      currency: 'USD',
+      shipping_address: paymentData.payer?.address || null,
+      billing_address: paymentData.payer?.address || null,
+      metadata: {
+        paypal_order_id: paymentData.id,
+        payment_status: paymentData.status,
+        payer_email: paymentData.payer?.email_address,
+        payment_source: 'paypal'
+      }
+    };
+
+    console.log('Creating order with data:', orderData);
+
+    // Create the order
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .insert([orderData])
+      .select()
+      .single();
+
+    if (orderError) {
+      console.error('Failed to create order:', orderError);
+      throw orderError;
+    }
+
+    if (!order) {
+      throw new Error('Order was created but not returned');
+    }
+
+    console.log('Order created successfully:', order.id);
+
+    // Create order items
+    const orderItems = cartItems.map(item => {
+      // Price is in cents in cart, keep as cents for database storage
+      const priceInCents = item.variant?.sale_price_in_cents ?? item.variant?.price_in_cents ?? item.product?.base_price ?? 0;
+      const quantity = item.quantity || 1;
+      const totalPrice = priceInCents * quantity; // Total price in cents
+
+      return {
+        order_id: order.id,
+        product_id: item.product?.id,
+        variant_id: item.variant?.id,
+        vendor_id: item.product?.vendor_id,
+        quantity: quantity,
+        unit_price: priceInCents, // INTEGER - price in cents
+        total_price: totalPrice, // INTEGER - total in cents
+        metadata: {
+          product_name: item.product?.title,
+          variant_name: item.variant?.title
+        }
+      };
+    });
+
+    console.log('Creating order items:', orderItems);
+
+    const { data: items, error: itemsError } = await supabase
+      .from('order_items')
+      .insert(orderItems)
+      .select();
+
+    if (itemsError) {
+      console.error('Failed to create order items:', itemsError);
+      throw itemsError;
+    }
+
+    console.log('Order items created successfully:', items?.length || 0);
+
+    // Create payment record if the payments table exists
+    try {
+      const paymentRecord = {
+        order_id: order.id,
+        provider: 'paypal',
+        provider_payment_id: paymentData.id,
+        amount: totalAmountCents, // INTEGER - amount in cents
+        currency: 'USD',
+        status: paymentData.status,
+        raw_response: paymentData
+      };
+
+      console.log('Creating payment record:', paymentRecord);
+
+      const { data: payment, error: paymentError } = await supabase
+        .from('payments')
+        .insert([paymentRecord])
+        .select()
+        .single();
+
+      if (paymentError) {
+        console.error('Failed to create payment record:', paymentError);
+        // Don't throw here - order is already created
+      } else {
+        console.log('Payment record created successfully:', payment?.id);
+      }
+    } catch (paymentErr) {
+      console.warn('Could not create payment record:', paymentErr.message);
+      // Non-critical error, don't fail the whole flow
+    }
+
+    return {
+      orderId: order.id,
+      status: order.status,
+      totalAmount: order.total_amount / 100, // Convert from cents to dollars for display
+      itemsCount: orderItems.length
+    };
+  } catch (error) {
+    console.error('Error creating order from PayPal payment:', error);
     throw error;
   }
 }
