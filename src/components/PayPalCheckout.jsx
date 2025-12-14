@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "../components/ui/use-toast";
 import { createPayPalOrder, capturePayPalOrder, createOrderFromPayPalPayment } from "../api/EcommerceApi";
 import { useAuth } from "../contexts/SupabaseAuthContext";
+import { FEATURE_FLAGS } from "../config/environment";
 import ErrorBoundary from "../ErrorBoundary";
 
 // Constants for button styles
@@ -51,8 +52,10 @@ export default function PayPalCheckout({ cartItems, onSuccess }) {
       // Validate the client ID format
       const encodedClientId = encodeURIComponent(clientId);
       
-      // Log initialization attempt (only show first few chars)
-      console.log('Initializing PayPal with Client ID:', encodedClientId.substring(0, 8) + '...');
+      // Log initialization attempt (only show first few chars, debug mode only)
+      if (FEATURE_FLAGS.debug) {
+        console.log('Initializing PayPal with Client ID:', encodedClientId.substring(0, 8) + '...');
+      }
       
       if (isMountedRef.current) setScriptLoaded(true);
     } catch (error) {
@@ -128,10 +131,10 @@ export default function PayPalCheckout({ cartItems, onSuccess }) {
     }
   };
   
-  // Debug: log client ID presence
+  // Debug: log client ID presence (only in dev/debug mode)
   if (!clientId) {
     console.warn('PayPal Client ID is empty or undefined in paypalConfig');
-  } else {
+  } else if (FEATURE_FLAGS.debug) {
     console.log('PayPal configured with Client ID:', clientId.substring(0, 8) + '...');
   }
 

@@ -15,8 +15,11 @@ const ENV = NODE_ENV === 'production' || NODE_ENV === 'live' ? 'production' : 's
 const PAYPAL_CLIENT_ID = process.env.VITE_PAYPAL_CLIENT_ID || process.env.PAYPAL_CLIENT_ID;
 const PAYPAL_CLIENT_SECRET = process.env.VITE_PAYPAL_SECRET || process.env.PAYPAL_SECRET;
 
-// Debug environment variables (redact secrets)
-console.log('PayPal env:', { NODE_ENV, ENV, PAYPAL_CLIENT_ID: PAYPAL_CLIENT_ID ? '\u2713' : '\u2717' });
+// Debug environment variables (redact secrets) - only in debug/dev mode
+const DEBUG_MODE = process.env.DEBUG_PAYPAL === 'true' || process.env.NODE_ENV === 'development';
+if (DEBUG_MODE) {
+  console.log('PayPal env:', { NODE_ENV, ENV, PAYPAL_CLIENT_ID: PAYPAL_CLIENT_ID ? '✓' : '✗' });
+}
 
 // Check PayPal configuration
 const missingVars = [];
@@ -31,11 +34,13 @@ if (missingVars.length > 0) {
 }
 
 async function generateAccessToken() {
-  // Log the client ID to verify it's loaded, but redact most of it.
-  const redactedClientId = PAYPAL_CLIENT_ID 
-    ? `${PAYPAL_CLIENT_ID.substring(0, 8)}...${PAYPAL_CLIENT_ID.substring(PAYPAL_CLIENT_ID.length - 4)}`
-    : 'NOT FOUND';
-  console.log(`Generating token for PayPal Client ID: ${redactedClientId}`);
+  // Log the client ID to verify it's loaded, but redact most of it (debug mode only)
+  if (DEBUG_MODE) {
+    const redactedClientId = PAYPAL_CLIENT_ID 
+      ? `${PAYPAL_CLIENT_ID.substring(0, 8)}...${PAYPAL_CLIENT_ID.substring(PAYPAL_CLIENT_ID.length - 4)}`
+      : 'NOT FOUND';
+    console.log(`Generating token for PayPal Client ID: ${redactedClientId}`);
+  }
 
   const auth = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`).toString('base64');
   const tokenUrl = `${PAYPAL_API[ENV]}/v1/oauth2/token`;
@@ -166,7 +171,9 @@ router.post('/create-order', express.json(), async (req, res) => {
     };
 
     const url = `${PAYPAL_API[ENV]}/v2/checkout/orders`;
-    console.log('Creating PayPal order at', url, 'payload total:', orderTotal.toFixed(2));
+    if (DEBUG_MODE) {
+      console.log('Creating PayPal order at', url, 'payload total:', orderTotal.toFixed(2));
+    }
 
     const response = await fetch(url, {
       method: 'POST',
