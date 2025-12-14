@@ -1,13 +1,13 @@
 import { supabase } from '../lib/customSupabaseClient';
 import { selectProductWithVariants, variantSelectCandidates } from '../lib/variantSelectHelper.js';
 import { productRatingsExist } from '../lib/ratingsChecker.js';
-
-// PayPal API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { API_CONFIG } from '../config/environment.js';
 
 // API endpoints (non-PayPal)
+// In dev: API_CONFIG.baseURL = '/api', so this becomes '/api/reviews'
+// In prod: API_CONFIG.baseURL = 'http://example.com', so this becomes 'http://example.com/api/reviews'
 const API_ENDPOINTS = {
-  reviews: `${API_BASE_URL}/api/reviews`,
+  reviews: `${API_CONFIG.baseURL}/reviews`,
 };
 
 export function formatCurrency(amountInCents, currencyInfo = { code: 'USD', symbol: '$' }) {
@@ -54,7 +54,7 @@ export async function createPayPalOrder(cartItems) {
 
     // Call our backend to create the PayPal order securely
     // Backend will use Client ID and Secret to authenticate with PayPal
-    const response = await fetch(`${API_BASE_URL}/api/paypal/create-order`, {
+    const response = await fetch(`${API_CONFIG.baseURL}/paypal/create-order`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -94,7 +94,7 @@ export async function capturePayPalOrder(orderID) {
 
     // Call our backend to capture the payment securely
     // Backend will use Client ID and Secret to authenticate with PayPal
-    const response = await fetch(`${API_BASE_URL}/api/paypal/capture-order/${orderID}`, {
+    const response = await fetch(`${API_CONFIG.baseURL}/paypal/capture-order/${orderID}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -106,38 +106,6 @@ export async function capturePayPalOrder(orderID) {
     if (!response.ok) {
       console.error('Backend capture-order failed:', { status: response.status, body: data });
       throw new Error(data?.error || data?.message || 'Failed to capture payment');
-    }
-
-    console.log('PayPal order captured successfully:', data.id);
-    return data;
-  } catch (error) {
-    console.error("Failed to capture PayPal order:", error);
-    throw error;
-  }
-}
-
-    // Use Basic Auth with Client ID and an empty secret (public key scenario)
-    const auth = btoa(`${clientId}:`);
-    const response = await fetch(`https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderID}/capture`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Basic ${auth}`
-      }
-    });
-
-    const text = await response.text();
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch (e) {
-      console.error('Invalid JSON response from PayPal:', text);
-      throw new Error('Invalid response from PayPal');
-    }
-
-    if (!response.ok) {
-      console.error('PayPal capture-order failed:', { status: response.status, body: data });
-      throw new Error(data?.message || data?.error?.message || 'Failed to capture PayPal order');
     }
 
     console.log('PayPal order captured successfully:', data.id);
@@ -970,7 +938,7 @@ export async function getVendorDashboardData(vendorId) {
     return null;
   }
   try {
-    const response = await fetch(`${API_BASE_URL}/api/dashboard/vendor/${vendorId}`);
+    const response = await fetch(`${API_CONFIG.baseURL}/dashboard/vendor/${vendorId}`);
     if (!response.ok) {
       throw new Error(`Failed to fetch vendor dashboard data: ${response.status}`);
     }

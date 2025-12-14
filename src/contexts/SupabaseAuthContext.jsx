@@ -13,21 +13,48 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [vendor, setVendor] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const handleSession = useCallback(async (session) => {
     setSession(session);
-    setUser(session?.user ?? null);
-    // fetch profile when session/user changes
-    if (session?.user) {
+    const currentUser = session?.user ?? null;
+    setUser(currentUser);
+
+    if (currentUser) {
       try {
-        const { data, error } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
-        if (!error) setProfile(data);
+        // Fetch profile
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', currentUser.id)
+          .single();
+        if (profileError) throw new Error(profileError.message);
+        setProfile(profileData);
+        
+        // Fetch vendor status
+        const res = await fetch('/api/onboarding/me', {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`
+          }
+        });
+
+        if (res.ok) {
+          const { vendor: vendorData } = await res.json();
+          setVendor(vendorData || null);
+        } else if (res.status === 404) {
+          setVendor(null); // No vendor found for user
+        }
+
       } catch (err) {
-        console.error('Failed to fetch profile:', err);
+        console.error('Failed to fetch user data:', err);
+        // Don't toast here, as it can be noisy during normal operations (e.g. 404)
+        setProfile(null);
+        setVendor(null);
       }
     } else {
       setProfile(null);
+      setVendor(null);
     }
 
     setLoading(false);
@@ -140,11 +167,12 @@ export const AuthProvider = ({ children }) => {
     user,
     session,
     profile,
+    vendor,
     loading,
     signUp,
     signIn,
     signOut,
-  }), [user, session, loading, signUp, signIn, signOut]);
+  }), [user, session, profile, vendor, loading, signUp, signIn, signOut]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

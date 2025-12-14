@@ -15,6 +15,8 @@ import ProtectedRoute from '../components/ProtectedRoute';
 import RequireRole from '../components/RequireRole';
 import VendorIndex from '../pages/vendor/Index';
 import VendorProducts from '../pages/vendor/Products';
+import VendorDashboardPage from '../pages/vendor/Dashboard';
+import EditStore from '../pages/vendor/EditStore';
 import VendorOrders from '../pages/vendor/Orders';
 import App from '../App';
 import MarketplacePage from '../pages/MarketplacePage';
@@ -52,9 +54,10 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
         children: [
-          { index: true, element: <VendorIndex /> },
+          { index: true, element: <VendorDashboardPage /> },
           { path: 'products', element: <VendorProducts /> },
           { path: 'orders', element: <VendorOrders /> },
+          { path: 'edit', element: <EditStore /> },
         ]
       },
     ],
