@@ -12,7 +12,10 @@
     "start": "node server/index.js",
     "postinstall": "node scripts/postinstall-guard.js",
     "check:seed": "node scripts/check_seed_conflicts.js",
-    "db:migrate": "node scripts/apply_migrations.js"
+    "db:migrate": "node scripts/apply_migrations.js",
+    "seller:register": "node scripts/register_existing_sellers.js",
+    "seller:verify": "node scripts/verify_sellers_registered.js",
+    "test:kyc": "node scripts/test_kyc_direct.js"
   },
   "dependencies": {
     "@paypal/react-paypal-js": "^8.9.2",
