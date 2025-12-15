@@ -1,0 +1,26 @@
+{
+  "generatedAt": "2025-12-15T03:38:19.994Z",
+  "preview": [
+    {
+      "id": "77574e97-885f-4fd0-8e47-741a321cce68",
+      "slug": "artisan-bread-loaf",
+      "title": "Artisan Bread Loaf",
+      "vendor_id": "a1bc8ec0-7de9-420b-82a5-e03766550def",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/a1bc8ec0-7de9-420b-82a5-e03766550def/products/artisan-bread-loaf/main.jpg"
+    },
+    {
+      "id": "011a1480-b868-4446-9927-f52b476146ff",
+      "slug": "authentic-jerk-seasoning",
+      "title": "Authentic Jerk Seasoning",
+      "vendor_id": "72db3dcb-8384-49df-ae3a-ad4106371917",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/72db3dcb-8384-49df-ae3a-ad4106371917/products/authentic-jerk-seasoning/main.jpg"
+    },
+    {
+      "id": "cc694b1a-541c-4fff-8d34-77873bcf999d",
+      "slug": "bluetooth-speaker",
+      "title": "Bluetooth Speaker",
+      "vendor_id": "0f134cb6-9ee5-4e4d-ba50-528cb55d3ca3",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/0f134cb6-9ee5-4e4d-ba50-528cb55d3ca3/products/bluetooth-speaker/main.jpg"
+    }
+  ]
+}

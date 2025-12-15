@@ -69,6 +69,11 @@ export const API_CONFIG = {
   fullURL: (import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(/\/$/, '')
 };
 
+// Detect misconfigured API URL in production builds (points to localhost)
+// If the production build has VITE_API_URL left as localhost, we should
+// avoid trying to reach the developer machine from the deployed frontend.
+export const IS_API_LOCAL_IN_PRODUCTION = !isDevelopment && API_CONFIG.baseURL.includes('localhost');
+
 // ============================================================================
 // FRONTEND CONFIGURATION
 // ============================================================================
@@ -113,7 +118,8 @@ export const FEATURE_FLAGS = {
   enableKYC: import.meta.env.VITE_ENABLE_KYC !== 'false',
   
   // Enable seller onboarding
-  enableSellerOnboarding: import.meta.env.VITE_ENABLE_SELLER_ONBOARDING !== 'false',
+  // Disable onboarding automatically if the API would target localhost in production
+  enableSellerOnboarding: (import.meta.env.VITE_ENABLE_SELLER_ONBOARDING !== 'false') && !IS_API_LOCAL_IN_PRODUCTION,
   
   // Enable debug mode
   debug: import.meta.env.VITE_DEBUG === 'true',
@@ -198,6 +204,14 @@ const logConfigStartup = () => {
 // Run startup checks if in debug mode or development
 if (FEATURE_FLAGS.debug || isDevelopment) {
   logConfigStartup();
+}
+
+// If we've detected a production build that would call localhost for the API,
+// log an explicit warning so deployers can fix their environment variables.
+if (IS_API_LOCAL_IN_PRODUCTION) {
+  console.warn('⚠️ Detected API base URL pointing to localhost in a production build.');
+  console.warn('This will disable seller onboarding in the frontend to avoid attempting to reach your local machine.');
+  console.warn('Set VITE_API_URL to your backend URL (for example, https://backend.example.com) in the deployment environment and rebuild the site.');
 }
 
 // ============================================================================

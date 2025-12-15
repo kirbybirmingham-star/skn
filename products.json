@@ -1,0 +1,205 @@
+{
+  "total": 33,
+  "withImages": 33,
+  "missing": 0,
+  "products": [
+    {
+      "id": "0d39966f-d67f-4e45-94d5-81f10d48bbc4",
+      "title": "Premium Wireless Headphones",
+      "slug": "premium-wireless-headphones",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/electronics/headphones.jpg"
+    },
+    {
+      "id": "8efbfdc7-287f-4ad6-a677-a0ca3f2240fa",
+      "title": "Organic Coffee Beans",
+      "slug": "organic-coffee-beans",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/food/coffee.jpg"
+    },
+    {
+      "id": "7d2555fa-0e87-4b7e-88f3-9daf822b26bf",
+      "title": "Smart Fitness Tracker",
+      "slug": "smart-fitness-tracker",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/electronics/fitness-tracker.jpg"
+    },
+    {
+      "id": "b30fbae4-3667-483f-a6f6-7edb81d427a9",
+      "title": "Portable Power Bank",
+      "slug": "portable-power-bank",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/electronics/power-bank.jpg"
+    },
+    {
+      "id": "cc694b1a-541c-4fff-8d34-77873bcf999d",
+      "title": "Bluetooth Speaker",
+      "slug": "bluetooth-speaker",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/electronics/bluetooth-speaker.jpg"
+    },
+    {
+      "id": "52dafa47-447c-4e8b-b314-9974a1fa3bb7",
+      "title": "Organic Honey",
+      "slug": "organic-honey",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/food/honey.jpg"
+    },
+    {
+      "id": "77574e97-885f-4fd0-8e47-741a321cce68",
+      "title": "Artisan Bread Loaf",
+      "slug": "artisan-bread-loaf",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/food/bread.webp"
+    },
+    {
+      "id": "f83a4d67-0a9b-4226-8f78-b4c614c1bac7",
+      "title": "Gourmet Pasta Sauce",
+      "slug": "gourmet-pasta-sauce",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/food/pasta-sauce.jpg"
+    },
+    {
+      "id": "4faa6ae9-c210-46da-b806-5ec342a52dcd",
+      "title": "Vibrant Caribbean Sundress",
+      "slug": "vibrant-caribbean-sundress",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/fashion/vibrant-caribbean-sundress.jpg"
+    },
+    {
+      "id": "2a8c1b80-a0e8-4a1a-9c1f-07d1f3377400",
+      "title": "Island Linen Shirt",
+      "slug": "island-linen-shirt",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/fashion/island-linen-shirt.jpg"
+    },
+    {
+      "id": "1b22d184-bf26-4773-893b-aa8a7343dafb",
+      "title": "Traditional Madras Headwrap",
+      "slug": "traditional-madras-headwrap",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/fashion/traditional-madras-headwrap.jpg"
+    },
+    {
+      "id": "45003df1-a03d-4722-a5f9-abc67d360cdd",
+      "title": "Mango Passion Smoothie",
+      "slug": "mango-passion-smoothie",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/smoothies/mango-passion-smoothie.jpg"
+    },
+    {
+      "id": "ed481a5d-0e00-4a25-a02f-aad6722ddf4e",
+      "title": "Pineapple Ginger Cooler",
+      "slug": "pineapple-ginger-cooler",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/smoothies/pineapple-ginger-cooler.jpg"
+    },
+    {
+      "id": "aee2dc93-7b8b-492d-aa1c-ad23ff376334",
+      "title": "Coconut Banana Bliss",
+      "slug": "coconut-banana-bliss",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/smoothies/coconut-banana-bliss.jpg"
+    },
+    {
+      "id": "e3a8b1fe-1f34-485f-8066-fb8b10401d78",
+      "title": "Handwoven Palm Basket",
+      "slug": "handwoven-palm-basket",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/crafts/handwoven-palm-basket.jpg"
+    },
+    {
+      "id": "e77c423b-2b0a-4115-9585-329a69768dc6",
+      "title": "Caribbean Bead Necklace",
+      "slug": "caribbean-bead-necklace",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/crafts/caribbean-bead-necklace.jpg"
+    },
+    {
+      "id": "ade5410e-3e48-49cf-aa25-cabd72195dc1",
+      "title": "Traditional Calabash Bowl",
+      "slug": "traditional-calabash-bowl",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/crafts/traditional-calabash-bowl.jpg"
+    },
+    {
+      "id": "b48ac020-6a40-4df5-baff-dea257fe11c3",
+      "title": "Fresh Caribbean Mangoes",
+      "slug": "fresh-caribbean-mangoes",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/produce/fresh-caribbean-mangoes.jpg"
+    },
+    {
+      "id": "011a1480-b868-4446-9927-f52b476146ff",
+      "title": "Authentic Jerk Seasoning",
+      "slug": "authentic-jerk-seasoning",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/produce/authentic-jerk-seasoning.jpg"
+    },
+    {
+      "id": "e2cf6eef-5a82-4d37-8fa5-496b90ffd59a",
+      "title": "Fresh Plantains",
+      "slug": "fresh-plantains",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/produce/fresh-plantains.jpg"
+    },
+    {
+      "id": "329695f2-2abb-46fd-991e-220a869696e1",
+      "title": "Caribbean Print Maxi Dress",
+      "slug": "caribbean-print-maxi-dress",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/fashion/caribbean-print-maxi-dress.jpg"
+    },
+    {
+      "id": "b55b6f90-6a3c-4030-8c6a-e7218020f7c5",
+      "title": "Embroidered Beach Cover-Up",
+      "slug": "embroidered-beach-cover-up",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/fashion/embroidered-beach-cover-up.jpg"
+    },
+    {
+      "id": "1195db4d-9482-4334-8bd6-799b23ee0248",
+      "title": "Palm Leaf Print Hat",
+      "slug": "palm-leaf-print-hat",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/fashion/palm-leaf-print-hat.jpg"
+    },
+    {
+      "id": "40d4af5f-c826-4972-a77e-d5a0301c0621",
+      "title": "Soursop Passion Fruit Blend",
+      "slug": "soursop-passion-fruit-blend",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/smoothies/soursop-passion-fruit-blend.jpg"
+    },
+    {
+      "id": "2c7f3ea1-d553-4a36-b1ad-5ff14416a917",
+      "title": "Tamarind Ginger Tea",
+      "slug": "tamarind-ginger-tea",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/smoothies/tamarind-ginger-tea.jpg"
+    },
+    {
+      "id": "fb03e99c-0a91-4674-a032-1d486b327bf1",
+      "title": "Guava Paradise Bowl",
+      "slug": "guava-paradise-bowl",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/smoothies/guava-paradise-bowl.jpg"
+    },
+    {
+      "id": "baf61ac7-53c3-4913-91a4-cdcdabb468df",
+      "title": "Woven Seagrass Placemats",
+      "slug": "woven-seagrass-placemats",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/crafts/woven-seagrass-placemats.jpg"
+    },
+    {
+      "id": "ff8eeb3b-8093-4019-bfeb-9bbe736e3645",
+      "title": "Caribbean Dreamcatcher",
+      "slug": "caribbean-dreamcatcher",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/crafts/caribbean-dreamcatcher.jpg"
+    },
+    {
+      "id": "1c604b0b-97c1-41f9-a26b-17e959b629fa",
+      "title": "Recycled Glass Wind Chimes",
+      "slug": "recycled-glass-wind-chimes",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/crafts/recycled-glass-wind-chimes.jpg"
+    },
+    {
+      "id": "f34e7b51-5533-437a-9754-67d61d1ec870",
+      "title": "Fresh Starfruit (Carambola)",
+      "slug": "fresh-starfruit-carambola",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/produce/fresh-starfruit-carambola.jpg"
+    },
+    {
+      "id": "dfbe7237-4f0c-4c4b-823a-fa108459ae4e",
+      "title": "Island Curry Powder Blend",
+      "slug": "island-curry-powder-blend",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/produce/island-curry-powder-blend.jpg"
+    },
+    {
+      "id": "54662207-ac75-40b3-bd54-84affab65e90",
+      "title": "Fresh Scotch Bonnet Peppers",
+      "slug": "fresh-scotch-bonnet-peppers",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/produce/fresh-scotch-bonnet-peppers.jpg"
+    },
+    {
+      "id": "ab8bab5d-40e8-4bb5-bac9-faa5c1423835",
+      "title": "Dried Mango Slices",
+      "slug": "dried-mango-slices",
+      "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/skn-bridge-assets/products/produce/dried-mango-slices.jpg"
+    }
+  ]
+}

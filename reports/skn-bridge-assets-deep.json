@@ -1,0 +1,78 @@
+{
+  "timestamp": "2025-12-15T02:13:16.367Z",
+  "bucket": "skn-bridge-assets",
+  "products": {
+    "count": 6,
+    "items": [
+      {
+        "name": "crafts",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "electronics",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "fashion",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "food",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "produce",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "smoothies",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      }
+    ]
+  },
+  "vendors": {
+    "count": 2,
+    "items": [
+      {
+        "name": "avatars",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      },
+      {
+        "name": "banners",
+        "id": null,
+        "updated_at": null,
+        "created_at": null,
+        "last_accessed_at": null,
+        "metadata": null
+      }
+    ]
+  }
+}

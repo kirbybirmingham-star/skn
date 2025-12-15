@@ -99,6 +99,13 @@ router.post('/signup', async (req, res) => {
 
 // GET /api/onboarding/me - return vendor for the authenticated user and some helper counts
 router.get('/me', verifySupabaseJwt, async (req, res) => {
+  // Debugging: log that the endpoint was hit and whether an auth header was present
+  try {
+    const authHeaderPresent = !!(req.headers && (req.headers.authorization || req.headers.Authorization));
+    console.info('[onboarding] GET /me called; authHeaderPresent:', authHeaderPresent, 'requesterId:', req.user?.id ? req.user.id : 'unknown');
+  } catch (e) {
+    // Non-fatal; continue handling the request
+  }
   try {
     const supabase = getSupabase();
     if (!supabase) return res.status(503).json({ error: 'Server not configured for onboarding' });

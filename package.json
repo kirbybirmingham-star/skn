@@ -7,7 +7,7 @@
     "dev": "vite --host :: --port 3000",
     "dev:ngrok": "vite --host localhost --port 3000",
     "dev:all": "concurrently \"node server/index.js\" \"npm run dev\"",
-    "build": "vite build",
+    "build": "node scripts/validate-build-env.js && vite build",
     "preview": "vite preview --host :: --port 3000",
     "start": "node server/index.js",
     "postinstall": "node scripts/postinstall-guard.js",

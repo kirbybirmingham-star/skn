@@ -39,11 +39,39 @@ export const AuthProvider = ({ children }) => {
           }
         });
 
-        if (res.ok) {
-          const { vendor: vendorData } = await res.json();
-          setVendor(vendorData || null);
-        } else if (res.status === 404) {
-          setVendor(null); // No vendor found for user
+        // Defensive parsing: if the server returned HTML (e.g. index.html)
+        // the call to `res.json()` will throw a SyntaxError. Detect the
+        // content type first and surface a helpful error for debugging.
+        const contentType = (res.headers.get('content-type') || '').toLowerCase();
+
+        if (contentType.includes('application/json')) {
+          if (res.ok) {
+            const { vendor: vendorData } = await res.json();
+            setVendor(vendorData || null);
+          } else if (res.status === 404) {
+            setVendor(null); // No vendor found for user
+          } else {
+            // Non-404 error from API - try to parse and log
+            try {
+              const errBody = await res.json();
+              console.error('Failed to fetch vendor, API error:', res.status, errBody);
+            } catch (err) {
+              console.error('Failed to fetch vendor and could not parse error body:', res.status, err);
+            }
+            setVendor(null);
+          }
+        } else {
+          // Unexpected non-JSON response (commonly HTML from the frontend dev server
+          // if the backend isn't running or the proxy is misconfigured). Log the
+          // response text to help debugging and surface a clear error.
+          const text = await res.text();
+          console.error('Unexpected non-JSON response from /api/onboarding/me', {
+            status: res.status,
+            contentType,
+            bodyPreview: (text || '').slice(0, 400)
+          });
+          // Treat as no vendor rather than crashing the app
+          setVendor(null);
         }
 
       } catch (err) {

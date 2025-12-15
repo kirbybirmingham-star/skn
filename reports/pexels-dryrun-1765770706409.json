@@ -1,0 +1,340 @@
+{
+  "generatedAt": "2025-12-15T03:51:46.409Z",
+  "opts": {
+    "dryRun": true,
+    "limit": 10,
+    "onlyPlaceholders": false,
+    "perPage": 3,
+    "withCommons": true,
+    "withUnsplash": true,
+    "useFullTitle": true,
+    "marketplace": true,
+    "noPexels": true
+  },
+  "results": [
+    {
+      "product": {
+        "id": "77574e97-885f-4fd0-8e47-741a321cce68",
+        "title": "Artisan Bread Loaf",
+        "slug": "artisan-bread-loaf",
+        "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/a1bc8ec0-7de9-420b-82a5-e03766550def/products/artisan-bread-loaf/main.jpg",
+        "vendor_id": "a1bc8ec0-7de9-420b-82a5-e03766550def"
+      },
+      "found": true,
+      "candidates": [
+        {
+          "id": "source-Artisan Bread Loaf",
+          "url": "https://source.unsplash.com/featured/?Artisan%20Bread%20Loaf",
+          "photographer": "unsplash-source",
+          "src": {
+            "original": "https://source.unsplash.com/featured/?Artisan%20Bread%20Loaf"
+          },
+          "source": "unsplash",
+          "score": 4
+        },
+        {
+          "id": 100139679,
+          "url": "https://commons.wikimedia.org/wiki/File:Paintings%20in%20the%20Bonnefantenmuseum",
+          "photographer": "Paintings in the Bonnefantenmuseum",
+          "src": {},
+          "source": "commons",
+          "score": 0
+        }
+      ]
+    },
+    {
+      "product": {
+        "id": "011a1480-b868-4446-9927-f52b476146ff",
+        "title": "Authentic Jerk Seasoning",
+        "slug": "authentic-jerk-seasoning",
+        "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/72db3dcb-8384-49df-ae3a-ad4106371917/products/authentic-jerk-seasoning/main.jpg",
+        "vendor_id": "72db3dcb-8384-49df-ae3a-ad4106371917"
+      },
+      "found": true,
+      "candidates": [
+        {
+          "id": "source-Authentic Jerk Seasoning",
+          "url": "https://source.unsplash.com/featured/?Authentic%20Jerk%20Seasoning",
+          "photographer": "unsplash-source",
+          "src": {
+            "original": "https://source.unsplash.com/featured/?Authentic%20Jerk%20Seasoning"
+          },
+          "source": "unsplash",
+          "score": 4
+        }
+      ]
+    },
+    {
+      "product": {
+        "id": "cc694b1a-541c-4fff-8d34-77873bcf999d",
+        "title": "Bluetooth Speaker",
+        "slug": "bluetooth-speaker",
+        "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/0f134cb6-9ee5-4e4d-ba50-528cb55d3ca3/products/bluetooth-speaker/main.jpg",
+        "vendor_id": "0f134cb6-9ee5-4e4d-ba50-528cb55d3ca3"
+      },
+      "found": true,
+      "candidates": [
+        {
+          "id": "source-Bluetooth Speaker",
+          "url": "https://source.unsplash.com/featured/?Bluetooth%20Speaker",
+          "photographer": "unsplash-source",
+          "src": {
+            "original": "https://source.unsplash.com/featured/?Bluetooth%20Speaker"
+          },
+          "source": "unsplash",
+          "score": 4
+        },
+        {
+          "id": 14239,
+          "url": "https://commons.wikimedia.org/wiki/File:Colors",
+          "photographer": "Colors",
+          "src": {},
+          "source": "commons",
+          "score": 0
+        },
+        {
+          "id": 52706,
+          "url": "https://commons.wikimedia.org/wiki/File:Loudspeaker",
+          "photographer": "Loudspeaker",
+          "src": {},
+          "source": "commons",
+          "score": 0
+        }
+      ]
+    },
+    {
+      "product": {
+        "id": "e77c423b-2b0a-4115-9585-329a69768dc6",
+        "title": "Caribbean Bead Necklace",
+        "slug": "caribbean-bead-necklace",
+        "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/73edbd84-62ff-4fcc-be15-8e45f8a6d966/products/caribbean-bead-necklace/main.jpg",
+        "vendor_id": "73edbd84-62ff-4fcc-be15-8e45f8a6d966"
+      },
+      "found": true,
+      "candidates": [
+        {
+          "id": "source-Caribbean Bead Necklace",
+          "url": "https://source.unsplash.com/featured/?Caribbean%20Bead%20Necklace",
+          "photographer": "unsplash-source",
+          "src": {
+            "original": "https://source.unsplash.com/featured/?Caribbean%20Bead%20Necklace"
+          },
+          "source": "unsplash",
+          "score": 4
+        },
+        {
+          "id": 15013401,
+          "url": "https://commons.wikimedia.org/wiki/File:Popular%20Science%20Monthly%20illustrations%2FCategories",
+          "photographer": "Popular Science Monthly illustrations/Categories",
+          "src": {},
+          "source": "commons",
+          "score": 0
+        },
+        {
+          "id": 60084132,
+          "url": "https://commons.wikimedia.org/wiki/File:Emoji%2FTable",
+          "photographer": "Emoji/Table",
+          "src": {},
+          "source": "commons",
+          "score": 0
+        }
+      ]
+    },
+    {
+      "product": {
+        "id": "ff8eeb3b-8093-4019-bfeb-9bbe736e3645",
+        "title": "Caribbean Dreamcatcher",
+        "slug": "caribbean-dreamcatcher",
+        "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/73edbd84-62ff-4fcc-be15-8e45f8a6d966/products/caribbean-dreamcatcher/main.jpg",
+        "vendor_id": "73edbd84-62ff-4fcc-be15-8e45f8a6d966"
+      },
+      "found": true,
+      "candidates": [
+        {
+          "id": "source-Caribbean Dreamcatcher",
+          "url": "https://source.unsplash.com/featured/?Caribbean%20Dreamcatcher",
+          "photographer": "unsplash-source",
+          "src": {
+            "original": "https://source.unsplash.com/featured/?Caribbean%20Dreamcatcher"
+          },
+          "source": "unsplash",
+          "score": 4
+        }
+      ]
+    },
+    {
+      "product": {
+        "id": "329695f2-2abb-46fd-991e-220a869696e1",
+        "title": "Caribbean Print Maxi Dress",
+        "slug": "caribbean-print-maxi-dress",
+        "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/bb36fe4c-6489-46df-98e7-e0917367d6d1/products/caribbean-print-maxi-dress/main.jpg",
+        "vendor_id": "bb36fe4c-6489-46df-98e7-e0917367d6d1"
+      },
+      "found": true,
+      "candidates": [
+        {
+          "id": "source-Caribbean Print Maxi Dress",
+          "url": "https://source.unsplash.com/featured/?Caribbean%20Print%20Maxi%20Dress",
+          "photographer": "unsplash-source",
+          "src": {
+            "original": "https://source.unsplash.com/featured/?Caribbean%20Print%20Maxi%20Dress"
+          },
+          "source": "unsplash",
+          "score": 4
+        }
+      ]
+    },
+    {
+      "product": {
+        "id": "aee2dc93-7b8b-492d-aa1c-ad23ff376334",
+        "title": "Coconut Banana Bliss",
+        "slug": "coconut-banana-bliss",
+        "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/485aacb6-4418-4467-bbbe-064311b847e6/products/coconut-banana-bliss/main.jpg",
+        "vendor_id": "485aacb6-4418-4467-bbbe-064311b847e6"
+      },
+      "found": true,
+      "candidates": [
+        {
+          "id": "source-Coconut Banana Bliss",
+          "url": "https://source.unsplash.com/featured/?Coconut%20Banana%20Bliss",
+          "photographer": "unsplash-source",
+          "src": {
+            "original": "https://source.unsplash.com/featured/?Coconut%20Banana%20Bliss"
+          },
+          "source": "unsplash",
+          "score": 4
+        },
+        {
+          "id": 29624,
+          "url": "https://commons.wikimedia.org/wiki/File:Belize",
+          "photographer": "Belize",
+          "src": {},
+          "source": "commons",
+          "score": 0
+        }
+      ]
+    },
+    {
+      "product": {
+        "id": "ab8bab5d-40e8-4bb5-bac9-faa5c1423835",
+        "title": "Dried Mango Slices",
+        "slug": "dried-mango-slices",
+        "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/72db3dcb-8384-49df-ae3a-ad4106371917/products/dried-mango-slices/main.jpg",
+        "vendor_id": "72db3dcb-8384-49df-ae3a-ad4106371917"
+      },
+      "found": true,
+      "candidates": [
+        {
+          "id": "source-Dried Mango Slices",
+          "url": "https://source.unsplash.com/featured/?Dried%20Mango%20Slices",
+          "photographer": "unsplash-source",
+          "src": {
+            "original": "https://source.unsplash.com/featured/?Dried%20Mango%20Slices"
+          },
+          "source": "unsplash",
+          "score": 4
+        },
+        {
+          "id": 695171,
+          "url": "https://commons.wikimedia.org/wiki/File:Desserts",
+          "photographer": "Desserts",
+          "src": {},
+          "source": "commons",
+          "score": 0
+        },
+        {
+          "id": 4632785,
+          "url": "https://commons.wikimedia.org/wiki/File:Cuisine%20of%20Thailand",
+          "photographer": "Cuisine of Thailand",
+          "src": {},
+          "source": "commons",
+          "score": 0
+        },
+        {
+          "id": 110518192,
+          "url": "https://commons.wikimedia.org/wiki/File:Surakarta%20cuisine",
+          "photographer": "Surakarta cuisine",
+          "src": {},
+          "source": "commons",
+          "score": 0
+        }
+      ]
+    },
+    {
+      "product": {
+        "id": "b55b6f90-6a3c-4030-8c6a-e7218020f7c5",
+        "title": "Embroidered Beach Cover-Up",
+        "slug": "embroidered-beach-cover-up",
+        "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/bb36fe4c-6489-46df-98e7-e0917367d6d1/products/embroidered-beach-cover-up/main.jpg",
+        "vendor_id": "bb36fe4c-6489-46df-98e7-e0917367d6d1"
+      },
+      "found": true,
+      "candidates": [
+        {
+          "id": "source-Embroidered Beach Cover-Up",
+          "url": "https://source.unsplash.com/featured/?Embroidered%20Beach%20Cover-Up",
+          "photographer": "unsplash-source",
+          "src": {
+            "original": "https://source.unsplash.com/featured/?Embroidered%20Beach%20Cover-Up"
+          },
+          "source": "unsplash",
+          "score": 4
+        },
+        {
+          "id": 98678231,
+          "url": "https://commons.wikimedia.org/wiki/File:Paintings%20in%20the%20Hungarian%20National%20Gallery",
+          "photographer": "Paintings in the Hungarian National Gallery",
+          "src": {},
+          "source": "commons",
+          "score": 0
+        },
+        {
+          "id": 99644551,
+          "url": "https://commons.wikimedia.org/wiki/File:Paintings%20by%20Claude%20Monet",
+          "photographer": "Paintings by Claude Monet",
+          "src": {},
+          "source": "commons",
+          "score": 0
+        },
+        {
+          "id": 113556335,
+          "url": "https://commons.wikimedia.org/wiki/File:Clothing",
+          "photographer": "Clothing",
+          "src": {},
+          "source": "commons",
+          "score": 0
+        }
+      ]
+    },
+    {
+      "product": {
+        "id": "b48ac020-6a40-4df5-baff-dea257fe11c3",
+        "title": "Fresh Caribbean Mangoes",
+        "slug": "fresh-caribbean-mangoes",
+        "image_url": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/72db3dcb-8384-49df-ae3a-ad4106371917/products/fresh-caribbean-mangoes/main.jpg",
+        "vendor_id": "72db3dcb-8384-49df-ae3a-ad4106371917"
+      },
+      "found": true,
+      "candidates": [
+        {
+          "id": "source-Fresh Caribbean Mangoes",
+          "url": "https://source.unsplash.com/featured/?Fresh%20Caribbean%20Mangoes",
+          "photographer": "unsplash-source",
+          "src": {
+            "original": "https://source.unsplash.com/featured/?Fresh%20Caribbean%20Mangoes"
+          },
+          "source": "unsplash",
+          "score": 4
+        },
+        {
+          "id": 60084132,
+          "url": "https://commons.wikimedia.org/wiki/File:Emoji%2FTable",
+          "photographer": "Emoji/Table",
+          "src": {},
+          "source": "commons",
+          "score": 0
+        }
+      ]
+    }
+  ]
+}

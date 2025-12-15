@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { ShoppingCart } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/components/ui/use-toast';
+import { resolveProductImageUrl, hasRealImage } from '@/lib/productImageResolver';
+import { supabase } from '@/lib/customSupabaseClient';
 
 import StarRating from './reviews/StarRating';
 
@@ -12,7 +14,20 @@ const placeholderImage = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/
 
 const getImageUrl = (product) => {
   if (!product) return placeholderImage;
-  // Follow ProductDetailsPage logic: prefer first variant image, then other fields
+  
+  // Try new vendor-organized storage resolver first
+  try {
+    const resolvedUrl = resolveProductImageUrl(product, supabase, {
+      fallbackPlaceholder: true,
+      placeholderService: 'dicebear',
+      size: 400
+    });
+    if (resolvedUrl) return resolvedUrl;
+  } catch (err) {
+    console.warn('Error resolving image from storage:', err.message);
+  }
+
+  // Fallback to legacy logic
   const variantImage = product?.product_variants?.[0]?.images?.[0];
   const imageUrl = variantImage || product.image_url || (product.images && product.images[0]) || (product.gallery_images && product.gallery_images[0]) || placeholderImage;
   return imageUrl;
