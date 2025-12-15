@@ -1,12 +1,15 @@
 import { supabase } from '../lib/customSupabaseClient.js';
 import { selectProductWithVariants } from '../lib/variantSelectHelper.js';
+import { API_CONFIG } from '../config/environment.js';
 
-// API Configuration - use relative path for Vite proxy, full URL only if explicitly set in env
-const API_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) || process.env.VITE_API_URL || '';
+// API Configuration - use the centralized config from environment.js
+// which properly handles VITE_API_URL and dev proxy paths
+const API_BASE_URL = API_CONFIG.baseURL;
 
 // API endpoints (non-PayPal)
+// API_BASE_URL already includes '/api' path, so just append endpoint names
 const API_ENDPOINTS = {
-  reviews: `${API_BASE_URL}/api/reviews`,
+  reviews: `${API_BASE_URL}/reviews`,
 };
 
 export function formatCurrency(amountInCents, currencyInfo = { code: 'USD', symbol: '$' }) {
@@ -736,7 +739,7 @@ export async function getVendorDashboardData(vendorId) {
     return null;
   }
   try {
-    const response = await fetch(`${API_BASE_URL}/api/dashboard/vendor/${vendorId}`);
+    const response = await fetch(`${API_BASE_URL}/dashboard/vendor/${vendorId}`);
     if (!response.ok) {
       throw new Error(`Failed to fetch vendor dashboard data: ${response.status}`);
     }
