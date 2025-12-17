@@ -783,18 +783,66 @@ export async function getProductQuantities({ product_ids }) {
 
 export async function createProduct(vendorId, productData) {
   if (!supabase) throw new Error('Supabase client not available');
+  
+  // Generate slug from title
+  const slug = (productData.title || 'product')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+    .slice(0, 100);
+  
+  // Create the product
   const payload = {
     vendor_id: vendorId,
     title: productData.title,
     description: productData.description,
-    category: productData.category,
-    image_url: productData.image,
-    variants: productData.variants || [],
+    slug: slug,
+    base_price: productData.price_in_cents || 0,
+    image_url: productData.image || null,
+    is_published: true,
+    metadata: {
+      category: productData.category || 'Uncategorized'
+    },
     created_at: new Date().toISOString()
   };
-  const { data, error } = await supabase.from('products').insert([payload]).select().single();
-  if (error) throw error;
-  return data;
+  
+  const { data: product, error: productError } = await supabase
+    .from('products')
+    .insert([payload])
+    .select()
+    .single();
+  
+  if (productError) throw productError;
+  
+  // Create variants if provided
+  if (productData.variants && Array.isArray(productData.variants) && productData.variants.length > 0) {
+    const variantsData = productData.variants.map((v, idx) => ({
+      product_id: product.id,
+      seller_id: vendorId, // Use vendor_id as seller_id for now
+      sku: v.sku || `${slug}-v${idx + 1}`,
+      price_in_cents: v.price_in_cents || productData.price_in_cents || 0,
+      inventory_quantity: v.inventory_quantity || 0,
+      attributes: v.attributes || { title: v.title || `Variant ${idx + 1}` },
+      is_active: true
+    }));
+    
+    const { error: variantsError } = await supabase
+      .from('product_variants')
+      .insert(variantsData);
+    
+    if (variantsError) {
+      console.warn('Failed to create variants:', variantsError);
+    }
+  }
+  
+  // Re-fetch with variants to return complete product
+  const { data: completeProduct } = await supabase
+    .from('products')
+    .select('*')
+    .eq('id', product.id)
+    .single();
+  
+  return completeProduct;
 }
 
 export async function updateProduct(productId, updates) {

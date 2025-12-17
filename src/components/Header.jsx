@@ -135,10 +135,11 @@ import React, { useState } from 'react';
                             <User className="mr-2 h-4 w-4" />
                             Account Settings
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate(isSeller ? '/dashboard/vendor' : '/dashboard')}
-                            className="cursor-pointer">
-                            <LayoutDashboard className="mr-2 h-4 w-4" />
-                            Dashboard
+                          <DropdownMenuItem asChild>
+                            <Link to={isSeller ? '/dashboard/vendor' : '/dashboard'} className="cursor-pointer">
+                              <LayoutDashboard className="mr-2 h-4 w-4" />
+                              Dashboard
+                            </Link>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={handleSignOut}

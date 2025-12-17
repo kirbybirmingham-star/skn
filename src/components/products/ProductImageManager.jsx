@@ -2,12 +2,17 @@ import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import ImageUploader from '@/components/ui/image-uploader';
 import { Button } from '@/components/ui/button';
-import { uploadImage, deleteImage } from '@/lib/supabaseStorage';
+import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
+import {
+  uploadProductGalleryImage,
+  deleteProductImage
+} from '@/lib/storageManager';
 
 const ProductImageManager = ({ 
   productId, 
   productSlug,
+  vendorId,
   images = [],
   onImagesUpdate 
 }) => {
@@ -16,24 +21,48 @@ const ProductImageManager = ({
 
   const handleImageUpload = async (files) => {
     if (!files || files.length === 0) return;
+    if (!vendorId) {
+      toast({
+        title: 'Error',
+        description: 'Vendor ID is required for image upload',
+        variant: 'destructive'
+      });
+      return;
+    }
     
     setUploading(true);
     try {
-      const uploadPromises = files.map(async (file) => {
-        const fileName = `${productSlug}-${Date.now()}-${file.name}`;
-        return await uploadImage(file, fileName, 'listings-images');
-      });
-
-      const newImageUrls = await Promise.all(uploadPromises);
+      const newImageUrls = [];
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const imageIndex = images.length + i;
+        
+        // Read file as buffer
+        const buffer = await file.arrayBuffer();
+        
+        // Upload using vendor-organized storage
+        const result = await uploadProductGalleryImage(
+          supabase,
+          vendorId,
+          productSlug,
+          imageIndex,
+          buffer,
+          file.type || 'image/jpeg'
+        );
+        
+        newImageUrls.push(result.publicUrl);
+      }
       
       // Call the parent component's update handler with new images
       onImagesUpdate([...images, ...newImageUrls]);
       
       toast({
         title: 'Success',
-        description: 'Images uploaded successfully'
+        description: `${newImageUrls.length} image(s) uploaded successfully`
       });
     } catch (error) {
+      console.error('Image upload error:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to upload images',
@@ -45,12 +74,25 @@ const ProductImageManager = ({
   };
 
   const handleImageDelete = async (imageUrl) => {
+    if (!vendorId) {
+      toast({
+        title: 'Error',
+        description: 'Vendor ID is required for image deletion',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     try {
-      // Extract the file path from the URL
-      const urlParts = imageUrl.split('/');
-      const fileName = urlParts[urlParts.length - 1];
+      // Extract path from storage URL
+      // URL format: https://supabase-url/storage/v1/object/public/listings-images/vendors/{vendorId}/products/{slug}/*
+      const pathMatch = imageUrl.match(/\/listings-images\/(.*)/);
+      if (!pathMatch) {
+        throw new Error('Invalid image URL format');
+      }
       
-      await deleteImage(fileName, 'listings-images');
+      const path = pathMatch[1];
+      await deleteProductImage(supabase, path);
       
       // Update the images list
       const updatedImages = images.filter(img => img !== imageUrl);
@@ -61,6 +103,7 @@ const ProductImageManager = ({
         description: 'Image deleted successfully'
       });
     } catch (error) {
+      console.error('Image deletion error:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to delete image',

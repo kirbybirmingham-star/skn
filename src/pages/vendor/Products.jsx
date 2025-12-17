@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
-import { getVendorByOwner, listProductsByVendor, createProduct, updateProduct, deleteProduct, formatCurrency } from '@/api/EcommerceApi';
+import { getVendorByOwner, listProductsByVendor, createProduct, updateProduct, deleteProduct, formatCurrency, uploadImageFile } from '@/api/EcommerceApi';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import ProductForm from '@/components/products/ProductForm';
@@ -132,19 +132,24 @@ const VendorProducts = () => {
                 <input className="w-full p-2 border rounded" value={form.category} onChange={e => setForm({...form, category: e.target.value})} />
               </div>
               <div>
-                <label className="text-sm">Image URL</label>
-                <input className="w-full p-2 border rounded" value={form.image} onChange={e => setForm({...form, image: e.target.value})} />
-                <input type="file" className="w-full mt-2" onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  try {
-                    const url = await uploadImageFile(file);
-                    setForm(f => ({ ...f, image: url }));
-                    toast({ title: 'Image uploaded' });
-                  } catch (err) {
-                    toast({ title: 'Upload failed', description: String(err), variant: 'destructive' });
-                  }
-                }} />
+            <label className="text-sm">Image URL</label>
+            <input className="w-full p-2 border rounded" value={form.image} onChange={e => setForm({...form, image: e.target.value})} />
+            <input type="file" accept="image/*" className="w-full mt-2" onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              try {
+                const url = await uploadImageFile(file);
+                setForm(f => ({ ...f, image: url }));
+                toast({ title: 'Image uploaded' });
+              } catch (err) {
+                toast({ title: 'Upload failed', description: String(err), variant: 'destructive' });
+              }
+            }} />
+            {editingId && form.image && (
+              <div className="mt-2">
+                <img src={form.image} alt="Product preview" className="w-32 h-32 object-cover rounded" />
+              </div>
+            )}
               </div>
             </div>
 
