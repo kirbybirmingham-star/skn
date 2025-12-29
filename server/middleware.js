@@ -1,29 +1,50 @@
-import { NextResponse } from 'next/server';
 import { SERVER_CONFIG } from './config.js';
 
-export async function middleware(request) {
-  // Apply CORS headers for PayPal integration
-  const response = NextResponse.next();
+/**
+ * Express middleware to authenticate users using Supabase JWT
+ */
+export async function authenticateUser(req, res, next) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ error: 'Missing authorization header' });
+    }
 
-  // Use centralized configuration for allowed origins
-  const origin = request.headers.get('origin');
+    const token = authHeader.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ error: 'Missing token' });
+    }
+
+    // Store token for use in route handlers
+    req.user = { token };
+    next();
+  } catch (err) {
+    console.error('Auth middleware error:', err);
+    return res.status(401).json({ error: 'Authentication failed' });
+  }
+}
+
+/**
+ * Express CORS middleware
+ */
+export function corsMiddleware(req, res, next) {
+  const origin = req.headers.origin;
+  
   if (origin && SERVER_CONFIG.frontend.urls.includes(origin)) {
-    response.headers.set('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Origin', origin);
   }
 
-  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  response.headers.set('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
 
   // Add security headers
-  response.headers.set('X-Frame-Options', 'SAMEORIGIN');
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  res.header('X-Frame-Options', 'SAMEORIGIN');
+  res.header('X-Content-Type-Options', 'nosniff');
 
-  // Cache the PayPal SDK for better performance
-  if (request.url.includes('/sdk/js')) {
-    response.headers.set('Cache-Control', 'public, max-age=3600');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
   }
 
-  return response;
+  next();
 }

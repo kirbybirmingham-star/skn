@@ -22,6 +22,8 @@ import App from '../App';
 import MarketplacePage from '../pages/MarketplacePage';
 import RouteError from '../components/RouteError';
 import OnboardingDashboard from '../pages/OnboardingDashboard';
+import CheckoutPage from '../pages/CheckoutPage';
+import OrderHistoryPage from '../pages/OrderHistoryPage';
 
 export const router = createBrowserRouter([
   {
@@ -30,11 +32,14 @@ export const router = createBrowserRouter([
     errorElement: <RouteError />,
     children: [
       { index: true, element: <HomePage /> },
-  { path: 'store', element: <StorePage /> },
-  { path: 'store/:sellerId', element: <StorePage /> },
+      { path: 'store', element: <StorePage /> },
+      { path: 'store/:sellerId', element: <StorePage /> },
       { path: 'marketplace', element: <MarketplacePage /> },
       { path: 'product/:id', element: <ProductDetailsPage /> },
       { path: 'success', element: <SuccessPage /> },
+      { path: 'checkout', element: <ProtectedRoute><CheckoutPage /></ProtectedRoute> },
+      { path: 'orders', element: <ProtectedRoute><OrderHistoryPage /></ProtectedRoute> },
+      { path: 'orders/:orderId', element: <ProtectedRoute><OrderHistoryPage /></ProtectedRoute> },
       { path: 'become-seller', element: <BecomeSellerPage /> },
       { path: 'onboarding', element: <ProtectedRoute><SellerOnboarding /></ProtectedRoute> },
       { path: 'onboarding/:token', element: <ProtectedRoute><SellerOnboarding /></ProtectedRoute> },

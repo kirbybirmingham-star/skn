@@ -1,11 +1,11 @@
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
 import path from 'path';
 import { SUPABASE_CONFIG, SERVER_CONFIG } from './config.js';
+import { verifySupabaseJwt } from './middleware/supabaseAuth.js';
 
-dotenv.config({ path: path.join(process.cwd(), '.env') });
+// Note: dotenv.config() already called in server/index.js before importing routes
 
 const router = express.Router();
 
@@ -98,25 +98,51 @@ router.post('/signup', async (req, res) => {
 });
 
 // GET /api/onboarding/me - return vendor for the authenticated user and some helper counts
-router.get('/me', verifySupabaseJwt, async (req, res) => {
-  // Debugging: log that the endpoint was hit and whether an auth header was present
-  try {
-    const authHeaderPresent = !!(req.headers && (req.headers.authorization || req.headers.Authorization));
-    console.info('[onboarding] GET /me called; authHeaderPresent:', authHeaderPresent, 'requesterId:', req.user?.id ? req.user.id : 'unknown');
-  } catch (e) {
-    // Non-fatal; continue handling the request
-  }
+// Also returns in-progress onboarding data for users in the middle of the onboarding flow
+router.get('/me', async (req, res) => {
   try {
     const supabase = getSupabase();
-    if (!supabase) return res.status(503).json({ error: 'Server not configured for onboarding' });
-    const requesterId = req.user?.id;
-    if (!requesterId) return res.status(401).json({ error: 'Not authenticated' });
+    if (!supabase) {
+      console.warn('[onboarding] GET /me: Supabase not configured, returning null vendor');
+      return res.json({ vendor: null, onboarding: null, counts: { activeListings: 0, itemsSold: 0, itemsBought: 0 } });
+    }
 
-    // Find vendor owned by this user
-    const { data: vendors, error: vErr } = await supabase.from('vendors').select('*').eq('owner_id', requesterId).limit(1);
+    // Verify JWT token inline
+    const auth = req.headers.authorization || req.headers.Authorization;
+    if (!auth || !auth.startsWith('Bearer ')) {
+      return res.json({ vendor: null, onboarding: null, counts: { activeListings: 0, itemsSold: 0, itemsBought: 0 } });
+    }
+    
+    const token = auth.split(' ')[1];
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data?.user) {
+      return res.json({ vendor: null, onboarding: null, counts: { activeListings: 0, itemsSold: 0, itemsBought: 0 } });
+    }
+    
+    const requesterId = data.user.id;
+    console.info('[onboarding] GET /me called; requesterId:', requesterId);
+
+    // Find vendor owned by this user (includes both active and in-progress vendors)
+    const { data: vendors, error: vErr } = await supabase
+      .from('vendors')
+      .select('*')
+      .eq('owner_id', requesterId)
+      .limit(1);
+    
     if (vErr) return res.status(500).json({ error: 'DB error' });
     const vendor = vendors && vendors[0];
-    if (!vendor) return res.json({ vendor: null, counts: { activeListings: 0, itemsSold: 0, itemsBought: 0 } });
+    
+    if (!vendor) {
+      return res.json({ vendor: null, onboarding: null, counts: { activeListings: 0, itemsSold: 0, itemsBought: 0 } });
+    }
+
+    // Include onboarding status in response
+    const onboarding = {
+      status: vendor.onboarding_status,
+      token: vendor.onboarding_token,
+      completedAt: vendor.onboarding_completed_at
+    };
+
 
     // Active listings: published products for this vendor
     const { count: listingsCount, error: pErr } = await supabase.from('products').select('id', { count: 'exact', head: true }).eq('vendor_id', vendor.id).eq('is_published', true);
@@ -156,7 +182,7 @@ router.get('/me', verifySupabaseJwt, async (req, res) => {
       console.warn('Failed to compute itemsBought:', err);
     }
 
-    return res.json({ vendor, counts: { activeListings: listingsCount || 0, itemsSold, itemsBought } });
+    return res.json({ vendor, onboarding, counts: { activeListings: listingsCount || 0, itemsSold, itemsBought } });
   } catch (err) {
     console.error('onboarding /me error:', err);
     return res.status(500).json({ error: 'Server error' });
@@ -185,8 +211,6 @@ router.get('/:token', async (req, res) => {
 
 // POST /api/onboarding/start-kyc - body: { vendor_id }
 // This starts a KYC session with the configured provider (stubbed) and returns a providerUrl
-import { verifySupabaseJwt } from './middleware/supabaseAuth.js';
-
 router.post('/start-kyc', verifySupabaseJwt, async (req, res) => {
   try {
     const supabase = getSupabase();

@@ -10,6 +10,17 @@ router.get('/vendor/:vendorId', async (req, res) => {
     return res.status(400).json({ error: 'Vendor ID is required' });
   }
 
+  // Defensive check: if Supabase is not configured, return mock data
+  if (!supabase) {
+    console.warn('[dashboard] Supabase not configured, returning mock dashboard data');
+    return res.json({
+      totalRevenue: 0,
+      totalOrders: 0,
+      averageOrderValue: 0,
+      recentOrders: []
+    });
+  }
+
   try {
     // --- Total Revenue and Total Orders ---
     const { data: orderItems, error: orderItemsError } = await supabase

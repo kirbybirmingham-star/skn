@@ -1,17 +1,19 @@
-import './cron.js';
-import express from 'express';
-import cors from 'cors';
+// Load environment variables FIRST before importing anything that uses config
 import { config } from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import fs from 'fs';
-import { SERVER_CONFIG, PAYPAL_CONFIG, validateServerConfig } from './config.js';
 
-// Load environment variables from root .env file
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const rootDir = join(__dirname, '..');
 config({ path: join(rootDir, '.env') });
+
+// Now import other modules that depend on env vars
+import './cron.js';
+import express from 'express';
+import cors from 'cors';
+import fs from 'fs';
+import { SERVER_CONFIG, PAYPAL_CONFIG, validateServerConfig } from './config.js';
 
 // Validate configuration
 validateServerConfig();
@@ -35,6 +37,10 @@ let dashboardRoutes;
 let healthRoutes;
 let reviewRoutes;
 let vendorRoutes;
+let ordersRoutes;
+let wishlistRoutes;
+let inventoryRoutes;
+let messagesRoutes;
 (async () => {
   const [
     { default: webhook },
@@ -47,6 +53,10 @@ let vendorRoutes;
     { default: health },
     { default: review },
     { default: vendor },
+    { default: orders },
+    { default: wishlist },
+    { default: inventory },
+    { default: messages },
   ] = await Promise.all([
     import('./webhooks.js'),
     import('./paypal-orders.js'),
@@ -58,6 +68,10 @@ let vendorRoutes;
     import('./health.js'),
     import('./reviews.js'),
     import('./vendor.js'),
+    import('./orders.js'),
+    import('./wishlist.js'),
+    import('./inventory.js'),
+    import('./messages.js'),
   ]);
   
   webhookRoutes = webhook;
@@ -70,6 +84,10 @@ let vendorRoutes;
   healthRoutes = health;
   reviewRoutes = review;
   vendorRoutes = vendor;
+  ordersRoutes = orders;
+  wishlistRoutes = wishlist;
+  inventoryRoutes = inventory;
+  messagesRoutes = messages;
 
   // Now start the server (moved inside async init)
   startServer();
@@ -123,6 +141,10 @@ function startServer() {
   app.use('/api/health', healthRoutes);
   app.use('/api', reviewRoutes);
   app.use('/api/vendor', vendorRoutes);
+  app.use('/api/orders', ordersRoutes);
+  app.use('/api/wishlist', wishlistRoutes);
+  app.use('/api/inventory', inventoryRoutes);
+  app.use('/api/messages', messagesRoutes);
 
   // Serve frontend static files if the build output exists (for deployments that use a single web service)
   try {

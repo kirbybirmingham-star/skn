@@ -15,13 +15,17 @@ const ENV = NODE_ENV === 'production' || NODE_ENV === 'live' ? 'production' : 's
 const PAYPAL_CLIENT_ID = process.env.VITE_PAYPAL_CLIENT_ID || process.env.PAYPAL_CLIENT_ID;
 const PAYPAL_CLIENT_SECRET = process.env.VITE_PAYPAL_SECRET || process.env.PAYPAL_SECRET;
 
-if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) {
-  console.error('Missing PayPal credentials. Check .env (VITE_PAYPAL_CLIENT_ID/VITE_PAYPAL_SECRET or PAYPAL_CLIENT_ID/PAYPAL_SECRET)');
-  // Throw to fail fast during startup so developer notices config issue
-  throw new Error('PayPal configuration is incomplete');
+const PAYPAL_CONFIGURED = !!(PAYPAL_CLIENT_ID && PAYPAL_CLIENT_SECRET);
+
+if (!PAYPAL_CONFIGURED) {
+  console.warn('⚠️ PayPal not configured (missing credentials). Payment features will be disabled.');
 }
 
 async function generateAccessToken() {
+  if (!PAYPAL_CONFIGURED) {
+    throw new Error('PayPal is not configured');
+  }
+  
   // Log the client ID to verify it's loaded, but redact most of it.
   const redactedClientId = PAYPAL_CLIENT_ID 
     ? `${PAYPAL_CLIENT_ID.substring(0, 8)}...${PAYPAL_CLIENT_ID.substring(PAYPAL_CLIENT_ID.length - 4)}`
@@ -67,6 +71,10 @@ async function generateAccessToken() {
 // Capture payment for completed order
 router.post('/capture-order/:orderID', async (req, res) => {
   try {
+    if (!PAYPAL_CONFIGURED) {
+      return res.status(503).send(JSON.stringify({ error: 'PayPal is not configured' }));
+    }
+
     const { orderID } = req.params;
     
     console.log('Attempting to capture PayPal order:', orderID);

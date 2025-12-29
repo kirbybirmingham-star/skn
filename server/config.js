@@ -67,8 +67,8 @@ export const SERVER_CONFIG = {
 // SUPABASE CONFIGURATION (using unified env var fallback pattern)
 // ============================================================================
 export const SUPABASE_CONFIG = {
-  url: getEnvVar('VITE_SUPABASE_URL', 'VITE_SUPABASE_URL'),
-  anonKey: getEnvVar('VITE_SUPABASE_ANON_KEY', 'VITE_SUPABASE_ANON_KEY'),
+  url: getEnvVar('SUPABASE_URL', 'VITE_SUPABASE_URL'),
+  anonKey: getEnvVar('SUPABASE_ANON_KEY', 'VITE_SUPABASE_ANON_KEY'),
   serviceRoleKey: getEnvVar('SUPABASE_SERVICE_ROLE_KEY', 'VITE_SUPABASE_SERVICE_ROLE_KEY')
 };
 

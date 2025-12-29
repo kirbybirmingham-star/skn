@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }) => {
     const currentUser = session?.user ?? null;
     setUser(currentUser);
 
-    if (currentUser) {
+    if (currentUser && supabase) {
       try {
         // Fetch profile
         const { data: profileData, error: profileError } = await supabase
@@ -68,7 +68,8 @@ export const AuthProvider = ({ children }) => {
           console.error('Unexpected non-JSON response from /api/onboarding/me', {
             status: res.status,
             contentType,
-            bodyPreview: (text || '').slice(0, 400)
+            bodyPreview: (text || '').slice(0, 400),
+            isHTML: (text || '').trim().startsWith('<')
           });
           // Treat as no vendor rather than crashing the app
           setVendor(null);
@@ -90,11 +91,23 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const getSession = async () => {
+      // Defensive check: if supabase is null (missing env vars), skip auth
+      if (!supabase) {
+        console.warn('⚠️ Supabase client not initialized. Running without authentication.');
+        setLoading(false);
+        return;
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
       handleSession(session);
     };
 
     getSession();
+
+    // Also guard the subscription
+    if (!supabase) {
+      return;
+    }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
