@@ -24,6 +24,8 @@ import RouteError from '../components/RouteError';
 import OnboardingDashboard from '../pages/OnboardingDashboard';
 import CheckoutPage from '../pages/CheckoutPage';
 import OrderHistoryPage from '../pages/OrderHistoryPage';
+import AccountSettings from '../pages/AccountSettings';
+import AdminPanel from '../pages/AdminPanel';
 
 export const router = createBrowserRouter([
   {
@@ -40,6 +42,8 @@ export const router = createBrowserRouter([
       { path: 'checkout', element: <ProtectedRoute><CheckoutPage /></ProtectedRoute> },
       { path: 'orders', element: <ProtectedRoute><OrderHistoryPage /></ProtectedRoute> },
       { path: 'orders/:orderId', element: <ProtectedRoute><OrderHistoryPage /></ProtectedRoute> },
+      { path: 'account-settings', element: <ProtectedRoute><AccountSettings /></ProtectedRoute> },
+      { path: 'admin', element: <ProtectedRoute><RequireRole role="admin"><AdminPanel /></RequireRole></ProtectedRoute> },
       { path: 'become-seller', element: <BecomeSellerPage /> },
       { path: 'onboarding', element: <ProtectedRoute><SellerOnboarding /></ProtectedRoute> },
       { path: 'onboarding/:token', element: <ProtectedRoute><SellerOnboarding /></ProtectedRoute> },

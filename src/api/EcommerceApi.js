@@ -1,6 +1,6 @@
 import { supabase } from '../lib/customSupabaseClient.js';
 import { selectProductWithVariants } from '../lib/variantSelectHelper.js';
-import { API_CONFIG } from '../config/environment.js';
+import { API_CONFIG, SUPABASE_CONFIG } from '../config/environment.js';
 
 // API Configuration - use the centralized config from environment.js
 // which properly handles VITE_API_URL and dev proxy paths
@@ -11,6 +11,46 @@ const API_BASE_URL = API_CONFIG.baseURL;
 const API_ENDPOINTS = {
   reviews: `${API_BASE_URL}/reviews`,
 };
+
+export async function canEditProduct(productId, userId) {
+  if (!supabase || !userId) return false;
+  
+  try {
+    // Fetch the product to get its vendor
+    const { data: product, error: productError } = await supabase
+      .from('products')
+      .select('vendor_id')
+      .eq('id', productId)
+      .single();
+    
+    if (productError || !product) {
+      console.warn('Product not found:', productError);
+      return false;
+    }
+    
+    // Get vendor info to check if user is owner
+    const { data: vendor, error: vendorError } = await supabase
+      .from('vendors')
+      .select('owner_id')
+      .eq('id', product.vendor_id)
+      .single();
+    
+    if (vendorError || !vendor) {
+      console.warn('Vendor not found:', vendorError);
+      return false;
+    }
+    
+    // Check if current user is the vendor owner
+    const isOwner = vendor.owner_id === userId;
+    
+    // Check if user is admin (would require admin role in profiles table)
+    // For now, we just check if they're the owner
+    return isOwner;
+  } catch (err) {
+    console.error('Authorization check failed:', err);
+    return false;
+  }
+}
 
 export function formatCurrency(amountInCents, currencyInfo = { code: 'USD', symbol: '$' }) {
   const amount = typeof amountInCents === 'number' ? amountInCents / 100 : 0;
@@ -562,6 +602,154 @@ export async function getCategories() {
   return data || [];
 }
 
+export async function ensureDefaultCategory() {
+  if (!supabase) return null;
+  
+  try {
+    const { data: existing } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('name', 'Uncategorized')
+      .single();
+    
+    if (existing) return existing.id;
+  } catch (e) {
+    // Doesn't exist, create it
+  }
+  
+  try {
+    const { data: created } = await supabase
+      .from('categories')
+      .insert([{ name: 'Uncategorized', slug: 'uncategorized' }])
+      .select('id')
+      .single();
+    
+    return created?.id || null;
+  } catch (error) {
+    console.error('Error ensuring default category:', error);
+    return null;
+  }
+}
+
+/**
+ * Alert admin of missing or incomplete categories
+ */
+export async function alertAdminMissingCategory(productId, categoryName, reason = 'FALLBACK_TO_UNCATEGORIZED') {
+  if (!supabase) return;
+  
+  try {
+    // Get current user for context
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id || 'unknown';
+    
+    // Insert admin alert
+    await supabase
+      .from('admin_alerts')
+      .insert([{
+        alert_type: 'MISSING_CATEGORY',
+        product_id: productId,
+        requested_category: categoryName,
+        reason,
+        triggered_by: userId,
+        created_at: new Date().toISOString(),
+        status: 'UNRESOLVED',
+        metadata: {
+          productId,
+          categoryName,
+          reason,
+          timestamp: new Date().toISOString()
+        }
+      }])
+      .select();
+    
+    console.log(`🚨 Admin alert: Missing category "${categoryName}" for product ${productId}`);
+  } catch (error) {
+    console.warn('Could not create admin alert:', error.message);
+  }
+}
+
+/**
+ * Get or create category by name with fallback handling
+ */
+export async function getOrCreateCategoryByName(categoryName, options = {}) {
+  if (!supabase || !categoryName) return null;
+  
+  const { alertOnFallback = true, createIfMissing = true } = options;
+  
+  const cleanName = String(categoryName).trim();
+  
+  // Handle empty or whitespace-only names
+  if (!cleanName || cleanName.length === 0) {
+    console.warn('Empty category name provided');
+    return await ensureDefaultCategory();
+  }
+  
+  const slug = cleanName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  
+  try {
+    // Try to find existing category (case-insensitive for flexibility)
+    const { data: existing } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('name', cleanName)
+      .single();
+    
+    if (existing) {
+      console.log(`✅ Found existing category: ${cleanName} (id: ${existing.id})`);
+      return existing.id;
+    }
+  } catch (e) {
+    // Category doesn't exist, will try to create
+    // Try case-insensitive search
+    try {
+      const { data: caseInsensitive } = await supabase
+        .from('categories')
+        .select('id')
+        .ilike('name', cleanName)
+        .single();
+      
+      if (caseInsensitive) {
+        console.log(`✅ Found existing category (case-insensitive): ${cleanName} (id: ${caseInsensitive.id})`);
+        return caseInsensitive.id;
+      }
+    } catch (err) {
+      // Still doesn't exist, will try to create
+    }
+  }
+  
+  // Only try to create if enabled
+  if (!createIfMissing) {
+    console.warn(`⚠️  Category "${cleanName}" not found and creation disabled`);
+    return null;
+  }
+  
+  // Category doesn't exist, try to create it
+  try {
+    const { data: created, error: createError } = await supabase
+      .from('categories')
+      .insert([{ name: cleanName, slug, metadata: { auto_created: true, created_at: new Date().toISOString() } }])
+      .select('id')
+      .single();
+    
+    if (createError) {
+      console.warn(`⚠️  Could not create category "${cleanName}":`, createError.message);
+      // Fall back to uncategorized
+      console.log(`📌 Falling back to "Uncategorized" for "${cleanName}"`);
+      if (alertOnFallback) {
+        // Will alert when product is updated
+      }
+      return null; // Return null to trigger fallback
+    }
+    
+    console.log(`✨ Created new category: ${cleanName} (id: ${created.id})`);
+    return created.id;
+  } catch (error) {
+    console.error(`Error creating category "${cleanName}":`, error);
+    console.log(`📌 Falling back to "Uncategorized" due to creation error`);
+    return null;
+  }
+}
+
 export async function getProductQuantities({ product_ids }) {
   if (!supabase) {
     console.warn('Supabase not initialized, returning empty variants array');
@@ -597,10 +785,40 @@ export async function createProduct(vendorId, productData) {
 }
 
 export async function updateProduct(productId, updates) {
-  if (!supabase) throw new Error('Supabase client not available');
-  const { data, error } = await supabase.from('products').update(updates).eq('id', productId).select().single();
-  if (error) throw error;
-  return data;
+  console.log('🔍 updateProduct called with:', { productId, updates });
+  
+  try {
+    // Get auth token from Supabase
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session) {
+      throw new Error('You must be logged in to update products');
+    }
+    
+    const token = session.access_token;
+    
+    // Call backend API endpoint which uses service role to bypass RLS
+    const response = await fetch(`${API_BASE_URL}/vendor/products/${productId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(updates)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('✅ Product updated successfully via backend API:', data.product);
+    
+    return data.product;
+  } catch (err) {
+    console.error('❌ Product update failed:', err.message);
+    throw err;
+  }
 }
 
 export async function deleteProduct(productId) {

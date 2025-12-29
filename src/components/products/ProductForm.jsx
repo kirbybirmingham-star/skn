@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import ProductImageManager from '@/components/products/ProductImageManager';
+import CategorySelect from '@/components/products/CategorySelect';
 import { Card } from '@/components/ui/card';
 
 const ProductForm = ({ 
@@ -16,7 +17,7 @@ const ProductForm = ({
     description: product?.description || '',
     price_in_cents: product?.price_in_cents || 0,
     inventory_quantity: product?.inventory_quantity || 0,
-    category: product?.category || 'Uncategorized'
+    category: product?.category || ''
   });
 
   const handleSubmit = (e) => {
@@ -57,11 +58,10 @@ const ProductForm = ({
           required
         />
         
-        <Input
-          label="Category"
+        <CategorySelect
           value={form.category}
-          onChange={(e) => setForm({ ...form, category: e.target.value })}
-          required
+          onChange={(category) => setForm({ ...form, category })}
+          label="Category"
         />
       </div>
 

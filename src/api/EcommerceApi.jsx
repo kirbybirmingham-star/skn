@@ -2,6 +2,7 @@ import { supabase } from '../lib/customSupabaseClient';
 import { selectProductWithVariants, variantSelectCandidates } from '../lib/variantSelectHelper.js';
 import { productRatingsExist } from '../lib/ratingsChecker.js';
 import { API_CONFIG } from '../config/environment.js';
+import { logDatabaseOperation } from '../lib/databaseDebugHelper.js';
 
 // API endpoints (non-PayPal)
 // In dev: API_CONFIG.baseURL = '/api', so this becomes '/api/reviews'
@@ -9,6 +10,50 @@ import { API_CONFIG } from '../config/environment.js';
 const API_ENDPOINTS = {
   reviews: `${API_CONFIG.baseURL}/reviews`,
 };
+
+/**
+ * Check if current user can edit a product
+ * Returns true if user is product owner or admin
+ */
+export async function canEditProduct(productId, userId) {
+  if (!supabase || !userId) return false;
+  
+  try {
+    // Fetch the product to get its vendor
+    const { data: product, error: productError } = await supabase
+      .from('products')
+      .select('vendor_id')
+      .eq('id', productId)
+      .single();
+    
+    if (productError || !product) {
+      console.warn('Product not found:', productError);
+      return false;
+    }
+    
+    // Get vendor info to check if user is owner
+    const { data: vendor, error: vendorError } = await supabase
+      .from('vendors')
+      .select('owner_id')
+      .eq('id', product.vendor_id)
+      .single();
+    
+    if (vendorError || !vendor) {
+      console.warn('Vendor not found:', vendorError);
+      return false;
+    }
+    
+    // Check if current user is the vendor owner
+    const isOwner = vendor.owner_id === userId;
+    
+    // Check if user is admin (would require admin role in profiles table)
+    // For now, we just check if they're the owner
+    return isOwner;
+  } catch (err) {
+    console.error('Authorization check failed:', err);
+    return false;
+  }
+}
 
 export function formatCurrency(amountInCents, currencyInfo = { code: 'USD', symbol: '$' }) {
   const amount = typeof amountInCents === 'number' ? amountInCents / 100 : 0;
@@ -763,6 +808,162 @@ export async function getCategories() {
   return data || [];
 }
 
+/**
+ * Get or create a category by name
+ * Returns the category ID, or null if operation fails
+ */
+/**
+ * Ensure "Uncategorized" default category exists
+ */
+export async function ensureDefaultCategory() {
+  if (!supabase) return null;
+  
+  try {
+    const { data: existing } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('name', 'Uncategorized')
+      .single();
+    
+    if (existing) return existing.id;
+  } catch (e) {
+    // Doesn't exist, create it
+  }
+  
+  try {
+    const { data: created } = await supabase
+      .from('categories')
+      .insert([{ name: 'Uncategorized', slug: 'uncategorized' }])
+      .select('id')
+      .single();
+    
+    return created?.id || null;
+  } catch (error) {
+    console.error('Error ensuring default category:', error);
+    return null;
+  }
+}
+
+/**
+ * Alert admin of missing or incomplete categories
+ */
+export async function alertAdminMissingCategory(productId, categoryName, reason = 'FALLBACK_TO_UNCATEGORIZED') {
+  if (!supabase) return;
+  
+  try {
+    // Get current user for context
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id || 'unknown';
+    
+    // Insert admin alert
+    await supabase
+      .from('admin_alerts')
+      .insert([{
+        alert_type: 'MISSING_CATEGORY',
+        product_id: productId,
+        requested_category: categoryName,
+        reason,
+        triggered_by: userId,
+        created_at: new Date().toISOString(),
+        status: 'UNRESOLVED',
+        metadata: {
+          productId,
+          categoryName,
+          reason,
+          timestamp: new Date().toISOString()
+        }
+      }])
+      .select();
+    
+    console.log(`🚨 Admin alert: Missing category "${categoryName}" for product ${productId}`);
+  } catch (error) {
+    console.warn('Could not create admin alert:', error.message);
+  }
+}
+
+/**
+ * Get or create category by name with fallback handling
+ * If category cannot be created, falls back to "Uncategorized" and alerts admin
+ */
+export async function getOrCreateCategoryByName(categoryName, options = {}) {
+  if (!supabase || !categoryName) return null;
+  
+  const { alertOnFallback = true, createIfMissing = true } = options;
+  
+  const cleanName = String(categoryName).trim();
+  
+  // Handle empty or whitespace-only names
+  if (!cleanName || cleanName.length === 0) {
+    console.warn('Empty category name provided');
+    return await ensureDefaultCategory();
+  }
+  
+  const slug = cleanName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  
+  try {
+    // Try to find existing category (case-insensitive for flexibility)
+    const { data: existing } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('name', cleanName)
+      .single();
+    
+    if (existing) {
+      console.log(`✅ Found existing category: ${cleanName} (id: ${existing.id})`);
+      return existing.id;
+    }
+  } catch (e) {
+    // Category doesn't exist, will try to create
+    // Try case-insensitive search
+    try {
+      const { data: caseInsensitive } = await supabase
+        .from('categories')
+        .select('id')
+        .ilike('name', cleanName)
+        .single();
+      
+      if (caseInsensitive) {
+        console.log(`✅ Found existing category (case-insensitive): ${cleanName} (id: ${caseInsensitive.id})`);
+        return caseInsensitive.id;
+      }
+    } catch (err) {
+      // Still doesn't exist, will try to create
+    }
+  }
+  
+  // Only try to create if enabled
+  if (!createIfMissing) {
+    console.warn(`⚠️  Category "${cleanName}" not found and creation disabled`);
+    return null;
+  }
+  
+  // Category doesn't exist, try to create it
+  try {
+    const { data: created, error: createError } = await supabase
+      .from('categories')
+      .insert([{ name: cleanName, slug, metadata: { auto_created: true, created_at: new Date().toISOString() } }])
+      .select('id')
+      .single();
+    
+    if (createError) {
+      console.warn(`⚠️  Could not create category "${cleanName}":`, createError.message);
+      // Fall back to uncategorized
+      console.log(`📌 Falling back to "Uncategorized" for "${cleanName}"`);
+      if (alertOnFallback) {
+        // Will alert when product is updated
+      }
+      return null; // Return null to trigger fallback
+    }
+    
+    console.log(`✨ Created new category: ${cleanName} (id: ${created.id})`);
+    return created.id;
+  } catch (error) {
+    console.error(`Error creating category "${cleanName}":`, error);
+    console.log(`📌 Falling back to "Uncategorized" due to creation error`);
+    return null;
+  }
+}
+
 export async function getProductQuantities({ product_ids }) {
   if (!supabase) {
     console.warn('Supabase not initialized, returning empty variants array');
@@ -847,9 +1048,246 @@ export async function createProduct(vendorId, productData) {
 
 export async function updateProduct(productId, updates) {
   if (!supabase) throw new Error('Supabase client not available');
-  const { data, error } = await supabase.from('products').update(updates).eq('id', productId).select().single();
-  if (error) throw error;
-  return data;
+  
+  console.log('🔍 updateProduct called with:', { productId, updates });
+  
+  // Get current user for authorization check
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
+    throw new Error('You must be logged in to update products');
+  }
+  
+  // Check authorization
+  const isAuthorized = await canEditProduct(productId, user.id);
+  if (!isAuthorized) {
+    throw new Error('You do not have permission to edit this product');
+  }
+  
+  // Fetch current product to preserve existing metadata and other fields
+  const { data: currentProduct, error: fetchError } = await supabase
+    .from('products')
+    .select('*')
+    .eq('id', productId)
+    .single();
+  
+  if (fetchError || !currentProduct) {
+    throw new Error('Product not found');
+  }
+  
+  // Map incoming updates to database schema
+  const dbUpdates = {};
+  
+  // Extract variants before processing other fields (don't include in product update)
+  const variantsToUpdate = updates.variants;
+  
+  // Only add fields that are being updated (non-undefined)
+  if (updates.title !== undefined && updates.title !== null) {
+    dbUpdates.title = String(updates.title).trim();
+  }
+  if (updates.description !== undefined && updates.description !== null) {
+    dbUpdates.description = String(updates.description).trim();
+  }
+  if (updates.price_in_cents !== undefined && updates.price_in_cents !== null) {
+    dbUpdates.base_price = Number(updates.price_in_cents);
+  }
+  if (updates.image !== undefined && updates.image !== null) {
+    const imageUrl = String(updates.image).trim();
+    // Only include image if it's a valid URL (not containing 'undefined')
+    if (imageUrl && !imageUrl.includes('undefined') && imageUrl.length > 10) {
+      dbUpdates.image_url = imageUrl;
+    } else {
+      console.warn('Invalid image URL, skipping:', imageUrl);
+    }
+  }
+  
+  // Handle metadata carefully - preserve existing metadata
+  // Merge in category name and any other desired metadata
+  if (updates.category !== undefined || Object.keys(updates).some(k => k.startsWith('metadata_'))) {
+    const existingMetadata = (currentProduct.metadata && typeof currentProduct.metadata === 'object') 
+      ? currentProduct.metadata 
+      : {};
+    
+    const newMetadata = { ...existingMetadata };
+    
+    // Store category name in metadata for search/reference
+    if (updates.category !== undefined && updates.category !== null) {
+      newMetadata.category_name = String(updates.category).trim();
+      newMetadata.category_updated_at = new Date().toISOString();
+    }
+    
+    // Handle any metadata_* fields from form
+    Object.entries(updates).forEach(([key, value]) => {
+      if (key.startsWith('metadata_')) {
+        const metaKey = key.replace('metadata_', '');
+        if (value !== undefined && value !== null) {
+          newMetadata[metaKey] = value;
+        }
+      }
+    });
+    
+    if (Object.keys(newMetadata).length > 0) {
+      dbUpdates.metadata = newMetadata;
+    }
+  }
+  
+  // Handle category FK - look up category ID from categories table
+  let categoryWarning = null;
+  if (updates.category !== undefined && updates.category !== null) {
+    // Check if it's already a UUID (category_id) or a string (category name)
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(updates.category));
+    
+    let categoryId;
+    if (isUUID) {
+      // Already a category_id, use it directly
+      categoryId = updates.category;
+      console.log(`📋 Using provided category_id: ${categoryId}`);
+    } else {
+      // It's a category name, look it up
+      const requestedCategory = String(updates.category).trim();
+      categoryId = await getOrCreateCategoryByName(requestedCategory);
+      
+      // If category creation failed, fall back to "Uncategorized"
+      if (!categoryId) {
+        console.warn(`⚠️  Category "${requestedCategory}" could not be resolved`);
+        categoryWarning = `Category "${requestedCategory}" was not found and could not be created. Using "Uncategorized".`;
+        
+        // Try to get "Uncategorized" category ID
+        categoryId = await ensureDefaultCategory();
+        
+        // Alert admin about the fallback
+        await alertAdminMissingCategory(productId, requestedCategory, 'CREATION_FAILED');
+      }
+    }
+    
+    if (categoryId) {
+      dbUpdates.category_id = categoryId;
+      console.log(`📋 Setting category_id to: ${categoryId}`);
+    }
+  } else if (currentProduct.category_id === null || currentProduct.category_id === undefined) {
+    // Product has no category, ensure it gets "Uncategorized"
+    const defaultCatId = await ensureDefaultCategory();
+    if (defaultCatId) {
+      dbUpdates.category_id = defaultCatId;
+      console.log(`📋 Auto-assigning "Uncategorized" to product with no category`);
+    }
+  }
+  
+  // If no updates, return current product
+  if (Object.keys(dbUpdates).length === 0) {
+    console.warn('No updates to apply');
+    return currentProduct;
+  }
+  
+  console.log('🔧 Final dbUpdates to send:', dbUpdates);
+  console.log('🔍 Fields being updated:', Object.keys(dbUpdates));
+  for (const [key, value] of Object.entries(dbUpdates)) {
+    const displayValue = typeof value === 'object' ? JSON.stringify(value) : String(value).substring(0, 50);
+    console.log(`   └─ ${key}: ${typeof value} = ${displayValue}`);
+  }
+  
+  // Update product record
+  const { data: product, error: productError } = await supabase
+    .from('products')
+    .update(dbUpdates)
+    .eq('id', productId)
+    .select()
+    .single();
+  
+  if (productError) {
+    // Log detailed error info
+    console.error('❌ Supabase error:', {
+      message: productError.message,
+      code: productError.code,
+      details: productError.details,
+      hint: productError.hint
+    });
+    
+    logDatabaseOperation({
+      table: 'products',
+      method: 'update',
+      id: productId,
+      payloadSent: dbUpdates,
+      error: productError.message,
+      context: 'updateProduct-api'
+    });
+    
+    console.error('Product update error:', productError);
+    console.error('Update payload was:', dbUpdates);
+    throw new Error(`Failed to update product: ${productError.message}`);
+  }
+  
+  // Log successful update
+  logDatabaseOperation({
+    table: 'products',
+    method: 'update',
+    id: productId,
+    payloadSent: dbUpdates,
+    payloadReceived: product,
+    context: 'updateProduct-api'
+  });
+  
+  // Handle variants if provided (separately from product update)
+  if (variantsToUpdate && Array.isArray(variantsToUpdate) && variantsToUpdate.length > 0) {
+    // Get existing variants
+    const { data: existingVariants, error: variantFetchError } = await supabase
+      .from('product_variants')
+      .select('id')
+      .eq('product_id', productId);
+    
+    if (!variantFetchError && existingVariants && existingVariants.length > 0) {
+      // Delete old variants
+      const { error: deleteError } = await supabase
+        .from('product_variants')
+        .delete()
+        .eq('product_id', productId);
+      
+      if (deleteError) {
+        console.warn('Failed to delete old variants:', deleteError);
+      }
+    }
+    
+    // Insert new variants
+    const newVariants = variantsToUpdate.map((v, idx) => ({
+      product_id: productId,
+      seller_id: product.vendor_id,
+      sku: v.sku || `${product.slug}-v${idx + 1}`,
+      price_in_cents: Number(v.price_in_cents) || 0,
+      inventory_quantity: Number(v.inventory_quantity) || 0,
+      attributes: v.attributes || { title: v.title || `Variant ${idx + 1}` },
+      is_active: true
+    }));
+    
+    const { error: variantError } = await supabase
+      .from('product_variants')
+      .insert(newVariants);
+    
+    if (variantError) {
+      console.warn('Failed to update variants:', variantError);
+    }
+  }
+  
+  // Re-fetch with updated data
+  const { data: completeProduct, error: refetchError } = await supabase
+    .from('products')
+    .select('*')
+    .eq('id', productId)
+    .single();
+  
+  if (refetchError) {
+    console.warn('Failed to re-fetch product:', refetchError);
+    return product;
+  }
+  
+  // Return product with warning if applicable
+  if (categoryWarning) {
+    console.warn(`⚠️  ${categoryWarning}`);
+    return {
+      ...completeProduct || product,
+      _warning: categoryWarning
+    };
+  }
+  
+  return completeProduct || product;
 }
 
 export async function deleteProduct(productId) {
@@ -857,6 +1295,192 @@ export async function deleteProduct(productId) {
   const { error } = await supabase.from('products').delete().eq('id', productId);
   if (error) throw error;
   return true;
+}
+
+/**
+ * Get unresolved admin alerts for missing categories
+ */
+export async function getAdminAlerts(options = {}) {
+  if (!supabase) {
+    console.warn('Supabase not initialized');
+    return [];
+  }
+  
+  const { status = 'UNRESOLVED', alertType = 'MISSING_CATEGORY', limit = 50 } = options;
+  
+  try {
+    let query = supabase
+      .from('admin_alerts')
+      .select('*')
+      .eq('status', status)
+      .eq('alert_type', alertType)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    
+    const { data, error } = await query;
+    
+    if (error) {
+      console.warn('Error fetching admin alerts:', error.message);
+      return [];
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Error in getAdminAlerts:', error);
+    return [];
+  }
+}
+
+/**
+ * Mark admin alert as resolved
+ */
+export async function resolveAdminAlert(alertId, categoryId = null) {
+  if (!supabase) return false;
+  
+  try {
+    const updates = {
+      status: 'RESOLVED',
+      resolved_at: new Date().toISOString(),
+      resolved_category_id: categoryId
+    };
+    
+    const { error } = await supabase
+      .from('admin_alerts')
+      .update(updates)
+      .eq('id', alertId);
+    
+    if (error) {
+      console.error('Error resolving alert:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error in resolveAdminAlert:', error);
+    return false;
+  }
+}
+
+/**
+ * Bulk migrate products missing categories
+ * Useful for cleaning up products without categories
+ */
+export async function migrateMissingCategories(options = {}) {
+  if (!supabase) {
+    throw new Error('Supabase not initialized');
+  }
+  
+  const { dryRun = true, batchSize = 100 } = options;
+  
+  try {
+    // Get products without categories
+    const { data: productsWithoutCategory, error: fetchError } = await supabase
+      .from('products')
+      .select('id, title, category_id')
+      .is('category_id', null)
+      .limit(batchSize);
+    
+    if (fetchError) {
+      throw new Error(`Failed to fetch products: ${fetchError.message}`);
+    }
+    
+    if (!productsWithoutCategory || productsWithoutCategory.length === 0) {
+      console.log('✅ No products found missing categories');
+      return { total: 0, updated: 0, errors: [] };
+    }
+    
+    // Ensure "Uncategorized" category exists
+    const uncategorizedId = await ensureDefaultCategory();
+    if (!uncategorizedId) {
+      throw new Error('Could not ensure default "Uncategorized" category');
+    }
+    
+    console.log(`📊 Found ${productsWithoutCategory.length} products missing categories`);
+    
+    if (dryRun) {
+      console.log('🔍 DRY RUN - Would update:', productsWithoutCategory.map(p => p.title));
+      return { total: productsWithoutCategory.length, updated: 0, errors: [], dryRun: true };
+    }
+    
+    // Update products
+    const updates = productsWithoutCategory.map(p => ({
+      id: p.id,
+      category_id: uncategorizedId
+    }));
+    
+    const { error: updateError } = await supabase
+      .from('products')
+      .upsert(updates);
+    
+    if (updateError) {
+      throw new Error(`Failed to update products: ${updateError.message}`);
+    }
+    
+    console.log(`✅ Successfully migrated ${productsWithoutCategory.length} products to "Uncategorized"`);
+    
+    return {
+      total: productsWithoutCategory.length,
+      updated: productsWithoutCategory.length,
+      errors: []
+    };
+  } catch (error) {
+    console.error('Error in migrateMissingCategories:', error);
+    return {
+      total: 0,
+      updated: 0,
+      errors: [error.message]
+    };
+  }
+}
+
+/**
+ * Get category statistics
+ * Shows how many products are in each category
+ */
+export async function getCategoryStats() {
+  if (!supabase) {
+    console.warn('Supabase not initialized');
+    return {};
+  }
+  
+  try {
+    // Count products by category
+    const { data: stats, error } = await supabase
+      .from('products')
+      .select('category_id, categories!inner(name, slug)')
+      .order('category_id');
+    
+    if (error) {
+      console.warn('Error fetching category stats:', error.message);
+    }
+    
+    // Aggregate by category
+    const categoryStats = {};
+    const productsWithoutCategory = { name: 'Uncategorized', count: 0, slug: 'uncategorized' };
+    
+    if (stats) {
+      stats.forEach(product => {
+        if (!product.category_id) {
+          productsWithoutCategory.count++;
+        } else if (product.categories) {
+          const cat = product.categories;
+          if (!categoryStats[cat.slug]) {
+            categoryStats[cat.slug] = { name: cat.name, count: 0, slug: cat.slug };
+          }
+          categoryStats[cat.slug].count++;
+        }
+      });
+    }
+    
+    if (productsWithoutCategory.count > 0) {
+      categoryStats['uncategorized'] = productsWithoutCategory;
+    }
+    
+    return categoryStats;
+  } catch (error) {
+    console.error('Error in getCategoryStats:', error);
+    return {};
+  }
 }
 
 export async function getProductById(productIdOrSlug) {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
     import { Link, useLocation, useNavigate } from 'react-router-dom';
-    import { Menu, X, ShoppingBag, ShoppingCart as CartIcon, User, LogOut, LayoutDashboard } from 'lucide-react';
+    import { Menu, X, ShoppingBag, ShoppingCart as CartIcon, User, LogOut, LayoutDashboard, Settings } from 'lucide-react';
     import { motion, AnimatePresence } from 'framer-motion';
     import { Button } from '@/components/ui/button';
     import { useCart } from '@/hooks/useCart';
@@ -25,9 +25,10 @@ import React, { useState } from 'react';
       const location = useLocation();
       const navigate = useNavigate();
       const { cartItems } = useCart();
-      const { user, signOut, vendor } = useAuth();
+      const { user, signOut, vendor, profile } = useAuth();
 
       const isSeller = vendor?.onboarding_status === 'approved' || vendor?.onboarding_status === 'pending' || vendor?.onboarding_status === 'kyc_in_progress';
+      const isAdmin = user?.user_metadata?.role === 'admin' || profile?.role === 'admin';
 
       const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -135,6 +136,13 @@ import React, { useState } from 'react';
                             <User className="mr-2 h-4 w-4" />
                             Account Settings
                           </DropdownMenuItem>
+                          {isAdmin && (
+                            <DropdownMenuItem onClick={() => navigate('/admin')}
+                              className="cursor-pointer">
+                              <Settings className="mr-2 h-4 w-4" />
+                              Admin Panel
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem asChild>
                             <Link to={isSeller ? '/dashboard/vendor' : '/dashboard'} className="cursor-pointer">
                               <LayoutDashboard className="mr-2 h-4 w-4" />

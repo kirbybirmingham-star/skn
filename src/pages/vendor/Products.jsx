@@ -7,7 +7,7 @@ import { useToast } from '@/components/ui/use-toast';
 import ProductForm from '@/components/products/ProductForm';
 import { supabase } from '@/lib/customSupabaseClient';
 
-const emptyForm = { title: '', description: '', price_in_cents: 0, inventory_quantity: 0, image: '', category: 'Uncategorized', variants: [] };
+const emptyForm = { title: '', description: '', price_in_cents: 0, inventory_quantity: 0, image: '', category: '', variants: [] };
 
 const VendorProducts = () => {
   const { profile } = useAuth();
@@ -50,7 +50,22 @@ const VendorProducts = () => {
   const openCreate = () => { setForm(emptyForm); setEditingId(null); setOpen(true); };
   const openEdit = (p) => {
     setEditingId(p.id);
-    setForm({ title: p.title, description: p.description, price_in_cents: p.variants?.[0]?.price_in_cents || 0, inventory_quantity: p.variants?.[0]?.inventory_quantity || 0, image: p.image || '', category: p.category || 'Uncategorized', variants: p.variants || [] });
+    const variants = p.product_variants || p.variants || [];
+    setForm({ 
+      title: p.title || '', 
+      description: p.description || '', 
+      price_in_cents: variants?.[0]?.price_in_cents || p.base_price || 0, 
+      inventory_quantity: variants?.[0]?.inventory_quantity || 0, 
+      image: p.image_url || p.image || '', 
+      category: p.category_id || '',
+      variants: variants.length > 0 ? variants.map(v => ({
+        id: v.id,
+        title: v.attributes?.title || v.title || `Variant`,
+        price_in_cents: v.price_in_cents || 0,
+        inventory_quantity: v.inventory_quantity || 0,
+        sku: v.sku || ''
+      })) : []
+    });
     setOpen(true);
   };
 
@@ -62,16 +77,63 @@ const VendorProducts = () => {
 
     try {
       if (editingId) {
-        // normalize variants: ensure ids and formatted price
-        const variantsToSave = (form.variants && form.variants.length) ? form.variants.map((v, i) => ({ id: v.id || `${editingId}-v${i+1}`, title: v.title || `Variant ${i+1}`, price_in_cents: Number(v.price_in_cents || 0), price_formatted: formatCurrency(Number(v.price_in_cents || 0)), inventory_quantity: Number(v.inventory_quantity || 0) })) : [{ id: `${editingId}-v1`, title: 'Default', price_in_cents: form.price_in_cents, price_formatted: formatCurrency(Number(form.price_in_cents || 0)), inventory_quantity: form.inventory_quantity }];
-        const updated = await updateProduct(editingId, { title: form.title, description: form.description, image: form.image, category: form.category, variants: variantsToSave });
-        setProducts(prev => prev.map(p => p.id === editingId ? { ...p, ...updated } : p));
-        toast({ title: 'Product updated' });
+        // Map form to update payload - only include defined fields
+        const updatePayload = {
+          title: form.title?.trim(),
+          description: form.description?.trim(),
+          price_in_cents: Number(form.price_in_cents) || 0,
+          variants: form.variants && form.variants.length > 0 ? form.variants : [
+            { 
+              id: `${editingId}-v1`,
+              title: 'Default', 
+              price_in_cents: Number(form.price_in_cents) || 0, 
+              inventory_quantity: Number(form.inventory_quantity) || 0 
+            }
+          ]
+        };
+        
+        // Only include category if it's set (it will be a category_id UUID)
+        if (form.category) {
+          updatePayload.category = form.category;
+        }
+        
+        // Only include image if it has a valid value (no 'undefined' in URL)
+        if (form.image && form.image.trim() && !form.image.includes('undefined')) {
+          updatePayload.image = form.image.trim();
+        }
+        
+        console.log('📤 Update payload being sent:', updatePayload);
+        console.log('📤 Variants in payload:', updatePayload.variants);
+        console.log('📤 Variant details:', updatePayload.variants?.map(v => ({
+          id: v.id,
+          title: v.title,
+          price: v.price_in_cents,
+          inventory: v.inventory_quantity
+        })));
+        
+        try {
+          const updated = await updateProduct(editingId, updatePayload);
+          setProducts(prev => prev.map(p => p.id === editingId ? { ...p, ...updated } : p));
+          toast({ title: 'Product updated successfully' });
+        } catch (error) {
+          console.error('❌ Update failed:', error.message);
+          toast({ title: 'Update failed', description: error.message, variant: 'destructive' });
+        }
       } else {
-        const variantsToSave = (form.variants && form.variants.length) ? form.variants.map((v, i) => ({ id: v.id || `${Date.now()}-v${i+1}`, title: v.title || `Variant ${i+1}`, price_in_cents: Number(v.price_in_cents || 0), price_formatted: formatCurrency(Number(v.price_in_cents || 0)), inventory_quantity: Number(v.inventory_quantity || 0) })) : [{ id: `${Date.now()}-v1`, title: 'Default', price_in_cents: form.price_in_cents, price_formatted: formatCurrency(Number(form.price_in_cents || 0)), inventory_quantity: form.inventory_quantity }];
+        const variantsToSave = (form.variants && form.variants.length) ? form.variants.map((v, i) => ({ 
+          id: v.id || `${Date.now()}-v${i+1}`, 
+          title: v.title || `Variant ${i+1}`, 
+          price_in_cents: Number(v.price_in_cents || 0), 
+          inventory_quantity: Number(v.inventory_quantity || 0) 
+        })) : [{ 
+          id: `${Date.now()}-v1`, 
+          title: 'Default', 
+          price_in_cents: Number(form.price_in_cents) || 0, 
+          inventory_quantity: Number(form.inventory_quantity) || 0 
+        }];
         const p = await createProduct(vendor.id, { ...form, variants: variantsToSave });
         setProducts(prev => [p, ...prev]);
-        toast({ title: 'Product created' });
+        toast({ title: 'Product created successfully' });
       }
       setOpen(false);
     } catch (err) {
@@ -119,6 +181,9 @@ const VendorProducts = () => {
         <Dialog.Overlay className="fixed inset-0 bg-black/40" />
         <Dialog.Content className="fixed left-1/2 top-1/2 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 shadow-lg">
           <Dialog.Title className="text-xl font-bold mb-4">{editingId ? 'Edit Product' : 'Create Product'}</Dialog.Title>
+          <Dialog.Description className="sr-only">
+            {editingId ? 'Edit your product details' : 'Create a new product with details and variants'}
+          </Dialog.Description>
           <div className="grid grid-cols-1 gap-3">
             <label className="text-sm">Title</label>
             <input className="w-full p-2 border rounded" value={form.title} onChange={e => setForm({...form, title: e.target.value})} />
