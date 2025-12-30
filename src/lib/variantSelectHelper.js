@@ -2,8 +2,8 @@
 import { productRatingsExist } from './ratingsChecker.js';
 
 export const variantSelectCandidates = [
-  'product_variants(id, name, images)',
-  'product_variants(id, title, images)',
+  'product_variants(id, name, images, inventory_quantity, price_in_cents)',
+  'product_variants(id, title, images, inventory_quantity, price_in_cents)',
   'product_variants(*)'
 ];
 

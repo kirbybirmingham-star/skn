@@ -936,7 +936,7 @@ export async function getVendorByOwner(ownerId) {
   try {
     const { data, error } = await supabase
       .from('vendors')
-      .select('id, owner_id, name, slug, description, created_at')
+      .select('id, owner_id, name, slug, description, created_at, onboarding_status, onboarding_data')
       .eq('owner_id', ownerId)
       .single();
 
@@ -953,19 +953,55 @@ export async function getVendorByOwner(ownerId) {
 
 export async function getVendorDashboardData(vendorId) {
   if (!vendorId) {
-    console.warn('Vendor ID is required to fetch dashboard data');
-    return null;
+    console.warn('[EcommerceApi] Vendor ID is required to fetch dashboard data');
+    return { totalRevenue: 0, totalOrders: 0, averageOrderValue: 0 };
   }
   try {
-    const response = await fetch(`${API_BASE_URL}/dashboard/vendor/${vendorId}`);
+    const url = `${API_BASE_URL}/dashboard/vendor/${vendorId}`;
+    console.log('[EcommerceApi] Fetching vendor dashboard data from:', url);
+    const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`Failed to fetch vendor dashboard data: ${response.status}`);
     }
     const data = await response.json();
-    return data;
+    console.log('[EcommerceApi] Dashboard data response:', data);
+    return data || { totalRevenue: 0, totalOrders: 0, averageOrderValue: 0 };
   } catch (error) {
-    console.error('Error fetching vendor dashboard data:', error);
-    throw error;
+    console.error('[EcommerceApi] Error fetching vendor dashboard data:', error);
+    return { totalRevenue: 0, totalOrders: 0, averageOrderValue: 0 };
+  }
+}
+
+export async function getVendorOrders(vendorId) {
+  if (!vendorId) {
+    console.warn('[EcommerceApi] Vendor ID is required to fetch orders');
+    return [];
+  }
+  try {
+    // Get the current session to extract JWT token
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session) {
+      console.warn('[EcommerceApi] No active session, cannot fetch vendor orders');
+      return [];
+    }
+
+    const url = `${API_BASE_URL}/vendor/${vendorId}/orders`;
+    console.log('[EcommerceApi] Fetching vendor orders from:', url);
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch vendor orders: ${response.status}`);
+    }
+    const data = await response.json();
+    console.log('[EcommerceApi] Vendor orders response:', data);
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error('[EcommerceApi] Error fetching vendor orders:', error);
+    return [];
   }
 }
 

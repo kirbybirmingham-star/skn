@@ -6,42 +6,44 @@ import { dirname, join } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const rootDir = join(__dirname, '..');
-config({ path: join(rootDir, '.env') });
+// Load .env with override to ensure all vars are available
+config({ path: join(rootDir, '.env'), override: true });
 
-// Now import other modules that depend on env vars
+// Log that env vars were loaded and show what we got
+console.log('[dotenv] Environment variables loaded from .env');
+console.log('[dotenv] Key variables:', {
+  SUPABASE_URL: process.env.SUPABASE_URL ? '✓' : '✗',
+  VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL ? '✓' : '✗',
+  PAYPAL_CLIENT_ID: process.env.PAYPAL_CLIENT_ID ? '✓' : '✗',
+  PORT: process.env.PORT
+});
+
+// Import cron FIRST (before anything else)
+// This is safe because cron.js doesn't depend on the config module
 import './cron.js';
+
+// NOW we can safely import express and other standard modules
 import express from 'express';
 import cors from 'cors';
 import fs from 'fs';
-import { SERVER_CONFIG, PAYPAL_CONFIG, validateServerConfig } from './config.js';
 
-// Validate configuration
-validateServerConfig();
+// Create a function to initialize the server after all env vars are loaded
+async function initializeServer() {
+  // NOW import config modules - this happens AFTER dotenv has loaded everything
+  const { SERVER_CONFIG, PAYPAL_CONFIG, SUPABASE_CONFIG, validateServerConfig } = await import('./config.js');
 
-// Debug - Print loaded environment variables
-console.log('Loaded Environment Variables:', {
-  VITE_PAYPAL_CLIENT_ID: PAYPAL_CONFIG.clientId ? '✓ Present' : '✗ Missing',
-  VITE_PAYPAL_SECRET: PAYPAL_CONFIG.secret ? '✓ Present' : '✗ Missing',
-  NODE_ENV: SERVER_CONFIG.environment,
-  PORT: SERVER_CONFIG.port
-});
+  // Validate configuration
+  validateServerConfig();
 
-// Dynamically import routes after env is loaded
-let webhookRoutes;
-let paypalRoutes;
-let paypalCaptureRoutes;
-let paypalMiddleware;
-let onboardingRoutes;
-let paypalPayoutsRoutes;
-let dashboardRoutes;
-let healthRoutes;
-let reviewRoutes;
-let vendorRoutes;
-let ordersRoutes;
-let wishlistRoutes;
-let inventoryRoutes;
-let messagesRoutes;
-(async () => {
+  // Debug - Print loaded environment variables
+  console.log('Loaded Environment Variables:', {
+    VITE_PAYPAL_CLIENT_ID: PAYPAL_CONFIG.clientId ? '✓ Present' : '✗ Missing',
+    VITE_PAYPAL_SECRET: PAYPAL_CONFIG.secret ? '✓ Present' : '✗ Missing',
+    NODE_ENV: SERVER_CONFIG.environment,
+    PORT: SERVER_CONFIG.port
+  });
+
+  // Load all route modules
   const [
     { default: webhook },
     { default: paypal },
@@ -73,46 +75,43 @@ let messagesRoutes;
     import('./inventory.js'),
     import('./messages.js'),
   ]);
-  
-  webhookRoutes = webhook;
-  paypalRoutes = paypal;
-  paypalCaptureRoutes = capture;
-  paypalPayoutsRoutes = payouts;
-  paypalMiddleware = configurePayPalMiddleware;
-  onboardingRoutes = onboarding;
-  dashboardRoutes = dashboard;
-  healthRoutes = health;
-  reviewRoutes = review;
-  vendorRoutes = vendor;
-  ordersRoutes = orders;
-  wishlistRoutes = wishlist;
-  inventoryRoutes = inventory;
-  messagesRoutes = messages;
 
-  // Now start the server (moved inside async init)
-  startServer();
-})();
+  // Start the server with all config and routes loaded
+  startServer(SERVER_CONFIG, {
+    webhook,
+    paypal,
+    capture,
+    payouts,
+    configurePayPalMiddleware,
+    onboarding,
+    dashboard,
+    health,
+    review,
+    vendor,
+    orders,
+    wishlist,
+    inventory,
+    messages,
+  });
+}
 
-let app;
+// Call the async initializer
+initializeServer().catch(err => {
+  console.error('Failed to initialize server:', err);
+  process.exit(1);
+});
 
-function startServer() {
-  app = express();
+function startServer(SERVER_CONFIG, routes) {
+  const app = express();
 
   // Middleware
-  // Apply PayPal middleware if it was loaded during init. Avoid using `await` inside
-  // this function so the file can run cleanly in environments that don't allow
-  // top-level/embedded await during module compilation.
-  if (typeof paypalMiddleware === 'function') {
+  // Apply PayPal middleware
+  if (typeof routes.configurePayPalMiddleware === 'function') {
     try {
-      paypalMiddleware(app);
+      routes.configurePayPalMiddleware(app);
     } catch (err) {
       console.error('Failed to apply PayPal middleware:', err);
     }
-  } else {
-    // Fallback: dynamically import and apply without using await
-    import('./paypal-middleware.js')
-      .then(mod => mod.configurePayPalMiddleware(app))
-      .catch(err => console.error('Failed to load PayPal middleware dynamically:', err));
   }
 
   // Fallback CORS for non-PayPal routes
@@ -132,19 +131,19 @@ function startServer() {
   app.use(express.json());
 
   // Routes
-  app.use('/api/paypal', paypalRoutes);
-  app.use('/api/paypal', paypalCaptureRoutes);
-  app.use('/api/paypal', paypalPayoutsRoutes);
-  app.use('/api/webhooks', webhookRoutes);
-  app.use('/api/onboarding', onboardingRoutes);
-  app.use('/api/dashboard', dashboardRoutes);
-  app.use('/api/health', healthRoutes);
-  app.use('/api', reviewRoutes);
-  app.use('/api/vendor', vendorRoutes);
-  app.use('/api/orders', ordersRoutes);
-  app.use('/api/wishlist', wishlistRoutes);
-  app.use('/api/inventory', inventoryRoutes);
-  app.use('/api/messages', messagesRoutes);
+  app.use('/api/paypal', routes.paypal);
+  app.use('/api/paypal', routes.capture);
+  app.use('/api/paypal', routes.payouts);
+  app.use('/api/webhooks', routes.webhook);
+  app.use('/api/onboarding', routes.onboarding);
+  app.use('/api/dashboard', routes.dashboard);
+  app.use('/api/health', routes.health);
+  app.use('/api', routes.review);
+  app.use('/api/vendor', routes.vendor);
+  app.use('/api/orders', routes.orders);
+  app.use('/api/wishlist', routes.wishlist);
+  app.use('/api/inventory', routes.inventory);
+  app.use('/api/messages', routes.messages);
 
   // Serve frontend static files if the build output exists (for deployments that use a single web service)
   try {

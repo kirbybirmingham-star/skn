@@ -176,7 +176,7 @@ export async function getProducts(options = {}) {
   // selecting products without the missing relation so the listings still render.
   // Explicitly request the fields we need to render cards to avoid accidental omission
   // of the `images` field when using '*' with nested relations.
-  const baseSelect = 'id, title, slug, vendor_id, base_price, currency, image_url, images, gallery_images, is_published, ribbon_text, created_at';
+  const baseSelect = 'id, title, slug, vendor_id, base_price, currency, image_url, images, gallery_images, is_published, ribbon_text, inventory_quantity, created_at';
   // product_variants may use different label columns across schemas (e.g., 'name' or 'title').
   // Try a few variant-select shapes until one succeeds.
   // Use shared `variantSelectCandidates` imported from `variantSelectHelper.js`
@@ -1606,19 +1606,22 @@ export async function getVendorByOwner(ownerId) {
 
 export async function getVendorDashboardData(vendorId) {
   if (!vendorId) {
-    console.warn('Vendor ID is required to fetch dashboard data');
-    return null;
+    console.warn('[EcommerceApi] Vendor ID is required to fetch dashboard data');
+    return { totalRevenue: 0, totalOrders: 0, averageOrderValue: 0 };
   }
   try {
-    const response = await fetch(`${API_CONFIG.baseURL}/dashboard/vendor/${vendorId}`);
+    const url = `${API_CONFIG.baseURL}/dashboard/vendor/${vendorId}`;
+    console.log('[EcommerceApi] Fetching vendor dashboard data from:', url);
+    const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`Failed to fetch vendor dashboard data: ${response.status}`);
     }
     const data = await response.json();
-    return data;
+    console.log('[EcommerceApi] Dashboard data response:', data);
+    return data || { totalRevenue: 0, totalOrders: 0, averageOrderValue: 0 };
   } catch (error) {
-    console.error('Error fetching vendor dashboard data:', error);
-    throw error;
+    console.error('[EcommerceApi] Error fetching vendor dashboard data:', error);
+    return { totalRevenue: 0, totalOrders: 0, averageOrderValue: 0 };
   }
 }
 

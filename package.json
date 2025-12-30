@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "vite --host :: --port 3000",
-    "dev:ngrok": "vite --host localhost --port 3000",
+    "dev": "vite --host ::",
+    "dev:ngrok": "vite --host localhost",
     "dev:all": "concurrently \"node server/index.js\" \"npm run dev\"",
     "build": "node scripts/validate-build-env.js && vite build",
     "preview": "vite preview --host :: --port 3000",

@@ -162,19 +162,26 @@ const VendorProducts = () => {
       <div className="grid grid-cols-1 gap-4">
         {loading && <p>Loading...</p>}
         {!loading && products.length === 0 && <p className="text-slate-500">No products yet.</p>}
-        {products.map(p => (
-          <div key={p.id} className="bg-white p-4 rounded-lg shadow flex items-start justify-between">
-            <div>
-              <h3 className="font-bold text-lg">{p.title}</h3>
-              <p className="text-sm text-slate-500">{p.description}</p>
-              <p className="text-sm text-slate-600 mt-2">Price: {p.variants?.[0]?.price_formatted || '$0.00'} • Qty: {p.variants?.[0]?.inventory_quantity ?? 0}</p>
+        {products.map(p => {
+          const variants = p.product_variants || p.variants || [];
+          const firstVariant = variants?.[0];
+          const price = firstVariant?.price_in_cents || p.base_price || 0;
+          const quantity = firstVariant?.inventory_quantity ?? p.inventory_quantity ?? 0;
+          const priceFormatted = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price / 100);
+          return (
+            <div key={p.id} className="bg-white p-4 rounded-lg shadow flex items-start justify-between">
+              <div>
+                <h3 className="font-bold text-lg">{p.title}</h3>
+                <p className="text-sm text-slate-500">{p.description}</p>
+                <p className="text-sm text-slate-600 mt-2">Price: {priceFormatted} • Qty: {quantity}</p>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => openEdit(p)}>Edit</Button>
+                <Button variant="destructive" onClick={() => handleDelete(p.id)}>Delete</Button>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => openEdit(p)}>Edit</Button>
-              <Button variant="destructive" onClick={() => handleDelete(p.id)}>Delete</Button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <Dialog.Root open={open} onOpenChange={setOpen}>

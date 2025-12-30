@@ -117,6 +117,17 @@ const MarketplaceProductCard = ({ product, index }) => {
           )}
         </div>
 
+        <div className="flex items-center gap-4 mb-2 text-sm text-gray-600">
+          {/* Display inventory quantity */}
+          {product?.product_variants?.[0]?.inventory_quantity != null ? (
+            <span>{product.product_variants[0].inventory_quantity} in stock</span>
+          ) : product?.inventory_quantity != null ? (
+            <span>{product.inventory_quantity} in stock</span>
+          ) : (
+            <span className="text-gray-400">Stock unavailable</span>
+          )}
+        </div>
+
         <div className="flex items-center mb-2">
           {product?.product_ratings && product.product_ratings.length > 0 ? (
             <>

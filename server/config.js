@@ -97,7 +97,11 @@ export const FEATURE_FLAGS = {
   enableSellerOnboarding: process.env.VITE_ENABLE_SELLER_ONBOARDING !== 'false',
   
   // Enable debug mode
-  debug: process.env.DEBUG_CONFIG === 'true' || process.env.VITE_DEBUG === 'true'
+  debug: process.env.DEBUG_CONFIG === 'true' || process.env.VITE_DEBUG === 'true',
+  
+  // Environment
+  isDevelopment: SERVER_CONFIG.isDevelopment,
+  isProduction: SERVER_CONFIG.isProduction
 };
 
 // ============================================================================
@@ -187,8 +191,7 @@ export const logConfigStartup = () => {
   }
 };
 
-// Run startup logging immediately
-logConfigStartup();
+// NOTE: logConfigStartup() is no longer called here - it's called from server/index.js after all initialization is complete
 
 // ============================================================================
 // DEBUG OUTPUT (verbose logging when enabled)

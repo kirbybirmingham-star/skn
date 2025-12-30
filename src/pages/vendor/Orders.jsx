@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
-import { getVendorByOwner } from '@/api/EcommerceApi';
+import { getVendorByOwner, getVendorOrders } from '@/api/EcommerceApi';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -20,36 +20,15 @@ const VendorOrders = () => {
       }
 
       try {
+        console.log('[VendorOrders] Loading for owner:', ownerId);
         const vendorData = await getVendorByOwner(ownerId);
+        console.log('[VendorOrders] Vendor data:', vendorData);
         setVendor(vendorData);
         
         if (vendorData?.id) {
-          setOrders([
-            {
-              id: 'ORDER-001',
-              customer: 'John Doe',
-              email: 'john@example.com',
-              total: 9999,
-              status: 'completed',
-              createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-            },
-            {
-              id: 'ORDER-002',
-              customer: 'Jane Smith',
-              email: 'jane@example.com',
-              total: 5499,
-              status: 'processing',
-              createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-            },
-            {
-              id: 'ORDER-003',
-              customer: 'Bob Johnson',
-              email: 'bob@example.com',
-              total: 12999,
-              status: 'pending',
-              createdAt: new Date().toLocaleDateString(),
-            },
-          ]);
+          const ordersData = await getVendorOrders(vendorData.id);
+          console.log('[VendorOrders] Orders data:', ordersData);
+          setOrders(ordersData);
         }
       } catch (err) {
         console.error('Failed to load orders', err);
@@ -117,20 +96,20 @@ const VendorOrders = () => {
                 <tbody>
                   {orders.map((order) => (
                     <tr key={order.id} className="border-b hover:bg-slate-50">
-                      <td className="py-3 px-4 font-medium text-blue-600">{order.id}</td>
+                      <td className="py-3 px-4 font-medium text-blue-600">{order.orderId}</td>
                       <td className="py-3 px-4">
                         <div>
-                          <p className="font-medium">{order.customer}</p>
-                          <p className="text-xs text-slate-500">{order.email}</p>
+                          <p className="font-medium">Customer {order.userId?.slice(0, 8)}</p>
+                          <p className="text-xs text-slate-500">{order.userEmail}</p>
                         </div>
                       </td>
-                      <td className="py-3 px-4 font-semibold">${(order.total / 100).toFixed(2)}</td>
+                      <td className="py-3 px-4 font-semibold">${(order.totalPrice / 100).toFixed(2)}</td>
                       <td className="py-3 px-4">
                         <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusBadge(order.status)}`}>
                           {order.status}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-slate-600">{order.createdAt}</td>
+                      <td className="py-3 px-4 text-slate-600">{new Date(order.createdAt).toLocaleDateString()}</td>
                       <td className="py-3 px-4">
                         <Button variant="outline" size="sm">
                           View

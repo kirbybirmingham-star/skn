@@ -5,14 +5,17 @@ const router = express.Router();
 
 router.get('/vendor/:vendorId', async (req, res) => {
   const { vendorId } = req.params;
+  console.log('[Dashboard] GET /vendor/:vendorId - vendorId:', vendorId);
 
   if (!vendorId) {
+    console.warn('[Dashboard] Missing vendor ID');
     return res.status(400).json({ error: 'Vendor ID is required' });
   }
 
   // Defensive check: if Supabase is not configured, return mock data
   if (!supabase) {
-    console.warn('[dashboard] Supabase not configured, returning mock dashboard data');
+    console.warn('[dashboard] ⚠️ Supabase client not initialized for vendor:', vendorId);
+    console.warn('[dashboard] Returning mock dashboard data - database not connected');
     return res.json({
       totalRevenue: 0,
       totalOrders: 0,
@@ -22,6 +25,7 @@ router.get('/vendor/:vendorId', async (req, res) => {
   }
 
   try {
+    console.log('[Dashboard] Fetching order items for vendor:', vendorId);
     // --- Total Revenue and Total Orders ---
     const { data: orderItems, error: orderItemsError } = await supabase
       .from('order_items')
@@ -29,10 +33,14 @@ router.get('/vendor/:vendorId', async (req, res) => {
       .eq('vendor_id', vendorId);
 
     if (orderItemsError) {
+      console.error('[Dashboard] Error fetching order items:', orderItemsError);
       throw orderItemsError;
     }
 
+    console.log('[Dashboard] Order items found:', orderItems?.length || 0);
+
     const orderIds = [...new Set(orderItems.map(item => item.order_id))];
+    console.log('[Dashboard] Unique order IDs:', orderIds.length);
 
     const { data: orders, error: ordersError } = await supabase
       .from('orders')
@@ -41,8 +49,11 @@ router.get('/vendor/:vendorId', async (req, res) => {
       .in('status', ['paid', 'fulfilled']);
 
     if (ordersError) {
+      console.error('[Dashboard] Error fetching orders:', ordersError);
       throw ordersError;
     }
+
+    console.log('[Dashboard] Paid/fulfilled orders found:', orders?.length || 0);
 
     const paidOrderIds = new Set(orders.map(order => order.id));
 
@@ -55,13 +66,16 @@ router.get('/vendor/:vendorId', async (req, res) => {
     // --- Average Order Value ---
     const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
-    res.json({
+    const responseData = {
       totalRevenue,
       totalOrders,
       averageOrderValue,
-    });
+    };
+
+    console.log('[Dashboard] Returning dashboard data:', responseData);
+    res.json(responseData);
   } catch (error) {
-    console.error('Error fetching vendor dashboard data:', error);
+    console.error('[Dashboard] Error fetching vendor dashboard data:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

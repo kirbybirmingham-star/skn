@@ -198,6 +198,17 @@ export default function OnboardingDashboard() {
     return <span className="inline-flex items-center gap-1 px-3 py-1 bg-slate-100 text-slate-800 text-xs font-semibold rounded-full"><Shield className="w-3 h-3" /> Not Started</span>;
   };
 
+  // Calculate progress: 0 = not started, 1 = account created, 2 = kyc_in_progress, 3 = approved
+  const getProgressStep = () => {
+    if (vendor.onboarding_status === 'approved') return 3;
+    if (vendor.onboarding_status === 'pending' || vendor.onboarding_status === 'kyc_in_progress') return 2;
+    if (vendor.onboarding_status === 'started') return 1;
+    return 0;
+  };
+
+  const progressStep = getProgressStep();
+  const progressPercent = (progressStep / 3) * 100;
+
   return (
     <>
       <Helmet>
@@ -217,6 +228,109 @@ export default function OnboardingDashboard() {
               Onboarding Dashboard
             </h1>
             <p className="text-slate-600">Manage your seller account and complete verification</p>
+          </motion.div>
+
+          {/* Progress Tracker */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.05 }}
+            className="mb-8"
+          >
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-4">
+                  {/* Progress Bar */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm font-semibold text-slate-700">Onboarding Progress</p>
+                      <p className="text-sm font-semibold text-slate-600">{progressStep} of 3</p>
+                    </div>
+                    <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                      <motion.div
+                        className="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progressPercent}%` }}
+                        transition={{ duration: 0.8, ease: 'easeOut' }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Steps */}
+                  <div className="grid grid-cols-3 gap-4 mt-6">
+                    {/* Step 1: Account Created */}
+                    <div className="text-center">
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.1 }}
+                        className={`flex items-center justify-center w-10 h-10 rounded-full mx-auto mb-2 ${
+                          progressStep >= 1
+                            ? 'bg-blue-100 text-blue-600'
+                            : 'bg-slate-100 text-slate-400'
+                        }`}
+                      >
+                        {progressStep > 1 ? (
+                          <CheckCircle className="w-6 h-6" />
+                        ) : (
+                          <span className="font-bold text-sm">1</span>
+                        )}
+                      </motion.div>
+                      <p className="text-xs font-semibold text-slate-700">Account Created</p>
+                      <p className="text-xs text-slate-500 mt-1">Store setup</p>
+                    </div>
+
+                    {/* Step 2: Identity Verification */}
+                    <div className="text-center">
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.2 }}
+                        className={`flex items-center justify-center w-10 h-10 rounded-full mx-auto mb-2 ${
+                          progressStep >= 2
+                            ? progressStep > 2
+                              ? 'bg-blue-100 text-blue-600'
+                              : 'bg-yellow-100 text-yellow-600'
+                            : 'bg-slate-100 text-slate-400'
+                        }`}
+                      >
+                        {progressStep > 2 ? (
+                          <CheckCircle className="w-6 h-6" />
+                        ) : progressStep === 2 ? (
+                          <Clock className="w-6 h-6" />
+                        ) : (
+                          <span className="font-bold text-sm">2</span>
+                        )}
+                      </motion.div>
+                      <p className="text-xs font-semibold text-slate-700">KYC Verification</p>
+                      <p className="text-xs text-slate-500 mt-1">Identity proof</p>
+                    </div>
+
+                    {/* Step 3: Approval */}
+                    <div className="text-center">
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.3 }}
+                        className={`flex items-center justify-center w-10 h-10 rounded-full mx-auto mb-2 ${
+                          progressStep >= 3
+                            ? 'bg-green-100 text-green-600'
+                            : 'bg-slate-100 text-slate-400'
+                        }`}
+                      >
+                        {progressStep >= 3 ? (
+                          <CheckCircle className="w-6 h-6" />
+                        ) : (
+                          <span className="font-bold text-sm">3</span>
+                        )}
+                      </motion.div>
+                      <p className="text-xs font-semibold text-slate-700">Approved</p>
+                      <p className="text-xs text-slate-500 mt-1">Ready to sell</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </motion.div>
 
           {/* Status Card */}
