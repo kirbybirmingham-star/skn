@@ -12,6 +12,23 @@ const BecomeSellerPage = () => {
     navigate('/onboarding');
   };
 
+  const handleChoosePlan = (tier) => {
+    const tierPrices = {
+      'Starter': 'XCD 50',
+      'Professional': 'XCD 150',
+      'Enterprise': 'XCD 300'
+    };
+    // Check if user is authenticated before navigating to payment
+    const user = JSON.parse(localStorage.getItem('supabase.auth.token'))?.user;
+    if (!user) {
+      // Store the intended destination for after login
+      sessionStorage.setItem('redirectAfterLogin', `/payment?tier=${tier}&price=${tierPrices[tier]}`);
+      navigate('/auth');
+      return;
+    }
+    navigate(`/payment?tier=${tier}&price=${tierPrices[tier]}`);
+  };
+
   return (
     <>
       <Helmet>
@@ -108,6 +125,78 @@ const BecomeSellerPage = () => {
                   <p className="text-slate-600 text-center">{benefit.description}</p>
                 </motion.div>
               ))}
+
+              {/* Pricing Section */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all border border-slate-200 col-span-full mt-8"
+              >
+                <div className="text-center mb-8">
+                  <h3 className="text-3xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                    Transparent Pricing & Fees
+                  </h3>
+                  <p className="text-slate-600 text-lg">All prices in Eastern Caribbean Dollars (XCD)</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl">
+                    <div className="text-4xl font-bold text-blue-600 mb-2">$50/month</div>
+                    <h4 className="text-xl font-semibold mb-2">Monthly Subscription</h4>
+                    <p className="text-slate-600">Starting price for all sellers</p>
+                    <ul className="text-sm text-slate-600 mt-4 space-y-1">
+                      <li>• Access to seller dashboard</li>
+                      <li>• Basic analytics</li>
+                      <li>• Email support</li>
+                    </ul>
+                  </div>
+
+                  <div className="text-center p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl">
+                    <div className="text-4xl font-bold text-green-600 mb-2">5-8%</div>
+                    <h4 className="text-xl font-semibold mb-2">Transaction Fee</h4>
+                    <p className="text-slate-600">Commission per sale based on your tier</p>
+                    <ul className="text-sm text-slate-600 mt-4 space-y-1">
+                      <li>• Starter: 8%</li>
+                      <li>• Professional: 6%</li>
+                      <li>• Enterprise: 5%</li>
+                    </ul>
+                  </div>
+
+                  <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl">
+                    <div className="text-4xl font-bold text-purple-600 mb-2">$25</div>
+                    <h4 className="text-xl font-semibold mb-2">Payout Fee</h4>
+                    <p className="text-slate-600">Fee deducted from each payout</p>
+                    <ul className="text-sm text-slate-600 mt-4 space-y-1">
+                      <li>• Bank transfer: $25</li>
+                      <li>• Minimum payout: $100</li>
+                      <li>• Paid within 7 days</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl">
+                  <h4 className="text-xl font-semibold mb-4 text-center">Commission Structure</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600">8%</div>
+                      <div className="text-sm text-slate-600">0-50 sales/month</div>
+                      <div className="text-xs text-slate-500 mt-1">Starter Tier</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600">6%</div>
+                      <div className="text-sm text-slate-600">51-200 sales/month</div>
+                      <div className="text-xs text-slate-500 mt-1">Professional Tier</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600">5%</div>
+                      <div className="text-sm text-slate-600">200+ sales/month</div>
+                      <div className="text-xs text-slate-500 mt-1">Enterprise Tier</div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
             </div>
           </div>
         </section>
@@ -131,22 +220,31 @@ const BecomeSellerPage = () => {
               {[
                 {
                   tier: "Starter",
+                  price: "XCD 50",
+                  description: "Perfect for getting started",
                   commission: "8%",
-                  sales: "0-50 sales/month",
-                  features: ["Basic seller dashboard", "Standard support", "Payment processing"],
+                  features: ["Basic seller dashboard", "Standard support", "Platform collects payments", "8% commission applied"],
+                  color: "from-slate-50 to-blue-50",
+                  buttonColor: "bg-[#00A86B] hover:bg-[#00A86B]/90",
                 },
                 {
                   tier: "Professional",
+                  price: "XCD 150",
+                  description: "For growing businesses",
                   commission: "6%",
-                  sales: "51-200 sales/month",
-                  features: ["Advanced analytics", "Priority support", "Featured listings", "Promotional tools"],
+                  features: ["Advanced analytics", "Priority support", "Stripe/PayPal integration", "6% commission option", "Direct payments"],
                   popular: true,
+                  color: "from-[#F5DEB3] to-[#40E0D0]/20",
+                  buttonColor: "bg-[#00A86B] hover:bg-[#00A86B]/90",
                 },
                 {
                   tier: "Enterprise",
+                  price: "XCD 300",
+                  description: "For established sellers",
                   commission: "5%",
-                  sales: "200+ sales/month",
-                  features: ["Dedicated account manager", "Custom integrations", "API access", "Premium placement"],
+                  features: ["Dedicated account manager", "Custom integrations", "API access", "Premium placement", "5% commission option"],
+                  color: "from-slate-50 to-blue-50",
+                  buttonColor: "bg-[#00A86B] hover:bg-[#00A86B]/90",
                 },
               ].map((plan, index) => (
                 <motion.div
@@ -155,27 +253,38 @@ const BecomeSellerPage = () => {
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className={`bg-gradient-to-br ${plan.popular ? 'from-blue-50 to-indigo-50 border-2 border-blue-500' : 'from-slate-50 to-blue-50 border border-slate-200'} rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all relative`}
+                  className={`bg-gradient-to-br ${plan.color} ${plan.popular ? 'border-2 border-[#40E0D0] shadow-xl scale-105' : 'border border-slate-200'} rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all relative overflow-hidden`}
+                  style={plan.popular ? { boxShadow: '0 0 30px rgba(64, 224, 208, 0.3)' } : {}}
                 >
                   {plan.popular && (
-                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-[#40E0D0] text-slate-800 px-4 py-1 rounded-full text-sm font-semibold shadow-lg">
                       Most Popular
                     </div>
                   )}
-                  <h3 className="text-2xl font-bold mb-2 text-slate-800">{plan.tier}</h3>
-                  <div className="mb-4">
-                    <span className="text-5xl font-bold text-blue-600">{plan.commission}</span>
-                    <span className="text-slate-600 ml-2">commission</span>
+                  <div className="text-center mb-6">
+                    <h3 className="text-2xl font-bold mb-2" style={{ color: '#1E90FF' }}>{plan.tier}</h3>
+                    <div className="mb-3">
+                      <span className="text-4xl font-bold" style={{ color: '#00A86B' }}>{plan.price}</span>
+                      <span className="text-slate-600 ml-1">/month</span>
+                    </div>
+                    <p className="text-slate-600 text-sm">{plan.description}</p>
                   </div>
-                  <p className="text-slate-600 mb-6">{plan.sales}</p>
-                  <ul className="space-y-3">
+
+                  <ul className="space-y-3 mb-8">
                     {plan.features.map((feature, idx) => (
                       <li key={idx} className="flex items-start gap-2">
-                        <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-slate-700">{feature}</span>
+                        <CheckCircle className="w-5 h-5 text-[#00A86B] flex-shrink-0 mt-0.5" />
+                        <span className="text-slate-700 text-sm">{feature}</span>
                       </li>
                     ))}
                   </ul>
+
+                  <button
+                    onClick={() => handleChoosePlan(plan.tier)}
+                    className={`w-full ${plan.buttonColor} text-white py-3 px-6 rounded-lg font-semibold transition-all hover:scale-105 shadow-md`}
+                  >
+                    Choose Plan
+                  </button>
                 </motion.div>
               ))}
             </div>

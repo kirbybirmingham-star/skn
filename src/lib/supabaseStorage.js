@@ -1,4 +1,4 @@
-import { supabase } from './customSupabaseClient.js';
+import { supabase } from './customSupabaseClient';
 
 /**
  * Uploads a file to Supabase Storage
@@ -43,8 +43,9 @@ const getStoragePath = (type, id, subtype, filename) => {
   }
 };
 
-export const uploadImage = async (file, path, bucketName = 'listings-images') => {
+export const uploadImage = async (file, path, bucketName = 'product-images') => {
   try {
+    console.log('uploadImage called with:', { path, bucketName, fileName: file.name });
     const { data, error } = await supabase.storage
       .from(bucketName)
       .upload(path, file, {
@@ -61,6 +62,7 @@ export const uploadImage = async (file, path, bucketName = 'listings-images') =>
       .from(bucketName)
       .getPublicUrl(data.path);
 
+    console.log('uploadImage successful, publicUrl:', publicUrl);
     return publicUrl;
   } catch (error) {
     console.error('Error uploading image:', error);
@@ -71,9 +73,9 @@ export const uploadImage = async (file, path, bucketName = 'listings-images') =>
 /**
  * Delete a file from Supabase Storage
  * @param {string} path - The path of the file to delete
- * @param {string} bucketName - The name of the storage bucket (default: 'listings-images')
+ * @param {string} bucketName - The name of the storage bucket (default: 'product-images')
  */
-export const deleteImage = async (path, bucketName = 'listings-images') => {
+export const deleteImage = async (path, bucketName = 'product-images') => {
   try {
     const { error } = await supabase.storage
       .from(bucketName)
@@ -94,7 +96,7 @@ export const deleteImage = async (path, bucketName = 'listings-images') => {
  * @param {string} bucketName - The name of the storage bucket (default: 'listings-images')
  * @returns {string} - The public URL of the file
  */
-export const getImageUrl = (path, bucketName = 'listings-images') => {
+export const getImageUrl = (path, bucketName = 'product-images') => {
   const { data: { publicUrl } } = supabase.storage
     .from(bucketName)
     .getPublicUrl(path);

@@ -1,0 +1,18 @@
+0000000000000000000000000000000000000000 4807f7577ecb03a98f222399d66033bf45daaf56 Skilli <businesstrends869@gmail.com> 1762984015 -0800	branch: Created from HEAD
+4807f7577ecb03a98f222399d66033bf45daaf56 1b013167c24fafd3e1b53037ab3dc45575ff5aa7 Skilli <businesstrends869@gmail.com> 1762984223 -0800	commit: docs: Add seller onboarding review and fixes documentation
+1b013167c24fafd3e1b53037ab3dc45575ff5aa7 78c0125dd94fecc3aeb2959dc4d5a41ce62c7e75 Skilli <businesstrends869@gmail.com> 1762984267 -0800	commit: docs: Add architecture diagrams for seller onboarding
+78c0125dd94fecc3aeb2959dc4d5a41ce62c7e75 2a8187258b9ac3b689430ecdbc56aee030631551 Skilli <businesstrends869@gmail.com> 1762984337 -0800	commit: docs: Add step-by-step action plan for seller onboarding fixes
+2a8187258b9ac3b689430ecdbc56aee030631551 589f9be65e2b613d4a3a9a0c36567e08bb37bec2 Skilli <businesstrends869@gmail.com> 1762984395 -0800	commit: docs: Add comprehensive seller onboarding implementation guide
+589f9be65e2b613d4a3a9a0c36567e08bb37bec2 3e67b8097ebff2e085f2c70c6651938888e40ede Skilli <businesstrends869@gmail.com> 1762984478 -0800	commit: docs: Add documentation index and navigation guide
+3e67b8097ebff2e085f2c70c6651938888e40ede bef223fd8c10958a48bda629fd3752ec697cf1b3 Skilli <businesstrends869@gmail.com> 1762984524 -0800	commit: docs: Add implementation ready status summary
+bef223fd8c10958a48bda629fd3752ec697cf1b3 bb20ca3cdca80040e5f85c4cca5e922470c693a2 Skilli <businesstrends869@gmail.com> 1762984707 -0800	commit: docs: Final analysis summary - ready for implementation
+bb20ca3cdca80040e5f85c4cca5e922470c693a2 d79e1676d0b9af1ae9f7febb4105b9df1ae38acf Skilli <businesstrends869@gmail.com> 1762984822 -0800	commit: fix: Implement secure seller onboarding with JWT authentication
+d79e1676d0b9af1ae9f7febb4105b9df1ae38acf 4fb10995081ae41ca66782fbddb167ee7acfc204 Skilli <businesstrends869@gmail.com> 1762984955 -0800	commit: docs: Add comprehensive testing guide for seller onboarding
+4fb10995081ae41ca66782fbddb167ee7acfc204 1790dc217dcb6dff276414c6373549a57054424b Skilli <businesstrends869@gmail.com> 1762984996 -0800	commit: docs: Add final implementation complete status
+1790dc217dcb6dff276414c6373549a57054424b 2713e5f0eb1e42d32cd8afa9d0e79da714ab7603 Skilli <businesstrends869@gmail.com> 1762985060 -0800	commit: docs: Add final implementation summary and quick reference
+2713e5f0eb1e42d32cd8afa9d0e79da714ab7603 04961b2a5e1e183fda996c6495d23c4bd259ee4a Skilli <businesstrends869@gmail.com> 1762985226 -0800	commit: docs: Add next steps roadmap with options and priorities
+04961b2a5e1e183fda996c6495d23c4bd259ee4a af3775bca1839b198cbbecdffa538cec310cdcf1 Skilli <businesstrends869@gmail.com> 1762988660 -0800	commit: fix: Add JWT auth headers to SellerSignupForm and improve error logging
+af3775bca1839b198cbbecdffa538cec310cdcf1 8844056eb51a9542906acf7b9261a17c9d48aeea Skilli <businesstrends869@gmail.com> 1762989008 -0800	commit: docs: Add final implementation session summary
+8844056eb51a9542906acf7b9261a17c9d48aeea 271cc7d4a06ce49e9d52d2e483fb7f2dad2fa34b Skilli <businesstrends869@gmail.com> 1762989169 -0800	commit: fix: Remove explicit created_at insertion, let Postgres auto-fill
+271cc7d4a06ce49e9d52d2e483fb7f2dad2fa34b 9d24ada59fb95f6931f20e3f01f5d09088321f80 Skilli <businesstrends869@gmail.com> 1762989861 -0800	commit: docs: Add seller dashboard implementation guide
+9d24ada59fb95f6931f20e3f01f5d09088321f80 349c48ea6d5234833cea7ec3f24c3a5e3d854e40 Skilli <businesstrends869@gmail.com> 1762989992 -0800	commit: docs: Add final comprehensive session summary

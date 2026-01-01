@@ -18,7 +18,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 async function main() {
   // fetch products that have null image_url
   const { data: products, error } = await supabase
-    .from('products')
+    .from('vendor_products')
     .select('id,slug,title,image_url')
     .is('image_url', null)
     .limit(100);
@@ -33,7 +33,7 @@ async function main() {
     return;
   }
 
-  const bucket = 'listings-images';
+  const bucket = 'product-images';
   for (const p of products) {
     const slug = p.slug;
     try {
@@ -49,14 +49,14 @@ async function main() {
       }
       const imageUrl = `${supabaseUrl}/storage/v1/object/public/${bucket}/products/${slug}/main.jpg`;
       const { data, error: updateErr } = await supabase
-        .from('products')
-        .update({ images: image_url })
+        .from('vendor_products')
+        .update({ image_url: imageUrl })
         .eq('slug', slug)
         .select();
       if (updateErr) {
         console.warn(`Failed to update product ${slug}:`, updateErr.message || updateErr);
       } else {
-        console.log(`Updated product ${slug} -> image_url set to ${image_url}`);
+        console.log(`Updated product ${slug} -> images set to ${imageUrl}`);
       }
     } catch (err) {
       console.error(`Error processing ${slug}:`, err.message || err);

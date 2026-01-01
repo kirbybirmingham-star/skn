@@ -472,7 +472,7 @@ async function main() {
     const vendorId = seedData.vendors[0].id;
     
     const { data: productData, error: productError } = await supabase
-      .from('products')
+      .from('vendor_products')
       .insert({
         vendor_id: vendorId,
         title: product.title,
@@ -480,23 +480,15 @@ async function main() {
         description: product.description,
         base_price: product.base_price,
         currency: product.currency,
-        images: product.images,
-        gallery_images: product.gallery_images,
-        status: product.is_published ? 'active' : 'draft',
-        category: product.category,
+        image_url: product.images[0],
         has_variants: product.has_variants,
         stock_tracking: product.stock_tracking,
         low_stock_alert: product.low_stock_alert,
         shipping_class: product.shipping_class,
         shipping_weight: product.shipping_weight,
         tags: product.tags,
-        has_variants: product.has_variants,
-        stock_tracking: product.stock_tracking,
-        low_stock_alert: product.low_stock_alert,
-        shipping_class: product.shipping_class,
-        shipping_weight: product.shipping_weight,
-        category: product.category,
-        tags: product.tags,
+        is_published: product.is_published,
+        product_variants: product.variants,
         created_at: new Date().toISOString()
       })
       .select()

@@ -22,60 +22,29 @@ const PRODUCT_ID = process.argv[2] || '185c65f0-2edc-4553-90a5-1ac0b972be06';
 
 async function main() {
   console.log('Fetching product id', PRODUCT_ID);
-  // Try a few variant projection shapes to handle schema differences (name vs title)
-  const variantSelectCandidates = [
-    'product_variants(id, name, images)',
-    'product_variants(id, title, images)',
-    'product_variants(*)'
-  ];
+  // Try selecting ratings relation; if missing, retry without it.
+  let res = await supabase
+    .from('products')
+    .select(`*
+      , product_variants(id, name, images)
+      , product_ratings(*)
+    `)
+    .eq('id', PRODUCT_ID)
+    .maybeSingle();
 
-  let res = null;
-  // First try including product_ratings when possible
-  for (const vs of variantSelectCandidates) {
-    try {
-      res = await supabase
-        .from('products')
-        .select(`*, ${vs}, product_ratings(*)`)
-        .eq('id', PRODUCT_ID)
-        .maybeSingle();
-      if (!res.error) break;
-      // If error points to missing relation, try next candidate
-      const msg = String(res.error.message || '');
-      if (msg.includes('Could not find a relationship') || msg.includes('does not exist')) {
-        continue;
-      } else {
-        // non-recoverable error, break and report
-        break;
-      }
-    } catch (e) {
-      // try next candidate
-    }
+  if (res.error && String(res.error.message || '').includes('Could not find a relationship')) {
+    console.warn('product_ratings relation missing; retrying without it');
+    res = await supabase
+      .from('products')
+      .select(`*
+        , product_variants(id, name, images)
+      `)
+      .eq('id', PRODUCT_ID)
+      .maybeSingle();
   }
 
-  // If still error or no data, try without product_ratings
-  if (!res || res.error || !res.data) {
-    for (const vs of variantSelectCandidates) {
-      try {
-        res = await supabase
-          .from('products')
-          .select(`*, ${vs}`)
-          .eq('id', PRODUCT_ID)
-          .maybeSingle();
-        if (!res.error) break;
-        const msg = String(res.error.message || '');
-        if (msg.includes('Could not find a relationship') || msg.includes('does not exist')) {
-          continue;
-        } else {
-          break;
-        }
-      } catch (e) {
-        // try next
-      }
-    }
-  }
-
-  if (!res || res.error) {
-    console.error('Error fetching product:', res ? res.error : 'unknown error');
+  if (res.error) {
+    console.error('Error fetching product:', res.error);
     process.exit(1);
   }
 

@@ -10,7 +10,12 @@ const VendorSidebar = () => {
         <NavLink to="/dashboard/vendor" end className={linkClass}>Overview</NavLink>
         <NavLink to="/dashboard/vendor/products" className={linkClass}>Products</NavLink>
         <NavLink to="/dashboard/vendor/orders" className={linkClass}>Orders</NavLink>
-        <NavLink to="/dashboard/vendor/edit" className={linkClass}>Edit Store</NavLink>
+        <div className="border-t my-4"></div>
+        <NavLink to="/dashboard/vendor/store" className={linkClass}>Store Settings</NavLink>
+        <NavLink to="/dashboard/vendor/verification" className={linkClass}>Verification</NavLink>
+        <NavLink to="/dashboard/vendor/assets" className={linkClass}>Assets</NavLink>
+        <NavLink to="/dashboard/vendor/images" className={linkClass}>Images</NavLink>
+        <NavLink to="/inventory" className={linkClass}>Inventory</NavLink>
       </nav>
     </aside>
   );

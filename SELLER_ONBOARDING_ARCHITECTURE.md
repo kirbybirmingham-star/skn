@@ -1,5 +1,21 @@
 # Seller Onboarding Architecture Diagram
 
+## 🎯 Two-Level Verification System
+
+```
+KYC (User-Level) = profiles.kyc_status
+├─ Single verification per account
+├─ Controls if user can sell globally
+├─ Status: ✅ IMPLEMENTED (Dec 31, 2025)
+└─ Values: 'not_started' | 'approved'
+
+KYB (Store-Level) = vendors.onboarding_status  
+├─ Individual verification per store
+├─ Controls if specific store can list products
+├─ Status: 🔄 READY FOR DEVELOPMENT
+└─ Values: 'not_started' | 'started' | 'pending' | 'kyc_in_progress' | 'approved'
+```
+
 ## Current Data Flow
 
 ```
@@ -52,10 +68,11 @@
 │  │  │  ├─ created_at: Timestamp                              │   │        │
 │  │  │  └─ onboarding_data: JSON (appeals, documents)         │   │        │
 │  │  │                                                          │   │        │
-│  │  │  profiles TABLE:                                        │   │        │
-│  │  │  ├─ id: UUID (from auth.users)                         │   │        │
-│  │  │  ├─ email: String                                       │   │        │
-│  │  │  ├─ role: 'buyer' | 'seller' | 'admin'                │   │        │
+│  │  profiles TABLE (KYC - User Level):                   │   │        │
+│  │  ├─ id: UUID (from auth.users)                         │   │        │
+│  │  ├─ email: String                                       │   │        │
+│  │  ├─ role: 'buyer' | 'seller' | 'admin'                │   │        │
+│  │  ├─ kyc_status: 'not_started' | 'approved' ✅         │   │        │
 │  │  │  └─ ...                                                  │   │        │
 │  │  └──────────────────────────────────────────────────────────┘   │        │
 │  └──────────────────────────────────────────────────────────────────┘        │

@@ -9,11 +9,12 @@ const supabaseServiceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(supabaseUrl, supabaseServiceRole);
 
 async function main() {
-  console.log('Checking listings-images bucket...\n');
+  const bucketName = process.argv[2] || 'listings-images';
+  console.log(`Checking ${bucketName} bucket...\n`);
 
   try {
     const { data, error } = await supabase.storage
-      .from('listings-images')
+      .from(bucketName)
       .list('', { limit: 100 });
 
     if (error) {
@@ -21,7 +22,7 @@ async function main() {
       return;
     }
 
-    console.log(`Found ${data.length} items in listings-images bucket:\n`);
+    console.log(`Found ${data.length} items in ${bucketName} bucket:\n`);
     data.forEach(item => {
       console.log(`  ${item.name}`);
     });

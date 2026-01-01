@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
     import { Link, useLocation, useNavigate } from 'react-router-dom';
-    import { Menu, X, ShoppingBag, ShoppingCart as CartIcon, User, LogOut, LayoutDashboard, Settings } from 'lucide-react';
+    import { Menu, X, ShoppingBag, ShoppingCart as CartIcon, User, LogOut, LayoutDashboard } from 'lucide-react';
     import { motion, AnimatePresence } from 'framer-motion';
     import { Button } from '@/components/ui/button';
+    import { ThemeToggle } from '@/components/ui/theme-toggle';
     import { useCart } from '@/hooks/useCart';
     import { useAuth } from '@/contexts/SupabaseAuthContext';
     import Login from '@/components/auth/Login';
@@ -25,24 +26,22 @@ import React, { useState } from 'react';
       const location = useLocation();
       const navigate = useNavigate();
       const { cartItems } = useCart();
-      const { user, signOut, vendor, profile } = useAuth();
-
-      const isSeller = vendor?.onboarding_status === 'approved' || vendor?.onboarding_status === 'pending' || vendor?.onboarding_status === 'kyc_in_progress';
-      const isAdmin = user?.user_metadata?.role === 'admin' || profile?.role === 'admin';
+      const { user, profile, signOut } = useAuth();
 
       const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-      const navItems = [
+      const mainNavItems = [
         { path: '/', label: 'Home' },
         { path: '/marketplace', label: 'Marketplace' },
-        isSeller
-          ? { path: '/dashboard/vendor', label: 'Seller Dashboard' }
-          : { path: '/become-seller', label: 'Become a Seller' },
+        { path: '/become-seller', label: 'Become a Seller' },
+      ];
+
+      const moreNavItems = [
         { path: '/trust-safety', label: 'Trust & Safety' },
         { path: '/about', label: 'About Us' },
         { path: '/faq', label: 'FAQ' },
         { path: '/contact', label: 'Contact' },
-      ].filter(Boolean);
+      ];
 
       const handleSignOut = async () => {
         try {
@@ -63,8 +62,8 @@ import React, { useState } from 'react';
           <Login isOpen={showLogin} onOpenChange={setShowLogin} onSignUpClick={() => { setShowLogin(false); setShowSignUp(true); }} />
           <SignUp isOpen={showSignUp} onOpenChange={setShowSignUp} onLoginClick={() => { setShowSignUp(false); setShowLogin(true); }} />
 
-          <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-slate-200 shadow-sm">
-            <div className="container mx-auto px-4 py-2">
+          <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border shadow-sm">
+            <div className="container mx-auto px-4 py-3">
               <div className="flex items-center justify-between gap-4">
                 <Link to="/" className="flex-shrink-0">
                   <motion.div 
@@ -72,61 +71,99 @@ import React, { useState } from 'react';
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+                    <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
                       <ShoppingBag className="w-4 h-4 text-white" />
                     </div>
-                    <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                    <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                       SKN Bridge Trade
                     </span>
                   </motion.div>
                 </Link>
 
-                <nav className="hidden md:flex items-center gap-4 flex-1 justify-center">
-                  {navItems.map((item) => (
+                <nav className="hidden md:flex items-center gap-6 flex-1 justify-center">
+                  {mainNavItems.map((item) => (
                     <Link
                       key={item.path}
                       to={item.path}
-                      className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                        location.pathname === item.path ? 'text-blue-600' : 'text-slate-700'
-                      }`}
+                      className={`text-sm font-medium transition-colors hover:text-primary px-3 py-2 rounded-md ${
+                       location.pathname === item.path
+                         ? 'text-primary bg-primary/10'
+                         : 'text-foreground hover:bg-accent'
+                     }`}
+                      aria-current={location.pathname === item.path ? 'page' : undefined}
                     >
                       {item.label}
                     </Link>
                   ))}
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className={`text-sm font-medium transition-colors hover:text-primary px-3 py-2 rounded-md ${
+                          moreNavItems.some(item => location.pathname === item.path)
+                            ? 'text-primary bg-primary/10'
+                            : 'text-foreground hover:bg-accent'
+                        }`}
+                      >
+                        More ▼
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-48">
+                      {moreNavItems.map((item) => (
+                        <DropdownMenuItem key={item.path} asChild>
+                          <Link
+                            to={item.path}
+                            className={`w-full ${
+                              location.pathname === item.path
+                                ? 'text-primary bg-primary/10'
+                                : 'text-foreground'
+                            }`}
+                            aria-current={location.pathname === item.path ? 'page' : undefined}
+                          >
+                            {item.label}
+                          </Link>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </nav>
 
                 <div className="hidden md:flex items-center gap-1">
                   {user ? (
                     <>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="flex items-center gap-1 px-2" 
+                      <ThemeToggle />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex items-center gap-1 px-2"
                         onClick={onCartClick}
                       >
                         <CartIcon className="w-4 h-4" />
                         {totalItems > 0 && (
-                          <span className="bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full text-xs font-medium">
-                            {totalItems}
-                          </span>
+                         <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded-full text-xs font-medium">
+                           {totalItems}
+                         </span>
                         )}
                       </Button>
                       
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
-                              <AvatarFallback>{getAvatarFallback(user.email)}</AvatarFallback>
-                            </Avatar>
-                          </Button>
-                        </DropdownMenuTrigger>
+                            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                              <Avatar className="h-8 w-8 border-2 border-white shadow-sm">
+                                <AvatarImage src={profile?.avatar_url} alt={user.email} />
+                                <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+                                  {getAvatarFallback(user.email)}
+                                </AvatarFallback>
+                              </Avatar>
+                            </Button>
+                          </DropdownMenuTrigger>
                         <DropdownMenuContent className="w-56" align="end">
                           <DropdownMenuLabel className="font-normal">
                             <div className="flex flex-col space-y-1">
-                              <p className="text-sm font-medium leading-none">{user.email}</p>
+                              <p className="text-sm font-medium leading-none">{profile?.full_name || user.email}</p>
                               <p className="text-xs leading-none text-muted-foreground">
-                                {user.user_metadata?.full_name || 'User'}
+                                {user.email}
                               </p>
                             </div>
                           </DropdownMenuLabel>
@@ -136,18 +173,10 @@ import React, { useState } from 'react';
                             <User className="mr-2 h-4 w-4" />
                             Account Settings
                           </DropdownMenuItem>
-                          {isAdmin && (
-                            <DropdownMenuItem onClick={() => navigate('/admin')}
-                              className="cursor-pointer">
-                              <Settings className="mr-2 h-4 w-4" />
-                              Admin Panel
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem asChild>
-                            <Link to={isSeller ? '/dashboard/vendor' : '/dashboard'} className="cursor-pointer">
-                              <LayoutDashboard className="mr-2 h-4 w-4" />
-                              Dashboard
-                            </Link>
+                          <DropdownMenuItem onClick={() => navigate('/dashboard')}
+                            className="cursor-pointer">
+                            <LayoutDashboard className="mr-2 h-4 w-4" />
+                            Dashboard
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={handleSignOut}
@@ -161,7 +190,7 @@ import React, { useState } from 'react';
                   ) : (
                     <div className="flex items-center gap-1">
                       <Button variant="ghost" size="sm" onClick={() => setShowLogin(true)}>Sign In</Button>
-                      <Button size="sm" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700" onClick={() => setShowSignUp(true)}>
+                      <Button size="sm" className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary" onClick={() => setShowSignUp(true)}>
                         Sign Up
                       </Button>
                     </div>
@@ -169,15 +198,16 @@ import React, { useState } from 'react';
                 </div>
 
                 <div className="md:hidden flex items-center gap-2">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="flex items-center gap-1 px-2" 
+                  <ThemeToggle />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex items-center gap-1 px-2"
                     onClick={onCartClick}
                   >
                     <CartIcon className="w-4 h-4" />
                     {totalItems > 0 && (
-                      <span className="bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full text-xs font-medium">
+                      <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded-full text-xs font-medium">
                         {totalItems}
                       </span>
                     )}
@@ -201,20 +231,42 @@ import React, { useState } from 'react';
                     className="md:hidden mt-4 pb-4"
                   >
                     <nav className="flex flex-col gap-3">
-                      {navItems.map((item) => (
+                      {mainNavItems.map((item) => (
                         <Link
                           key={item.path}
                           to={item.path}
                           onClick={() => setMobileMenuOpen(false)}
-                          className={`text-left px-4 py-2 rounded-lg transition-colors ${
+                          className={`block text-left px-4 py-3 rounded-lg transition-colors ${
                             location.pathname === item.path
-                              ? 'bg-blue-50 text-blue-600'
-                              : 'text-slate-700 hover:bg-slate-50'
+                              ? 'bg-primary/10 text-primary font-medium'
+                              : 'text-foreground hover:bg-accent'
                           }`}
+                          aria-current={location.pathname === item.path ? 'page' : undefined}
                         >
                           {item.label}
                         </Link>
                       ))}
+
+                      <div className="border-t border-border pt-2 mt-2">
+                        <div className="px-4 py-2 text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                          More
+                        </div>
+                        {moreNavItems.map((item) => (
+                          <Link
+                            key={item.path}
+                            to={item.path}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className={`block text-left px-4 py-3 rounded-lg transition-colors ${
+                              location.pathname === item.path
+                                ? 'bg-teal-50 text-teal-700 font-medium'
+                                : 'text-foreground hover:bg-accent'
+                            }`}
+                            aria-current={location.pathname === item.path ? 'page' : undefined}
+                          >
+                            {item.label}
+                          </Link>
+                        ))}
+                      </div>
                       <div className="flex flex-col gap-2 mt-2">
                         {user ? (
                           <>
@@ -227,7 +279,7 @@ import React, { useState } from 'react';
                         ) : (
                           <>
                             <Button variant="outline" size="sm" onClick={() => { setMobileMenuOpen(false); setShowLogin(true); }}>Sign In</Button>
-                            <Button size="sm" className="bg-gradient-to-r from-blue-600 to-indigo-600" onClick={() => { setMobileMenuOpen(false); setShowSignUp(true);}}>
+                            <Button size="sm" className="bg-gradient-to-r from-primary to-primary/80" onClick={() => { setMobileMenuOpen(false); setShowSignUp(true);}}>
                               Sign Up
                             </Button>
                           </>

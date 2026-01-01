@@ -1,12 +1,10 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../components/ui/use-toast";
-import { createPayPalOrder, capturePayPalOrder, createOrderFromPayPalPayment } from "../api/EcommerceApi";
-import { useAuth } from "../contexts/SupabaseAuthContext";
-import { FEATURE_FLAGS } from "../config/environment";
+import { createPayPalOrder, capturePayPalOrder } from "../api/EcommerceApi";
 import ErrorBoundary from "../ErrorBoundary";
 
 // Constants for button styles
@@ -21,17 +19,8 @@ const PAYPAL_BUTTON_STYLES = {
 export default function PayPalCheckout({ cartItems, onSuccess }) {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [scriptError, setScriptError] = useState(null);
-  const isMountedRef = useRef(true);
-
-  useEffect(() => {
-    return () => {
-      // Mark component as unmounted to prevent state updates after unmount
-      isMountedRef.current = false;
-    };
-  }, []);
 
   useEffect(() => {
     const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
@@ -39,7 +28,7 @@ export default function PayPalCheckout({ cartItems, onSuccess }) {
     if (!clientId) {
       const error = 'PayPal Client ID is missing';
       console.error(error);
-      if (isMountedRef.current) setScriptError(error);
+      setScriptError(error);
       toast({
         variant: "destructive",
         title: "PayPal Configuration Error",
@@ -52,15 +41,13 @@ export default function PayPalCheckout({ cartItems, onSuccess }) {
       // Validate the client ID format
       const encodedClientId = encodeURIComponent(clientId);
       
-      // Log initialization attempt (only show first few chars, debug mode only)
-      if (FEATURE_FLAGS.debug) {
-        console.log('Initializing PayPal with Client ID:', encodedClientId.substring(0, 8) + '...');
-      }
+      // Log initialization attempt (only show first few chars)
+      console.log('Initializing PayPal with Client ID:', encodedClientId.substring(0, 8) + '...');
       
-      if (isMountedRef.current) setScriptLoaded(true);
+      setScriptLoaded(true);
     } catch (error) {
       console.error('PayPal initialization error:', error);
-      if (isMountedRef.current) setScriptError('Failed to initialize PayPal: ' + error.message);
+      setScriptError('Failed to initialize PayPal: ' + error.message);
       toast({
         variant: "destructive",
         title: "PayPal Error",
@@ -114,29 +101,14 @@ export default function PayPalCheckout({ cartItems, onSuccess }) {
   }
 
   // Properly encode the client ID and other values
-  const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID || '';
   const paypalConfig = {
-    "client-id": clientId,
+    "client-id": encodeURIComponent(import.meta.env.VITE_PAYPAL_CLIENT_ID || ''),
     currency: "USD",
-    // Request the PayPal JS SDK v6 per integration guide
-    "sdk-version": "6",
     intent: "capture",
     components: "buttons",
     "disable-funding": "credit,card",
     "enable-funding": "venmo,paylater",
-    // Add options to reduce initial load timeout and improve robustness
-    "data-page-type": "product",
-    dataAttributes: {
-      "data-sdk-tracking-id": "react-paypal-js"
-    }
   };
-  
-  // Debug: log client ID presence (only in dev/debug mode)
-  if (!clientId) {
-    console.warn('PayPal Client ID is empty or undefined in paypalConfig');
-  } else if (FEATURE_FLAGS.debug) {
-    console.log('PayPal configured with Client ID:', clientId.substring(0, 8) + '...');
-  }
 
   // Function to handle script load errors
   const handleScriptLoadError = (err) => {
@@ -170,11 +142,32 @@ export default function PayPalCheckout({ cartItems, onSuccess }) {
             throw new Error('Your cart is empty');
           }
 
-          // Calculate order total (move this to a utility function if used elsewhere)
+          // Calculate order total using the same logic as cart hook
           const orderTotal = cartItems.reduce((total, item) => {
-            const priceCents = item.variant?.sale_price_in_cents ?? item.variant?.price_in_cents ?? item.product?.base_price ?? 0;
-            const price = Number(priceCents) / 100;
-            return total + (price * (item.quantity || 0));
+            let price = 0;
+
+            if (item.variant) {
+              const variantPrice = item.variant.price_in_cents ?? item.variant.price ?? item.variant.price_cents;
+              if (variantPrice != null) {
+                const num = Number(variantPrice);
+                price = num > 1000 ? Math.round(num) : Math.round(num * 100);
+              }
+            } else {
+              const firstVariant = Array.isArray(item.product?.product_variants) && item.product.product_variants.length > 0
+                ? item.product.product_variants[0]
+                : null;
+
+              const variantPrice = firstVariant && (firstVariant.price_in_cents ?? firstVariant.price ?? firstVariant.price_cents);
+              if (variantPrice != null && !Number.isNaN(Number(variantPrice))) {
+                const num = Number(variantPrice);
+                price = num > 1000 ? Math.round(num) : Math.round(num * 100);
+              } else if (item.product?.base_price != null && !Number.isNaN(Number(item.product.base_price))) {
+                const bp = Number(item.product.base_price);
+                price = bp > 1000 ? Math.round(bp) : Math.round(bp * 100);
+              }
+            }
+
+            return total + (price / 100) * item.quantity;
           }, 0);
 
           if (orderTotal <= 0) {
@@ -206,52 +199,27 @@ export default function PayPalCheckout({ cartItems, onSuccess }) {
       }}
       onApprove={async (data) => {
         try {
-          // Check if user is authenticated
-          if (!user) {
-            throw new Error('You must be logged in to complete this purchase');
-          }
-
           // Show processing message
           toast({
             title: "Processing Payment",
             description: "Please wait while we confirm your payment...",
           });
 
-          console.log('Capturing PayPal order:', data.orderID);
-
-          // Capture the order from PayPal
+          // Capture the order
           const orderData = await capturePayPalOrder(data.orderID);
           
           if (!orderData || orderData.error) {
             throw new Error(orderData?.error?.message || 'Failed to capture payment');
           }
 
-          console.log('PayPal capture successful, creating database order');
-
-          // Create the order in our database
-          try {
-            const dbOrder = await createOrderFromPayPalPayment(orderData, cartItems, user.id);
-            console.log('Database order created:', dbOrder.orderId);
-
-            // Show success message and redirect
-            toast({
-              title: "Payment Successful! 🎉",
-              description: `Thank you for your purchase. Order #${dbOrder.orderId.substring(0, 8)} has been created.`,
-            });
-            
-            onSuccess?.(orderData);
-            navigate("/success");
-          } catch (dbError) {
-            console.error('Failed to create order in database:', dbError);
-            // Payment was captured from PayPal, but order couldn't be saved to DB
-            // This is a critical issue that needs manual intervention
-            toast({
-              variant: "destructive",
-              title: "Payment Captured - Order Save Failed",
-              description: "Your payment was successful but we couldn't save your order. Please contact support with your PayPal transaction ID: " + orderData.id,
-            });
-            navigate("/success");
-          }
+          // Show success message and redirect
+          toast({
+            title: "Payment Successful! 🎉",
+            description: "Thank you for your purchase.",
+          });
+          
+          onSuccess?.(orderData);
+          navigate("/success");
         } catch (error) {
           console.error('PayPal capture error:', error);
           toast({

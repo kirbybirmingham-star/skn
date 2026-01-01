@@ -1,0 +1,732 @@
+{
+  "timestamp": "2025-12-31T20:18:23.359Z",
+  "summary": {
+    "total": 153,
+    "alreadyHaveImage": 33,
+    "canUseGallery": 0,
+    "needGenerated": 120,
+    "errors": []
+  },
+  "updates": [
+    {
+      "id": "166f3406-549e-45f1-bbca-f49fe9c41a55",
+      "title": "Rice Brown Organic 2lb",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/4deecda9-7135-47dd-8bd0-e9b75d1d204c/products/rice-brown-organic-2lb/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "ff7bcd19-6b3a-4467-a319-3c65ddcc58e5",
+      "title": "Almond Butter Natural 16oz",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/834883fd-b714-42b6-8480-a52956faf3de/products/almond-butter-natural-16oz/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "2f0ec5d2-885e-4753-bc70-b9baca81a070",
+      "title": "Granola Organic Mix 12oz",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/72db3dcb-8384-49df-ae3a-ad4106371917/products/granola-organic-mix-12oz/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "7041a098-d831-4a3c-976e-27a7b200650d",
+      "title": "Spice Blend Italian Herbs",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/73edbd84-62ff-4fcc-be15-8e45f8a6d966/products/spice-blend-italian-herbs/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "8d251ba4-dd4a-4752-91cb-e91c8943564b",
+      "title": "Olive Oil Extra Virgin 16oz",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/485aacb6-4418-4467-bbbe-064311b847e6/products/olive-oil-extra-virgin-16oz/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "80fa1408-2eb0-4325-9b56-f3be585e351a",
+      "title": "Chocolate Dark 70% 4oz",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/bb36fe4c-6489-46df-98e7-e0917367d6d1/products/chocolate-dark-70-4oz/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "5afaa716-9008-4022-b308-f199849ad4f4",
+      "title": "Honey Raw Local 16oz",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/a1bc8ec0-7de9-420b-82a5-e03766550def/products/honey-raw-local-16oz/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "b6d7832d-9415-4bbc-a631-63eb08452030",
+      "title": "Tea Green Organic 20 bags",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/0f134cb6-9ee5-4e4d-ba50-528cb55d3ca3/products/tea-green-organic-20-bags/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "dd9935ea-8e74-40cc-acb7-48779579183a",
+      "title": "Coffee Beans Arabica 1lb",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/14ad953d-863d-47a5-ab74-035ef8be090b/products/coffee-beans-arabica-1lb/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "df36cd70-6832-4163-b014-9bd54f9767f5",
+      "title": "Hair Ties Elastic Set",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/dfaccd73-346e-4aa7-9b27-518f7a0bb612/products/hair-ties-elastic-set/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "5a6046a7-1467-4bdc-bd7f-194014116c90",
+      "title": "Deodorant Natural Aluminum-Free",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/23bcb607-38e1-4814-85d0-8c0148f96063/products/deodorant-natural-aluminum-free/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "7ab3576b-123c-47d4-bb6e-62ce7ae1fcff",
+      "title": "Toothbrush Electric Sonic",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/058faf1c-9f28-4318-b01c-cd2d5fc38394/products/toothbrush-electric-sonic/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "311d1aa1-79bd-4373-843c-cc27a118a9c5",
+      "title": "Body Lotion Shea Butter",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/46496dfb-17c9-464c-bee5-db40d2c01c4d/products/body-lotion-shea-butter/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "52e0aa18-d088-4306-ac93-d881cd0a356d",
+      "title": "Nail Clippers Stainless",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/622bb87d-3c7a-451a-87db-b8690faaeee8/products/nail-clippers-stainless/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "d0b77032-a2d4-4b21-b410-957997fcdc8e",
+      "title": "Hair Brush Detangling",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/67a9cacf-e91e-44fd-84f7-05681bae6d7e/products/hair-brush-detangling/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "172cb418-3d5d-483b-91ed-7dadce59800f",
+      "title": "Facial Cleanser Gentle",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/4d3da66c-4a38-4529-b5bf-538aa2a9db11/products/facial-cleanser-gentle/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "2a82f659-5cfe-43ae-afdd-a44a68dc064d",
+      "title": "Laundry Basket Wicker",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/46496dfb-17c9-464c-bee5-db40d2c01c4d/products/laundry-basket-wicker/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "9fef5c1c-e35f-4e9b-baa3-892243f361ed",
+      "title": "Lip Balm SPF 15",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/93312eef-68f6-49b2-92ed-bcbeec83f268/products/lip-balm-spf-15/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "a402a6e2-80f1-446e-81a4-620d93b643eb",
+      "title": "Shampoo Organic 16oz",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/4deecda9-7135-47dd-8bd0-e9b75d1d204c/products/shampoo-organic-16oz/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "106c83b9-7690-4c98-a2a0-4ee8aff5b6f6",
+      "title": "Swimming Goggles Anti-Fog",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/a1bc8ec0-7de9-420b-82a5-e03766550def/products/swimming-goggles-anti-fog/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "0f9e16a5-d129-4d8f-98e6-4a07074036f7",
+      "title": "Cotton Hoodie Zip Up",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/14ad953d-863d-47a5-ab74-035ef8be090b/products/cotton-hoodie-zip-up/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "f12756b4-61b0-4310-bc27-0ce943b4352a",
+      "title": "Hiking Backpack 40L",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/0f134cb6-9ee5-4e4d-ba50-528cb55d3ca3/products/hiking-backpack-40l/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "38625d53-21c2-41e5-b38c-4305a1bbf523",
+      "title": "Basketball Official Size",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/14ad953d-863d-47a5-ab74-035ef8be090b/products/basketball-official-size/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "e57baa64-bca3-4ef1-bf87-9920c68f42c0",
+      "title": "Camping Tent 4 Person",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/dfaccd73-346e-4aa7-9b27-518f7a0bb612/products/camping-tent-4-person/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "367a70b3-d1fd-4eb8-b0cd-a9335970f9c6",
+      "title": "Face Moisturizer SPF 30",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/834883fd-b714-42b6-8480-a52956faf3de/products/face-moisturizer-spf-30/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "02b4774c-ae83-443b-aa3c-16a6c0eaedeb",
+      "title": "Golf Balls Titleist 12pk",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/72db3dcb-8384-49df-ae3a-ad4106371917/products/golf-balls-titleist-12pk/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "2cb42b80-677e-44a6-bec8-7d15f6252b86",
+      "title": "Fishing Rod Spinning 7ft",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/73edbd84-62ff-4fcc-be15-8e45f8a6d966/products/fishing-rod-spinning-7ft/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "3ee57f7d-f517-414f-a76c-302712dce89c",
+      "title": "Dumbbells Adjustable 50lb",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/23bcb607-38e1-4814-85d0-8c0148f96063/products/dumbbells-adjustable-50lb/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "3312ef7a-ec88-449a-a352-d4fafa5f28d0",
+      "title": "Yoga Mat Non-Slip",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/058faf1c-9f28-4318-b01c-cd2d5fc38394/products/yoga-mat-non-slip/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "905357d0-ac02-4c73-93f3-2680a379245f",
+      "title": "Wireless Bluetooth Headphones",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/0f134cb6-9ee5-4e4d-ba50-528cb55d3ca3/products/wireless-bluetooth-headphones/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "9e930d91-3473-491e-8e16-f923353ed806",
+      "title": "Gaming Mechanical Keyboard",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/a1bc8ec0-7de9-420b-82a5-e03766550def/products/gaming-mechanical-keyboard/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "c8dfcb2f-fa05-44b2-a562-22d5c21320d8",
+      "title": "Smart Fitness Watch",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/bb36fe4c-6489-46df-98e7-e0917367d6d1/products/smart-fitness-watch/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "f135b50e-8562-4271-84d7-6cd7bb660dd8",
+      "title": "Portable Power Bank 20000mAh",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/485aacb6-4418-4467-bbbe-064311b847e6/products/portable-power-bank-20000mah/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "59b799f8-c51c-4522-93b6-5aadf9be7005",
+      "title": "Bluetooth Speaker Waterproof",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/72db3dcb-8384-49df-ae3a-ad4106371917/products/bluetooth-speaker-waterproof/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "b7c2adb1-20f3-4fb6-92c9-eb58c2a1102f",
+      "title": "Smart Home Security Camera",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/4deecda9-7135-47dd-8bd0-e9b75d1d204c/products/smart-home-security-camera/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "8f177b90-7d43-490d-a5d6-0dafb3dc1b4c",
+      "title": "External SSD 1TB Portable",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/4d3da66c-4a38-4529-b5bf-538aa2a9db11/products/external-ssd-1tb-portable/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "2b2d58d9-1df0-4b09-b780-0ce1c6c1042d",
+      "title": "Cotton T-Shirt Basic",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/67a9cacf-e91e-44fd-84f7-05681bae6d7e/products/cotton-t-shirt-basic/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "df674d64-c6be-449d-b2a9-999d2f2bc4a9",
+      "title": "Denim Jeans Classic Fit",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/622bb87d-3c7a-451a-87db-b8690faaeee8/products/denim-jeans-classic-fit/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "a131e184-aeb1-432a-9c30-bb7146a5af39",
+      "title": "Running Sneakers Lightweight",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/46496dfb-17c9-464c-bee5-db40d2c01c4d/products/running-sneakers-lightweight/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "b8fdb2c0-935c-423b-8372-785b0af3cc5e",
+      "title": "Wool Sweater Crew Neck",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/058faf1c-9f28-4318-b01c-cd2d5fc38394/products/wool-sweater-crew-neck/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "5b4864be-fa59-4007-89f7-a904ba0de257",
+      "title": "Cycling Helmet Safety",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/485aacb6-4418-4467-bbbe-064311b847e6/products/cycling-helmet-safety/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "493c0b05-c81b-442d-8399-d02c3d61cc59",
+      "title": "Wireless Charging Pad",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/73edbd84-62ff-4fcc-be15-8e45f8a6d966/products/wireless-charging-pad/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "6994e951-2d4b-452a-9bcb-cef4bf9be3b3",
+      "title": "USB-C Hub Multiport Adapter",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/834883fd-b714-42b6-8480-a52956faf3de/products/usb-c-hub-multiport-adapter/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "0cdaac8e-996f-48e2-82e8-108e06702a01",
+      "title": "LED Monitor 27 inch 144Hz",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/93312eef-68f6-49b2-92ed-bcbeec83f268/products/led-monitor-27-inch-144hz/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "ff18438b-240b-48c9-a1b5-d0f124aa3a10",
+      "title": "Sunglasses Polarized UV",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/dfaccd73-346e-4aa7-9b27-518f7a0bb612/products/sunglasses-polarized-uv/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "b5d058b6-d4d8-4dd5-a8d7-09f848f2e7b6",
+      "title": "Dress Shoes Oxford Black",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/0f134cb6-9ee5-4e4d-ba50-528cb55d3ca3/products/dress-shoes-oxford-black/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "24e00bae-3f81-490a-83a5-e97238ba8738",
+      "title": "Silk Scarf Patterned",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/a1bc8ec0-7de9-420b-82a5-e03766550def/products/silk-scarf-patterned/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "b49dff42-1923-4a0a-8a11-811ac1485a24",
+      "title": "Baseball Cap Adjustable",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/bb36fe4c-6489-46df-98e7-e0917367d6d1/products/baseball-cap-adjustable/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "d19b7caa-2819-45ae-a94c-05dc4b004fff",
+      "title": "Ceramic Coffee Mug Set",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/485aacb6-4418-4467-bbbe-064311b847e6/products/ceramic-coffee-mug-set/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "05a7adf8-caa1-44b7-8ff8-b6fe0cc4f64b",
+      "title": "Throw Pillow Decorative",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/73edbd84-62ff-4fcc-be15-8e45f8a6d966/products/throw-pillow-decorative/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "d7ca749a-17cb-4f29-8978-9cbe7345ee2b",
+      "title": "Plant Pot Ceramic 6 inch",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/72db3dcb-8384-49df-ae3a-ad4106371917/products/plant-pot-ceramic-6-inch/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "bf2506b3-fabc-4a3b-9c03-7f49113c4ae7",
+      "title": "Kitchen Knife Set Stainless",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/834883fd-b714-42b6-8480-a52956faf3de/products/kitchen-knife-set-stainless/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "1d753a39-63e3-4468-9fcc-5e5e4e7eb4ac",
+      "title": "Wall Clock Modern Design",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/4deecda9-7135-47dd-8bd0-e9b75d1d204c/products/wall-clock-modern-design/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "2576c8a0-b5e1-4b22-9461-114a0ce5069b",
+      "title": "Bath Towel Set 4 Piece",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/93312eef-68f6-49b2-92ed-bcbeec83f268/products/bath-towel-set-4-piece/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "9b8eae37-594c-4adc-bfd1-65af781abe6c",
+      "title": "Picture Frame 8x10 Wood",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/4d3da66c-4a38-4529-b5bf-538aa2a9db11/products/picture-frame-8x10-wood/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "65c8366d-c27e-4b99-ab90-9462d6528621",
+      "title": "Candles Scented Set 3",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/67a9cacf-e91e-44fd-84f7-05681bae6d7e/products/candles-scented-set-3/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "6fa059fb-8b9a-44a5-b308-61548691f86e",
+      "title": "Cutting Board Bamboo",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/622bb87d-3c7a-451a-87db-b8690faaeee8/products/cutting-board-bamboo/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "e7372c10-8f97-472c-9d92-cb0d6140b1cb",
+      "title": "Tennis Racket Graphite",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/bb36fe4c-6489-46df-98e7-e0917367d6d1/products/tennis-racket-graphite/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "53f5f0f0-bc33-420f-84c1-0c6544cfead1",
+      "title": "Leather Crossbody Bag",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/23bcb607-38e1-4814-85d0-8c0148f96063/products/leather-crossbody-bag/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "0a053c3f-c058-40e5-8741-fcb1e0d6c6c3",
+      "title": "Pasta Whole Wheat 16oz",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/93312eef-68f6-49b2-92ed-bcbeec83f268/products/pasta-whole-wheat-16oz/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "8a930877-a8c4-48da-a78b-a0d4671fda0e",
+      "title": "Toothbrush Electric Sonic",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/23bcb607-38e1-4814-85d0-8c0148f96063/products/toothbrush-electric-sonic/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "af6138cc-12b6-47ba-9be9-07489cf5e9f3",
+      "title": "External SSD 1TB Portable",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/14ad953d-863d-47a5-ab74-035ef8be090b/products/external-ssd-1tb-portable/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "199dbb3b-ad12-4977-8434-e9919c6f36ec",
+      "title": "Cotton T-Shirt Basic",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/4deecda9-7135-47dd-8bd0-e9b75d1d204c/products/cotton-t-shirt-basic/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "422224fb-b31d-4028-8438-6d7459a6afec",
+      "title": "Denim Jeans Classic Fit",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/93312eef-68f6-49b2-92ed-bcbeec83f268/products/denim-jeans-classic-fit/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "fe2a4542-b526-45bb-828d-712b85238917",
+      "title": "Running Sneakers Lightweight",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/4d3da66c-4a38-4529-b5bf-538aa2a9db11/products/running-sneakers-lightweight/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "41c003af-3fd4-41aa-9937-b6cf3e77ca53",
+      "title": "Wool Sweater Crew Neck",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/67a9cacf-e91e-44fd-84f7-05681bae6d7e/products/wool-sweater-crew-neck/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "d2fbd6e6-764a-4de7-955f-e8799c596260",
+      "title": "Leather Crossbody Bag",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/622bb87d-3c7a-451a-87db-b8690faaeee8/products/leather-crossbody-bag/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "737ee43a-74b8-4a6b-8b47-aa05c57b4337",
+      "title": "Sunglasses Polarized UV",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/46496dfb-17c9-464c-bee5-db40d2c01c4d/products/sunglasses-polarized-uv/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "71d3207b-dc9b-4666-9f54-40c61e360ad1",
+      "title": "Cotton Hoodie Zip Up",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/058faf1c-9f28-4318-b01c-cd2d5fc38394/products/cotton-hoodie-zip-up/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "531d37f5-39b7-4c8e-a0f0-e714da8a03fe",
+      "title": "Baseball Cap Adjustable",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/14ad953d-863d-47a5-ab74-035ef8be090b/products/baseball-cap-adjustable/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "77d26737-6712-432f-860e-02e9a7c2f0c8",
+      "title": "Ceramic Coffee Mug Set",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/4deecda9-7135-47dd-8bd0-e9b75d1d204c/products/ceramic-coffee-mug-set/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "73f15596-b7eb-4c5f-9e1a-5e86aabd66ad",
+      "title": "Throw Pillow Decorative",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/93312eef-68f6-49b2-92ed-bcbeec83f268/products/throw-pillow-decorative/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "9f195bd7-e9d6-4db6-896b-b012adae88ae",
+      "title": "Plant Pot Ceramic 6 inch",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/4d3da66c-4a38-4529-b5bf-538aa2a9db11/products/plant-pot-ceramic-6-inch/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "d3a615e8-c88f-4d88-b7dd-4e8ec6baacbe",
+      "title": "Kitchen Knife Set Stainless",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/67a9cacf-e91e-44fd-84f7-05681bae6d7e/products/kitchen-knife-set-stainless/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "f06c62f8-6ab7-48d4-903c-9e04bcdbeaef",
+      "title": "Wall Clock Modern Design",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/622bb87d-3c7a-451a-87db-b8690faaeee8/products/wall-clock-modern-design/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "f5bad92c-141e-4a14-a3bf-b553955f0217",
+      "title": "Bath Towel Set 4 Piece",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/46496dfb-17c9-464c-bee5-db40d2c01c4d/products/bath-towel-set-4-piece/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "629c1b35-a963-4da6-9df1-35930db077da",
+      "title": "Picture Frame 8x10 Wood",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/058faf1c-9f28-4318-b01c-cd2d5fc38394/products/picture-frame-8x10-wood/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "d97a683f-8025-4e21-bff7-9dbdb9330058",
+      "title": "Cutting Board Bamboo",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/dfaccd73-346e-4aa7-9b27-518f7a0bb612/products/cutting-board-bamboo/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "ea55c29e-f16b-4f07-83eb-d6e75cb0d0aa",
+      "title": "Laundry Basket Wicker",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/14ad953d-863d-47a5-ab74-035ef8be090b/products/laundry-basket-wicker/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "a015c80d-4d8b-422b-854f-3e8310ad9c7c",
+      "title": "Silk Scarf Patterned",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/dfaccd73-346e-4aa7-9b27-518f7a0bb612/products/silk-scarf-patterned/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "99d4b355-bd3f-4d1c-8da4-8c907ede7dd6",
+      "title": "Candles Scented Set 3",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/23bcb607-38e1-4814-85d0-8c0148f96063/products/candles-scented-set-3/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "8347517e-791b-4397-b079-0547cae4a865",
+      "title": "Yoga Mat Non-Slip",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/4deecda9-7135-47dd-8bd0-e9b75d1d204c/products/yoga-mat-non-slip/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "bc47cc4f-96ee-4c45-9174-0b1aafb98f3b",
+      "title": "Dumbbells Adjustable 50lb",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/93312eef-68f6-49b2-92ed-bcbeec83f268/products/dumbbells-adjustable-50lb/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "7563c25c-8a00-4eb1-bbad-b9b53cdc89e4",
+      "title": "Camping Tent 4 Person",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/4d3da66c-4a38-4529-b5bf-538aa2a9db11/products/camping-tent-4-person/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "34c75762-a441-4dac-8ee1-1a6fd2928c6a",
+      "title": "Wireless Bluetooth Headphones",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/4deecda9-7135-47dd-8bd0-e9b75d1d204c/products/wireless-bluetooth-headphones/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "c3a0ee16-5593-4062-8f3c-5be1987ad466",
+      "title": "Gaming Mechanical Keyboard",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/93312eef-68f6-49b2-92ed-bcbeec83f268/products/gaming-mechanical-keyboard/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "cc749514-1c18-46b6-820f-acbc49596e8d",
+      "title": "Smart Fitness Watch",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/4d3da66c-4a38-4529-b5bf-538aa2a9db11/products/smart-fitness-watch/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "f890ea1d-dabc-49b6-8c17-eae0a461634c",
+      "title": "Portable Power Bank 20000mAh",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/67a9cacf-e91e-44fd-84f7-05681bae6d7e/products/portable-power-bank-20000mah/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "c99faa11-1a4f-4ae3-92b8-5e9a4519b2ea",
+      "title": "Wireless Charging Pad",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/622bb87d-3c7a-451a-87db-b8690faaeee8/products/wireless-charging-pad/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "d4f7618c-944e-4a8f-a31c-6c23a1274e0d",
+      "title": "Bluetooth Speaker Waterproof",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/46496dfb-17c9-464c-bee5-db40d2c01c4d/products/bluetooth-speaker-waterproof/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "c1bf4156-00f7-4b1a-b7d6-4a03fe48f46d",
+      "title": "Smart Home Security Camera",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/23bcb607-38e1-4814-85d0-8c0148f96063/products/smart-home-security-camera/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "632c6794-8cc1-4def-8b9b-b1bca0cbbad2",
+      "title": "USB-C Hub Multiport Adapter",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/058faf1c-9f28-4318-b01c-cd2d5fc38394/products/usb-c-hub-multiport-adapter/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "c7c7e767-81f2-4665-89d3-2218bc39b60e",
+      "title": "LED Monitor 27 inch 144Hz",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/dfaccd73-346e-4aa7-9b27-518f7a0bb612/products/led-monitor-27-inch-144hz/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "797dcd05-4f94-4218-8bb2-11a7f26369de",
+      "title": "Basketball Official Size",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/67a9cacf-e91e-44fd-84f7-05681bae6d7e/products/basketball-official-size/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "505781b7-08aa-4092-876f-711e8507731f",
+      "title": "Hiking Backpack 40L",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/622bb87d-3c7a-451a-87db-b8690faaeee8/products/hiking-backpack-40l/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "dd9df8fd-118e-40f4-a806-8361cef6ce24",
+      "title": "Swimming Goggles Anti-Fog",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/46496dfb-17c9-464c-bee5-db40d2c01c4d/products/swimming-goggles-anti-fog/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "05dc5c6f-9ae8-4bcf-b3e1-38b6916c7ebf",
+      "title": "Cycling Helmet Safety",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/23bcb607-38e1-4814-85d0-8c0148f96063/products/cycling-helmet-safety/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "e7bbe1d9-3f47-4ca9-ba99-c5251974928a",
+      "title": "Face Moisturizer SPF 30",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/4deecda9-7135-47dd-8bd0-e9b75d1d204c/products/face-moisturizer-spf-30/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "b1eaea85-c1ad-4382-87ae-f8e9b7d10306",
+      "title": "Shampoo Organic 16oz",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/93312eef-68f6-49b2-92ed-bcbeec83f268/products/shampoo-organic-16oz/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "86b85026-ea7b-4ede-97a9-91581340f4ba",
+      "title": "Lip Balm SPF 15",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/4d3da66c-4a38-4529-b5bf-538aa2a9db11/products/lip-balm-spf-15/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "cadb58ac-2b40-4bf5-ba26-b704d4c5ce11",
+      "title": "Facial Cleanser Gentle",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/67a9cacf-e91e-44fd-84f7-05681bae6d7e/products/facial-cleanser-gentle/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "7b8420e7-668c-4377-a233-267b45f749b4",
+      "title": "Hair Brush Detangling",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/622bb87d-3c7a-451a-87db-b8690faaeee8/products/hair-brush-detangling/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "7abe7b1d-3887-4e4b-9b35-2712bdfac4d9",
+      "title": "Nail Clippers Stainless",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/46496dfb-17c9-464c-bee5-db40d2c01c4d/products/nail-clippers-stainless/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "a34afe78-67ee-47bb-bc54-ce4d19398cec",
+      "title": "Body Lotion Shea Butter",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/058faf1c-9f28-4318-b01c-cd2d5fc38394/products/body-lotion-shea-butter/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "b7998251-a6ca-446d-83f5-9ff8713f5fbe",
+      "title": "Deodorant Natural Aluminum-Free",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/dfaccd73-346e-4aa7-9b27-518f7a0bb612/products/deodorant-natural-aluminum-free/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "4e8d4029-c647-4dd8-9616-548914c29012",
+      "title": "Hair Ties Elastic Set",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/14ad953d-863d-47a5-ab74-035ef8be090b/products/hair-ties-elastic-set/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "4e8a8a2a-67a3-4d3a-8ba8-b4152ef98a92",
+      "title": "Coffee Beans Arabica 1lb",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/4deecda9-7135-47dd-8bd0-e9b75d1d204c/products/coffee-beans-arabica-1lb/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "edbe5fa9-2dcf-4536-9e26-975f13536507",
+      "title": "Tea Green Organic 20 bags",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/93312eef-68f6-49b2-92ed-bcbeec83f268/products/tea-green-organic-20-bags/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "34745faf-1050-4cc0-86a3-f782b8b56297",
+      "title": "Honey Raw Local 16oz",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/4d3da66c-4a38-4529-b5bf-538aa2a9db11/products/honey-raw-local-16oz/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "bcf225de-85d7-4607-939b-08c35b9ecb32",
+      "title": "Fishing Rod Spinning 7ft",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/dfaccd73-346e-4aa7-9b27-518f7a0bb612/products/fishing-rod-spinning-7ft/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "d21cf59c-2529-47d2-b863-d2dae7dcd50b",
+      "title": "Golf Balls Titleist 12pk",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/14ad953d-863d-47a5-ab74-035ef8be090b/products/golf-balls-titleist-12pk/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "67192501-fc6c-4f1b-9bcf-a268a8258e56",
+      "title": "Chocolate Dark 70% 4oz",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/67a9cacf-e91e-44fd-84f7-05681bae6d7e/products/chocolate-dark-70-4oz/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "1ef22f54-7cba-4186-87c9-4f595b914ba2",
+      "title": "Spice Blend Italian Herbs",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/46496dfb-17c9-464c-bee5-db40d2c01c4d/products/spice-blend-italian-herbs/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "d8080a23-1776-46d3-9481-cd42aa0d4910",
+      "title": "Granola Organic Mix 12oz",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/058faf1c-9f28-4318-b01c-cd2d5fc38394/products/granola-organic-mix-12oz/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "ed5a490a-9ebc-4fd9-be48-b751703b8b9b",
+      "title": "Almond Butter Natural 16oz",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/23bcb607-38e1-4814-85d0-8c0148f96063/products/almond-butter-natural-16oz/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "e5cfb6ea-aad7-42aa-91c7-01e02e0e5d97",
+      "title": "Pasta Whole Wheat 16oz",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/14ad953d-863d-47a5-ab74-035ef8be090b/products/pasta-whole-wheat-16oz/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "28a395f4-eede-496c-ac93-573273170fb1",
+      "title": "Rice Brown Organic 2lb",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/dfaccd73-346e-4aa7-9b27-518f7a0bb612/products/rice-brown-organic-2lb/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "55141ed9-fd7e-4e37-9831-f28bb44a7879",
+      "title": "Dress Shoes Oxford Black",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/23bcb607-38e1-4814-85d0-8c0148f96063/products/dress-shoes-oxford-black/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "1fc506fb-e785-4702-b0d6-60620a98a140",
+      "title": "Tennis Racket Graphite",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/058faf1c-9f28-4318-b01c-cd2d5fc38394/products/tennis-racket-graphite/main.jpg",
+      "source": "generated"
+    },
+    {
+      "id": "47689027-9d68-42a9-b266-434059560c23",
+      "title": "Olive Oil Extra Virgin 16oz",
+      "newImageUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/listings-images/vendors/622bb87d-3c7a-451a-87db-b8690faaeee8/products/olive-oil-extra-virgin-16oz/main.jpg",
+      "source": "generated"
+    }
+  ]
+}

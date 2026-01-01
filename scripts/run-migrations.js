@@ -33,15 +33,22 @@ const migrations = [
 async function runMigration(filename) {
   console.log(`\nRunning migration: ${filename}`);
   const filePath = join(__dirname, '..', 'supabase_migrations', filename);
-  
+
   try {
     const sql = await fs.readFile(filePath, 'utf8');
-    const { error } = await supabase.rpc('exec_sql', { sql });
-    
-    if (error) {
-      throw error;
+    // Split SQL into individual statements
+    const statements = sql.split(';').map(s => s.trim()).filter(s => s.length > 0);
+
+    for (const statement of statements) {
+      if (statement.trim()) {
+        const { error } = await supabase.rpc('exec_sql', { sql: statement + ';' });
+        if (error) {
+          console.error(`Error executing statement:`, statement.substring(0, 100) + '...');
+          throw error;
+        }
+      }
     }
-    
+
     console.log(`✓ Migration ${filename} completed`);
   } catch (err) {
     console.error(`Error running migration ${filename}:`, err);

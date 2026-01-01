@@ -112,7 +112,7 @@ const FAQPage = () => {
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
         <section className="relative py-20 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700">
+          <div className="absolute inset-0 bg-gradient-to-br from-teal-600 via-emerald-600 to-cyan-700">
             <div className="absolute inset-0 opacity-20">
               <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
               <div className="absolute bottom-0 right-0 w-96 h-96 bg-pink-300 rounded-full blur-3xl"></div>

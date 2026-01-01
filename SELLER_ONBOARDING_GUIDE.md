@@ -2,8 +2,26 @@
 
 **Repository**: kirbybirmingham-star/skn  
 **Branch**: `feature/auth-login-signup`  
-**Date**: November 12, 2025  
-**Status**: ✅ Analysis Complete, Ready for Implementation
+**Date**: November 12, 2025 | Updated: December 31, 2025  
+**Status**: ✅ KYC Implementation Complete, KYB Ready for Development
+
+## 🎯 KYC vs KYB Architecture
+
+**IMPORTANT UPDATE**: The system now implements **two-level verification**:
+
+- **KYC (Know Your Customer)** = User-level verification (`profiles.kyc_status`)
+  - Determines if user can sell globally
+  - Single verification per account
+  - Status: ✅ Implemented and synced
+  - Values: `not_started`, `approved`
+
+- **KYB (Know Your Business)** = Store-level verification (`vendors.onboarding_status`)
+  - Determines if each specific store can list products
+  - One verification per vendor/store
+  - Status: 🔄 Ready for development (documented in SELLER_ONBOARDING_*.md)
+  - Values: `not_started`, `started`, `pending`, `kyc_in_progress`, `approved`
+
+**See**: [KYC_KYB_SEPARATION.md](./KYC_KYB_SEPARATION.md) for detailed architecture
 
 ---
 
@@ -68,11 +86,13 @@ I've created comprehensive documentation to guide you:
 **Time**: 20 minutes (both files)  
 **Action Plan**: See `SELLER_ONBOARDING_ACTION_PLAN.md` - Steps 3 & 4
 
-### Issue 4: KYC Provider Stubbed ⚠️ (Not Urgent)
+### Issue 4: KYB (Store) Verification Provider Stubbed ⚠️ (Documented)
 **Status**: Intentionally stubbed for development  
-**When to Fix**: Later, when ready for KYC integration  
-**Provider**: Currently using fake "stub" provider  
-**Production**: Needs real KYC provider (e.g., JewelHQ, Onfido)
+**Type**: KYB (Store-level verification) - not KYC (user-level)  
+**When to Fix**: Later, when ready for store-level verification  
+**Note**: User-level KYC (`profiles.kyc_status`) is already implemented  
+**Provider**: Needs real provider for store verification (e.g., JewelHQ, Onfido)  
+**Reference**: [KYC_KYB_SEPARATION.md](./KYC_KYB_SEPARATION.md)
 
 ---
 
@@ -80,10 +100,11 @@ I've created comprehensive documentation to guide you:
 
 ### Database (Perfect)
 - ✅ Supabase with all required tables
-- ✅ vendors table with onboarding fields
-- ✅ profiles table with role field
+- ✅ vendors table with onboarding fields (KYB - store level)
+- ✅ profiles table with role field + kyc_status (KYC - user level)
 - ✅ products, orders, order_items tables
 - ✅ RLS (Row Level Security) policies
+- ✅ KYC data synced to profiles.kyc_status (Dec 31, 2025)
 
 ### Backend (Perfect)
 - ✅ Express server running on port 3001

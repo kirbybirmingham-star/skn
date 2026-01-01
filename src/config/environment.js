@@ -55,7 +55,21 @@ export const API_CONFIG = {
   // `https://backend.example.com/api/onboarding/me` (server mounts under /api)
   baseURL: (function () {
     if (isDevelopment && !isDeployedOnRender()) return '/api';
-    const backendRoot = (import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(/\/$/, '');
+    
+    const viteApiUrl = import.meta.env.VITE_API_URL || '';
+    
+    // If VITE_API_URL is already the proxy path '/api', use it as-is
+    if (viteApiUrl === '/api') return '/api';
+    
+    // If VITE_API_URL is a full URL, append '/api' if not already present
+    if (viteApiUrl && viteApiUrl.startsWith('http')) {
+      const backendRoot = viteApiUrl.replace(/\/$/, '');
+      if (backendRoot.endsWith('/api')) return backendRoot;
+      return `${backendRoot}/api`;
+    }
+    
+    // Fallback: use localhost:3001 and append /api
+    const backendRoot = 'http://localhost:3001'.replace(/\/$/, '');
     return `${backendRoot}/api`;
   })(),
   

@@ -20,7 +20,14 @@ export default function SellerOnboarding() {
   useEffect(() => {
     if (!token) return;
     setLoading(true);
-    fetch(`/api/onboarding/${token}`)
+    const token_val = session?.access_token;
+    const headers = {
+      'Content-Type': 'application/json'
+    };
+    if (token_val) {
+      headers['Authorization'] = `Bearer ${token_val}`;
+    }
+    fetch(`/api/onboarding/${token}`, { headers })
       .then(r => r.json())
       .then(data => {
         if (data?.vendor) setVendor(data.vendor);
@@ -28,7 +35,7 @@ export default function SellerOnboarding() {
       })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
-  }, [token]);
+  }, [token, session?.access_token]);
 
   const handleSuccess = (data) => {
     // If the API returned an onboardingUrl, navigate there

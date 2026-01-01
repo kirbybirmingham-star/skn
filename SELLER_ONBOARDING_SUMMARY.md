@@ -1,9 +1,16 @@
 # Summary: Seller/Vendor Onboarding Status
 
-## Current Branch
+## Current Status (Updated: Dec 31, 2025)
 - **Branch**: `feature/auth-login-signup` ✅ Created
 - **Remote**: `https://github.com/kirbybirmingham-star/skn` ✅ Set up
-- **Latest merge**: Pulled from correct repo on 2025-11-12
+- **KYC Implementation**: ✅ COMPLETE (User-level verification)
+- **KYB Implementation**: 🔄 READY (Store-level verification)
+- **Latest sync**: KYC data synced to profiles.kyc_status on Dec 31, 2025
+
+## 🎯 Two-Level Verification Architecture
+
+**New in this session**: System now implements KYC (user) vs KYB (store) separation:  
+**See**: [KYC_KYB_SEPARATION.md](./KYC_KYB_SEPARATION.md) for complete details
 
 ---
 

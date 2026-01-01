@@ -59,6 +59,8 @@ async function initializeServer() {
     { default: wishlist },
     { default: inventory },
     { default: messages },
+    { default: profile },
+    { default: products },
   ] = await Promise.all([
     import('./webhooks.js'),
     import('./paypal-orders.js'),
@@ -74,6 +76,8 @@ async function initializeServer() {
     import('./wishlist.js'),
     import('./inventory.js'),
     import('./messages.js'),
+    import('./profile.js'),
+    import('./products.js'),
   ]);
 
   // Start the server with all config and routes loaded
@@ -92,6 +96,8 @@ async function initializeServer() {
     wishlist,
     inventory,
     messages,
+    profile,
+    products,
   });
 }
 
@@ -144,6 +150,10 @@ function startServer(SERVER_CONFIG, routes) {
   app.use('/api/wishlist', routes.wishlist);
   app.use('/api/inventory', routes.inventory);
   app.use('/api/messages', routes.messages);
+  app.use('/api/profile', routes.profile);
+  
+  // Products route - multer middleware applied to specific endpoint in router
+  app.use('/api/products', routes.products);
 
   // Serve frontend static files if the build output exists (for deployments that use a single web service)
   try {

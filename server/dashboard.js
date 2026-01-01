@@ -39,27 +39,43 @@ router.get('/vendor/:vendorId', async (req, res) => {
 
     console.log('[Dashboard] Order items found:', orderItems?.length || 0);
 
+    if (!orderItems || orderItems.length === 0) {
+      console.log('[Dashboard] No orders found, returning zero values');
+      return res.json({
+        totalRevenue: 0,
+        totalOrders: 0,
+        averageOrderValue: 0
+      });
+    }
+
     const orderIds = [...new Set(orderItems.map(item => item.order_id))];
     console.log('[Dashboard] Unique order IDs:', orderIds.length);
 
+    // Get orders with 'paid' or 'fulfilled' status
     const { data: orders, error: ordersError } = await supabase
       .from('orders')
       .select('id, status')
-      .in('id', orderIds)
-      .in('status', ['paid', 'fulfilled']);
+      .in('id', orderIds);
 
     if (ordersError) {
       console.error('[Dashboard] Error fetching orders:', ordersError);
       throw ordersError;
     }
 
-    console.log('[Dashboard] Paid/fulfilled orders found:', orders?.length || 0);
+    console.log('[Dashboard] All orders found:', orders?.length || 0);
 
-    const paidOrderIds = new Set(orders.map(order => order.id));
+    // Filter to paid/fulfilled orders
+    const paidOrderIds = new Set(
+      (orders || [])
+        .filter(order => order.status === 'paid' || order.status === 'fulfilled')
+        .map(order => order.id)
+    );
+
+    console.log('[Dashboard] Paid/fulfilled orders:', paidOrderIds.size);
 
     const totalRevenue = orderItems
       .filter(item => paidOrderIds.has(item.order_id))
-      .reduce((acc, item) => acc + item.total_price, 0);
+      .reduce((acc, item) => acc + (item.total_price || 0), 0);
 
     const totalOrders = paidOrderIds.size;
 
@@ -67,16 +83,16 @@ router.get('/vendor/:vendorId', async (req, res) => {
     const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
     const responseData = {
-      totalRevenue,
+      totalRevenue: Math.round(totalRevenue * 100) / 100,
       totalOrders,
-      averageOrderValue,
+      averageOrderValue: Math.round(averageOrderValue * 100) / 100,
     };
 
     console.log('[Dashboard] Returning dashboard data:', responseData);
     res.json(responseData);
   } catch (error) {
     console.error('[Dashboard] Error fetching vendor dashboard data:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: error.message || 'Internal server error' });
   }
 });
 

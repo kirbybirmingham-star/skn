@@ -1,0 +1,101 @@
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# On branch feature/auth-login-signup
+# Changes to be committed:
+#	new file:   .vscode/settings.json
+#	new file:   ENHANCED_ORDER_MANAGEMENT_SCHEMA.md
+#	new file:   README_NOTIFICATION_SYSTEM.md
+#	new file:   THEME_SYSTEM_PLAN.md
+#	modified:   package-lock.json
+#	modified:   package.json
+#	new file:   scripts/apply-migrations-to-new-db.js
+#	new file:   scripts/check-profile-role.js
+#	new file:   scripts/createDefaultEmailTemplates.js
+#	new file:   scripts/get_token.js
+#	modified:   scripts/run-migrations.js
+#	new file:   server/analytics.js
+#	modified:   server/dashboard.js
+#	new file:   server/emailQueue.js
+#	new file:   server/emailService.js
+#	modified:   server/index.js
+#	new file:   server/inventory.js
+#	modified:   server/middleware.js
+#	new file:   server/notificationService.js
+#	new file:   server/notifications.js
+#	modified:   server/onboarding.js
+#	new file:   server/orderAutomation.js
+#	new file:   server/orderStatusManager.js
+#	new file:   server/orders.js
+#	modified:   server/paypal-capture.js
+#	modified:   server/paypal-orders.js
+#	new file:   server/paypal-refunds.js
+#	new file:   server/paypal-verification.js
+#	new file:   server/paypal-webhooks.js
+#	modified:   server/supabaseClient.js
+#	modified:   src/App.jsx
+#	modified:   src/api/EcommerceApi.js
+#	modified:   src/api/EcommerceApi.jsx
+#	new file:   src/api/inventoryApi.js
+#	modified:   src/components/Footer.jsx
+#	modified:   src/components/Header.jsx
+#	modified:   src/components/VendorCard.jsx
+#	modified:   src/components/VendorSidebar.jsx
+#	new file:   src/components/admin/AdminAnalytics.jsx
+#	new file:   src/components/admin/AdminOverview.jsx
+#	new file:   src/components/admin/AdminSettings.jsx
+#	new file:   src/components/admin/AdminSidebar.jsx
+#	new file:   src/components/admin/AdminUsers.jsx
+#	new file:   src/components/admin/AdminVendors.jsx
+#	new file:   src/components/analytics/AdminAnalyticsDashboard.jsx
+#	new file:   src/components/analytics/VendorAnalyticsDashboard.jsx
+#	modified:   src/components/auth/SellerSignupForm.jsx
+#	new file:   src/components/inventory/InventoryAlerts.jsx
+#	new file:   src/components/inventory/InventoryManager.jsx
+#	new file:   src/components/inventory/InventorySettings.jsx
+#	new file:   src/components/orders/CancellationModal.jsx
+#	new file:   src/components/orders/NotificationPreferences.jsx
+#	new file:   src/components/orders/OrderCard.jsx
+#	new file:   src/components/orders/OrderFilters.jsx
+#	new file:   src/components/orders/OrderFulfillmentModal.jsx
+#	new file:   src/components/orders/OrderStatusTimeline.jsx
+#	new file:   src/components/orders/RefundManagement.jsx
+#	new file:   src/components/orders/RefundRequestModal.jsx
+#	new file:   src/components/orders/RefundStatus.jsx
+#	new file:   src/components/orders/VendorOrderActions.jsx
+#	new file:   src/components/orders/VendorOrderAnalytics.jsx
+#	new file:   src/components/orders/VendorOrderCard.jsx
+#	new file:   src/components/orders/VendorOrderDashboard.jsx
+#	new file:   src/components/orders/VendorOrderDetails.jsx
+#	new file:   src/components/orders/VendorOrderList.jsx
+#	new file:   src/components/ui/badge.jsx
+#	modified:   src/components/ui/button.jsx
+#	new file:   src/components/ui/calendar.jsx
+#	modified:   src/components/ui/card.jsx
+#	new file:   src/components/ui/date-range-picker.jsx
+#	new file:   src/components/ui/label.jsx
+#	new file:   src/components/ui/popover.jsx
+#	new file:   src/components/ui/select.jsx
+#	new file:   src/components/ui/switch.jsx
+#	new file:   src/components/ui/tabs.jsx
+#	new file:   src/components/ui/theme-toggle.jsx
+#	modified:   src/contexts/SupabaseAuthContext.jsx
+#	new file:   src/contexts/ThemeContext.jsx
+#	new file:   src/hooks/use-toast.js
+#	modified:   src/index.css
+#	modified:   src/lib/routerConfig.jsx
+#	new file:   src/pages/AdminDashboard.jsx
+#	modified:   src/pages/Dashboardpage.jsx
+#	modified:   src/pages/HomePage.jsx
+#	new file:   src/pages/InventoryPage.jsx
+#	modified:   src/pages/MarketplacePage.jsx
+#	new file:   src/pages/OrderDetailsPage.jsx
+#	new file:   src/pages/OrderHistoryPage.jsx
+#	modified:   src/pages/SellerOnboarding.jsx
+#	modified:   src/pages/StorePage.jsx
+#	new file:   src/pages/vendor/Assets.jsx
+#	modified:   src/pages/vendor/Dashboard.jsx
+#	new file:   src/pages/vendor/Store.jsx
+#	new file:   src/pages/vendor/Verification.jsx
+#

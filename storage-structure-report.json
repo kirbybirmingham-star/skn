@@ -1,0 +1,1815 @@
+{
+  "timestamp": "2025-12-31T20:03:06.634Z",
+  "buckets": [
+    {
+      "name": "product-images",
+      "id": "product-images",
+      "public": true,
+      "stats": {
+        "totalFolders": 0,
+        "totalFiles": 8,
+        "totalSize": 1689455,
+        "byType": {
+          "jpg": 7,
+          "webp": 1
+        },
+        "byFolder": {
+          "root": 8
+        }
+      },
+      "items": [
+        {
+          "type": "file",
+          "name": "img_0ab2cce78f3a411c.jpg",
+          "path": "img_0ab2cce78f3a411c.jpg",
+          "depth": 0,
+          "size": 55816,
+          "created": "2025-12-31T19:24:40.156Z",
+          "updated": "2025-12-31T19:24:40.156Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "img_135f9a30a7674bab.jpg",
+          "path": "img_135f9a30a7674bab.jpg",
+          "depth": 0,
+          "size": 26074,
+          "created": "2025-12-31T19:24:44.772Z",
+          "updated": "2025-12-31T19:24:44.772Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "img_496b174385a447de.jpg",
+          "path": "img_496b174385a447de.jpg",
+          "depth": 0,
+          "size": 35764,
+          "created": "2025-12-31T19:24:43.370Z",
+          "updated": "2025-12-31T19:24:43.370Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "img_4a15a465fead4136.jpg",
+          "path": "img_4a15a465fead4136.jpg",
+          "depth": 0,
+          "size": 138134,
+          "created": "2025-12-31T19:24:46.352Z",
+          "updated": "2025-12-31T19:24:46.352Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "img_81a7f3ba03da408d.jpg",
+          "path": "img_81a7f3ba03da408d.jpg",
+          "depth": 0,
+          "size": 953033,
+          "created": "2025-12-31T19:24:49.582Z",
+          "updated": "2025-12-31T19:24:49.582Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "img_a9955506e5d84312.webp",
+          "path": "img_a9955506e5d84312.webp",
+          "depth": 0,
+          "size": 32204,
+          "created": "2025-12-31T19:24:41.987Z",
+          "updated": "2025-12-31T19:24:41.987Z",
+          "mimetype": "image/webp"
+        },
+        {
+          "type": "file",
+          "name": "img_acb2fab1afc04c0c.jpg",
+          "path": "img_acb2fab1afc04c0c.jpg",
+          "depth": 0,
+          "size": 314828,
+          "created": "2025-12-31T19:24:51.239Z",
+          "updated": "2025-12-31T19:24:51.239Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "img_b37fc69de1cc4da6.jpg",
+          "path": "img_b37fc69de1cc4da6.jpg",
+          "depth": 0,
+          "size": 133602,
+          "created": "2025-12-31T19:24:47.817Z",
+          "updated": "2025-12-31T19:24:47.817Z",
+          "mimetype": "image/jpeg"
+        }
+      ]
+    },
+    {
+      "name": "skn-bridge-assets",
+      "id": "skn-bridge-assets",
+      "public": true,
+      "stats": {
+        "totalFolders": 11,
+        "totalFiles": 81,
+        "totalSize": 6094686,
+        "byType": {
+          "jpg": 79,
+          "webp": 1,
+          "emptyFolderPlaceholder": 1
+        },
+        "byFolder": {
+          "products": 72,
+          "users": 1,
+          "vendors": 8
+        }
+      },
+      "items": [
+        {
+          "type": "folder",
+          "name": "products",
+          "path": "products",
+          "depth": 0
+        },
+        {
+          "type": "folder",
+          "name": "crafts",
+          "path": "products/crafts",
+          "depth": 1
+        },
+        {
+          "type": "file",
+          "name": "beaded-necklace.jpg",
+          "path": "products/crafts/beaded-necklace.jpg",
+          "depth": 2,
+          "size": 307324,
+          "created": "2025-11-15T21:31:25.630Z",
+          "updated": "2025-11-15T21:31:25.630Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "caribbean-bead-necklace.jpg",
+          "path": "products/crafts/caribbean-bead-necklace.jpg",
+          "depth": 2,
+          "size": 712,
+          "created": "2025-11-16T03:09:36.798Z",
+          "updated": "2025-11-17T03:52:17.035Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "caribbean-dreamcatcher.jpg",
+          "path": "products/crafts/caribbean-dreamcatcher.jpg",
+          "depth": 2,
+          "size": 711,
+          "created": "2025-11-16T03:09:35.609Z",
+          "updated": "2025-11-17T03:52:16.103Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "ceramic-bowl-handmade.jpg",
+          "path": "products/crafts/ceramic-bowl-handmade.jpg",
+          "depth": 2,
+          "size": 152870,
+          "created": "2025-11-15T21:31:26.005Z",
+          "updated": "2025-11-15T21:31:26.005Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "handwoven-palm-basket.jpg",
+          "path": "products/crafts/handwoven-palm-basket.jpg",
+          "depth": 2,
+          "size": 710,
+          "created": "2025-11-16T03:09:36.461Z",
+          "updated": "2025-11-17T03:52:16.721Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "recycled-glass-wind-chimes.jpg",
+          "path": "products/crafts/recycled-glass-wind-chimes.jpg",
+          "depth": 2,
+          "size": 715,
+          "created": "2025-11-16T03:09:36.117Z",
+          "updated": "2025-11-17T03:52:16.421Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "straw-mat-floor.jpg",
+          "path": "products/crafts/straw-mat-floor.jpg",
+          "depth": 2,
+          "size": 286542,
+          "created": "2025-11-15T21:34:08.024Z",
+          "updated": "2025-11-15T21:34:08.024Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "traditional-calabash-bowl.jpg",
+          "path": "products/crafts/traditional-calabash-bowl.jpg",
+          "depth": 2,
+          "size": 714,
+          "created": "2025-11-16T03:09:37.175Z",
+          "updated": "2025-11-17T03:52:17.370Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "wooden-carving-fish.jpg",
+          "path": "products/crafts/wooden-carving-fish.jpg",
+          "depth": 2,
+          "size": 31615,
+          "created": "2025-11-15T21:31:25.040Z",
+          "updated": "2025-11-15T21:31:25.040Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "woven-basket-colored.jpg",
+          "path": "products/crafts/woven-basket-colored.jpg",
+          "depth": 2,
+          "size": 181033,
+          "created": "2025-11-15T21:31:25.455Z",
+          "updated": "2025-11-15T21:31:25.455Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "woven-basket-natural.jp.webp",
+          "path": "products/crafts/woven-basket-natural.jp.webp",
+          "depth": 2,
+          "size": 283290,
+          "created": "2025-11-15T21:31:25.572Z",
+          "updated": "2025-11-15T21:31:25.572Z",
+          "mimetype": "image/webp"
+        },
+        {
+          "type": "file",
+          "name": "woven-basket-natural.jpg",
+          "path": "products/crafts/woven-basket-natural.jpg",
+          "depth": 2,
+          "size": 709,
+          "created": "2025-11-16T03:09:37.463Z",
+          "updated": "2025-11-17T03:52:17.775Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "woven-seagrass-placemats.jpg",
+          "path": "products/crafts/woven-seagrass-placemats.jpg",
+          "depth": 2,
+          "size": 713,
+          "created": "2025-11-16T03:09:35.272Z",
+          "updated": "2025-11-17T03:52:15.787Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "folder",
+          "name": "electronics",
+          "path": "products/electronics",
+          "depth": 1
+        },
+        {
+          "type": "file",
+          "name": "bluetooth-speaker-portable.jpg",
+          "path": "products/electronics/bluetooth-speaker-portable.jpg",
+          "depth": 2,
+          "size": 720,
+          "created": "2025-11-16T03:09:32.179Z",
+          "updated": "2025-11-17T03:52:12.648Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "bluetooth-speaker.jpg",
+          "path": "products/electronics/bluetooth-speaker.jpg",
+          "depth": 2,
+          "size": 55816,
+          "created": "2025-11-15T20:49:27.995Z",
+          "updated": "2025-11-15T20:49:27.995Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "earbuds-wireless.jpg",
+          "path": "products/electronics/earbuds-wireless.jpg",
+          "depth": 2,
+          "size": 293476,
+          "created": "2025-11-15T20:48:52.073Z",
+          "updated": "2025-11-15T20:48:52.073Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "fitness-tracker.jpg",
+          "path": "products/electronics/fitness-tracker.jpg",
+          "depth": 2,
+          "size": 26074,
+          "created": "2025-11-15T20:49:01.172Z",
+          "updated": "2025-11-15T20:49:01.172Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "headphones.jpg",
+          "path": "products/electronics/headphones.jpg",
+          "depth": 2,
+          "size": 138134,
+          "created": "2025-11-15T20:48:58.498Z",
+          "updated": "2025-11-15T20:48:58.498Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "phone-case-caribbean.jpg",
+          "path": "products/electronics/phone-case-caribbean.jpg",
+          "depth": 2,
+          "size": 714,
+          "created": "2025-11-16T03:09:32.492Z",
+          "updated": "2025-11-17T03:52:13.136Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "phone-stand-adjustable.jpg",
+          "path": "products/electronics/phone-stand-adjustable.jpg",
+          "depth": 2,
+          "size": 31882,
+          "created": "2025-11-15T20:48:52.023Z",
+          "updated": "2025-11-15T20:48:52.023Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "power-bank-solar.jpg",
+          "path": "products/electronics/power-bank-solar.jpg",
+          "depth": 2,
+          "size": 178106,
+          "created": "2025-11-15T20:48:51.956Z",
+          "updated": "2025-11-15T20:48:51.956Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "power-bank.jpg",
+          "path": "products/electronics/power-bank.jpg",
+          "depth": 2,
+          "size": 314828,
+          "created": "2025-11-15T20:49:03.814Z",
+          "updated": "2025-11-15T20:49:03.814Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "usb-cable-tropical.jpg",
+          "path": "products/electronics/usb-cable-tropical.jpg",
+          "depth": 2,
+          "size": 157878,
+          "created": "2025-11-15T20:48:52.102Z",
+          "updated": "2025-11-15T20:48:52.102Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "folder",
+          "name": "fashion",
+          "path": "products/fashion",
+          "depth": 1
+        },
+        {
+          "type": "file",
+          "name": "- caribbean-sundress-blue.jpg",
+          "path": "products/fashion/- caribbean-sundress-blue.jpg",
+          "depth": 2,
+          "size": 136196,
+          "created": "2025-11-15T20:24:25.546Z",
+          "updated": "2025-11-15T20:24:25.546Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "- caribbean-sundress-yellow.jpg",
+          "path": "products/fashion/- caribbean-sundress-yellow.jpg",
+          "depth": 2,
+          "size": 77892,
+          "created": "2025-11-15T20:24:24.996Z",
+          "updated": "2025-11-15T20:24:24.996Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "beach-sandals-brown.jpg",
+          "path": "products/fashion/beach-sandals-brown.jpg",
+          "depth": 2,
+          "size": 319168,
+          "created": "2025-11-15T20:24:25.712Z",
+          "updated": "2025-11-15T20:24:25.712Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "beach-sandals-colorful.jpg",
+          "path": "products/fashion/beach-sandals-colorful.jpg",
+          "depth": 2,
+          "size": 712,
+          "created": "2025-11-16T03:09:30.730Z",
+          "updated": "2025-11-17T03:52:11.025Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "caribbean-print-maxi-dress.jpg",
+          "path": "products/fashion/caribbean-print-maxi-dress.jpg",
+          "depth": 2,
+          "size": 716,
+          "created": "2025-11-16T03:09:28.730Z",
+          "updated": "2025-11-17T03:52:08.921Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "caribbean-sundress-yellow.jpg",
+          "path": "products/fashion/caribbean-sundress-yellow.jpg",
+          "depth": 2,
+          "size": 715,
+          "created": "2025-11-16T03:09:30.025Z",
+          "updated": "2025-11-17T03:52:10.343Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "cotton-tshirt-local.jpg",
+          "path": "products/fashion/cotton-tshirt-local.jpg",
+          "depth": 2,
+          "size": 60231,
+          "created": "2025-11-15T20:24:24.803Z",
+          "updated": "2025-11-15T20:24:24.803Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "cotton-tshirt-tourist.jpg",
+          "path": "products/fashion/cotton-tshirt-tourist.jpg",
+          "depth": 2,
+          "size": 78402,
+          "created": "2025-11-15T20:24:24.887Z",
+          "updated": "2025-11-15T20:24:24.887Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "embroidered-beach-cover-up.jpg",
+          "path": "products/fashion/embroidered-beach-cover-up.jpg",
+          "depth": 2,
+          "size": 716,
+          "created": "2025-11-16T03:09:29.313Z",
+          "updated": "2025-11-17T03:52:09.349Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "island-linen-shirt.jpg",
+          "path": "products/fashion/island-linen-shirt.jpg",
+          "depth": 2,
+          "size": 708,
+          "created": "2025-11-16T03:09:31.550Z",
+          "updated": "2025-11-17T03:52:11.857Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "mens-linen-shirt-blue.jpg",
+          "path": "products/fashion/mens-linen-shirt-blue.jpg",
+          "depth": 2,
+          "size": 83472,
+          "created": "2025-11-15T20:24:24.781Z",
+          "updated": "2025-11-15T20:24:24.781Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "mens-linen-shirt-white.jpg",
+          "path": "products/fashion/mens-linen-shirt-white.jpg",
+          "depth": 2,
+          "size": 61492,
+          "created": "2025-11-15T20:24:24.954Z",
+          "updated": "2025-11-15T20:24:24.954Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "palm-leaf-print-hat.jpg",
+          "path": "products/fashion/palm-leaf-print-hat.jpg",
+          "depth": 2,
+          "size": 709,
+          "created": "2025-11-16T03:09:29.627Z",
+          "updated": "2025-11-17T03:52:09.920Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "sarong-beach-wrap.jpg",
+          "path": "products/fashion/sarong-beach-wrap.jpg",
+          "depth": 2,
+          "size": 79526,
+          "created": "2025-11-15T20:24:25.080Z",
+          "updated": "2025-11-15T20:24:25.080Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "straw-hat-colored.jpg",
+          "path": "products/fashion/straw-hat-colored.jpg",
+          "depth": 2,
+          "size": 707,
+          "created": "2025-11-16T03:09:30.422Z",
+          "updated": "2025-11-17T03:52:10.673Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "straw-hat-natural.jpg",
+          "path": "products/fashion/straw-hat-natural.jpg",
+          "depth": 2,
+          "size": 477316,
+          "created": "2025-11-15T20:24:25.564Z",
+          "updated": "2025-11-15T20:24:25.564Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "traditional-madras-headwrap.jpg",
+          "path": "products/fashion/traditional-madras-headwrap.jpg",
+          "depth": 2,
+          "size": 717,
+          "created": "2025-11-16T03:09:31.864Z",
+          "updated": "2025-11-17T03:52:12.302Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "vibrant-caribbean-sundress.jpg",
+          "path": "products/fashion/vibrant-caribbean-sundress.jpg",
+          "depth": 2,
+          "size": 716,
+          "created": "2025-11-16T03:09:31.084Z",
+          "updated": "2025-11-17T03:52:11.511Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "womens-wrap-skirt.jpg",
+          "path": "products/fashion/womens-wrap-skirt.jpg",
+          "depth": 2,
+          "size": 52666,
+          "created": "2025-11-15T20:24:24.826Z",
+          "updated": "2025-11-15T20:24:24.826Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "folder",
+          "name": "food",
+          "path": "products/food",
+          "depth": 1
+        },
+        {
+          "type": "file",
+          "name": "artisan-bread-loaf.jpg",
+          "path": "products/food/artisan-bread-loaf.jpg",
+          "depth": 2,
+          "size": 705,
+          "created": "2025-11-16T03:09:40.707Z",
+          "updated": "2025-11-17T03:52:21.287Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "gourmet-pasta-sauce.jpg",
+          "path": "products/food/gourmet-pasta-sauce.jpg",
+          "depth": 2,
+          "size": 706,
+          "created": "2025-11-16T03:09:41.022Z",
+          "updated": "2025-11-17T03:52:21.651Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "organic-coffee-beans.jpg",
+          "path": "products/food/organic-coffee-beans.jpg",
+          "depth": 2,
+          "size": 707,
+          "created": "2025-11-16T03:09:40.065Z",
+          "updated": "2025-11-17T03:52:20.545Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "organic-honey.jpg",
+          "path": "products/food/organic-honey.jpg",
+          "depth": 2,
+          "size": 700,
+          "created": "2025-11-16T03:09:40.362Z",
+          "updated": "2025-11-17T03:52:20.835Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "folder",
+          "name": "produce",
+          "path": "products/produce",
+          "depth": 1
+        },
+        {
+          "type": "file",
+          "name": "authentic-jerk-seasoning.jpg",
+          "path": "products/produce/authentic-jerk-seasoning.jpg",
+          "depth": 2,
+          "size": 714,
+          "created": "2025-11-16T03:09:34.187Z",
+          "updated": "2025-11-17T03:52:14.791Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "breadfruit-whole.jpg",
+          "path": "products/produce/breadfruit-whole.jpg",
+          "depth": 2,
+          "size": 53186,
+          "created": "2025-11-15T21:06:37.347Z",
+          "updated": "2025-11-15T21:06:37.347Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "callaloo-bunch.jpg",
+          "path": "products/produce/callaloo-bunch.jpg",
+          "depth": 2,
+          "size": 244567,
+          "created": "2025-11-15T21:06:17.026Z",
+          "updated": "2025-11-15T21:06:17.026Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "coconut-young.jpg",
+          "path": "products/produce/coconut-young.jpg",
+          "depth": 2,
+          "size": 435265,
+          "created": "2025-11-15T21:06:37.629Z",
+          "updated": "2025-11-15T21:06:37.629Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "coffee.jpg",
+          "path": "products/produce/coffee.jpg",
+          "depth": 2,
+          "size": 35764,
+          "created": "2025-11-15T21:06:56.015Z",
+          "updated": "2025-11-15T21:06:56.015Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "dried-mango-slices.jpg",
+          "path": "products/produce/dried-mango-slices.jpg",
+          "depth": 2,
+          "size": 708,
+          "created": "2025-11-16T03:09:33.501Z",
+          "updated": "2025-11-17T03:52:14.132Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "fresh-caribbean-mangoes.jpg",
+          "path": "products/produce/fresh-caribbean-mangoes.jpg",
+          "depth": 2,
+          "size": 713,
+          "created": "2025-11-16T03:09:33.866Z",
+          "updated": "2025-11-17T03:52:14.460Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "fresh-plantains.jpg",
+          "path": "products/produce/fresh-plantains.jpg",
+          "depth": 2,
+          "size": 705,
+          "created": "2025-11-16T03:09:34.498Z",
+          "updated": "2025-11-17T03:52:15.123Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "fresh-scotch-bonnet-peppers.jpg",
+          "path": "products/produce/fresh-scotch-bonnet-peppers.jpg",
+          "depth": 2,
+          "size": 717,
+          "created": "2025-11-16T03:09:33.182Z",
+          "updated": "2025-11-17T03:52:13.777Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "fresh-starfruit-carambola.jpg",
+          "path": "products/produce/fresh-starfruit-carambola.jpg",
+          "depth": 2,
+          "size": 715,
+          "created": "2025-11-16T03:09:32.826Z",
+          "updated": "2025-11-17T03:52:13.449Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "ginger-root.jpg",
+          "path": "products/produce/ginger-root.jpg",
+          "depth": 2,
+          "size": 30122,
+          "created": "2025-11-15T21:06:37.231Z",
+          "updated": "2025-11-15T21:06:37.231Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "hot-pepper-scotch-bonnet.jpg",
+          "path": "products/produce/hot-pepper-scotch-bonnet.jpg",
+          "depth": 2,
+          "size": 54512,
+          "created": "2025-11-15T21:06:37.428Z",
+          "updated": "2025-11-15T21:06:37.428Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "island-curry-powder-blend.jpg",
+          "path": "products/produce/island-curry-powder-blend.jpg",
+          "depth": 2,
+          "size": 117532,
+          "created": "2025-11-16T03:09:34.986Z",
+          "updated": "2025-12-09T00:49:22.253Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "mango-fresh.jpg",
+          "path": "products/produce/mango-fresh.jpg",
+          "depth": 2,
+          "size": 26982,
+          "created": "2025-11-15T21:06:28.455Z",
+          "updated": "2025-11-15T21:06:28.455Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "pineapple-whole.jpg",
+          "path": "products/produce/pineapple-whole.jpg",
+          "depth": 2,
+          "size": 422250,
+          "created": "2025-11-15T21:06:17.096Z",
+          "updated": "2025-11-15T21:06:17.096Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "sweet-potato-local.jpg",
+          "path": "products/produce/sweet-potato-local.jpg",
+          "depth": 2,
+          "size": 74574,
+          "created": "2025-11-15T21:06:37.214Z",
+          "updated": "2025-11-15T21:06:37.214Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "folder",
+          "name": "smoothies",
+          "path": "products/smoothies",
+          "depth": 1
+        },
+        {
+          "type": "file",
+          "name": "coconut-banana-bliss.jpg",
+          "path": "products/smoothies/coconut-banana-bliss.jpg",
+          "depth": 2,
+          "size": 712,
+          "created": "2025-11-16T03:09:39.752Z",
+          "updated": "2025-11-17T03:52:19.988Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "coconut-water-bottle.jpg",
+          "path": "products/smoothies/coconut-water-bottle.jpg",
+          "depth": 2,
+          "size": 22927,
+          "created": "2025-11-15T21:54:47.088Z",
+          "updated": "2025-11-15T21:54:47.088Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "guava-paradise-bowl.jpg",
+          "path": "products/smoothies/guava-paradise-bowl.jpg",
+          "depth": 2,
+          "size": 711,
+          "created": "2025-11-16T03:09:38.818Z",
+          "updated": "2025-11-17T03:52:18.883Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "mango-passion-smoothie.jpg",
+          "path": "products/smoothies/mango-passion-smoothie.jpg",
+          "depth": 2,
+          "size": 714,
+          "created": "2025-11-16T03:09:39.157Z",
+          "updated": "2025-11-17T03:52:19.298Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "mango-smoothie-glass.jpg",
+          "path": "products/smoothies/mango-smoothie-glass.jpg",
+          "depth": 2,
+          "size": 36195,
+          "created": "2025-11-15T21:54:47.098Z",
+          "updated": "2025-11-15T21:54:47.098Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "pineapple-ginger-cooler.jpg",
+          "path": "products/smoothies/pineapple-ginger-cooler.jpg",
+          "depth": 2,
+          "size": 715,
+          "created": "2025-11-16T03:09:39.444Z",
+          "updated": "2025-11-17T03:52:19.665Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "pineapple-smoothie-bottle.jpg",
+          "path": "products/smoothies/pineapple-smoothie-bottle.jpg",
+          "depth": 2,
+          "size": 12908,
+          "created": "2025-11-15T21:54:48.970Z",
+          "updated": "2025-11-15T21:54:48.970Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "soursop-passion-fruit-blend.jpg",
+          "path": "products/smoothies/soursop-passion-fruit-blend.jpg",
+          "depth": 2,
+          "size": 719,
+          "created": "2025-11-16T03:09:38.148Z",
+          "updated": "2025-11-17T03:52:18.155Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "tamarind-ginger-tea.jpg",
+          "path": "products/smoothies/tamarind-ginger-tea.jpg",
+          "depth": 2,
+          "size": 711,
+          "created": "2025-11-16T03:09:38.497Z",
+          "updated": "2025-11-17T03:52:18.524Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "file",
+          "name": "tropical-fruit-juice.jpg",
+          "path": "products/smoothies/tropical-fruit-juice.jpg",
+          "depth": 2,
+          "size": 23560,
+          "created": "2025-11-15T21:54:47.175Z",
+          "updated": "2025-11-15T21:54:47.175Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "folder",
+          "name": "users",
+          "path": "users",
+          "depth": 0
+        },
+        {
+          "type": "file",
+          "name": ".emptyFolderPlaceholder",
+          "path": "users/.emptyFolderPlaceholder",
+          "depth": 1,
+          "size": 0,
+          "created": "2025-12-31T19:47:45.297Z",
+          "updated": "2025-12-31T19:47:45.297Z",
+          "mimetype": "application/octet-stream"
+        },
+        {
+          "type": "folder",
+          "name": "vendors",
+          "path": "vendors",
+          "depth": 0
+        },
+        {
+          "type": "folder",
+          "name": "avatars",
+          "path": "vendors/avatars",
+          "depth": 1
+        },
+        {
+          "type": "file",
+          "name": "vendor-avatar-1.jpg",
+          "path": "vendors/avatars/vendor-avatar-1.jpg",
+          "depth": 2,
+          "size": 52524,
+          "created": "2025-11-16T01:30:18.984Z",
+          "updated": "2025-11-16T01:30:18.984Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "vendor-avatar-2.jpg",
+          "path": "vendors/avatars/vendor-avatar-2.jpg",
+          "depth": 2,
+          "size": 45183,
+          "created": "2025-11-16T01:30:18.922Z",
+          "updated": "2025-11-16T01:30:18.922Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "folder",
+          "name": "banners",
+          "path": "vendors/banners",
+          "depth": 1
+        },
+        {
+          "type": "file",
+          "name": "store-banner-crafts.jpg",
+          "path": "vendors/banners/store-banner-crafts.jpg",
+          "depth": 2,
+          "size": 36329,
+          "created": "2025-11-16T01:29:56.363Z",
+          "updated": "2025-11-16T01:29:56.363Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "store-banner-electronics.jpg",
+          "path": "vendors/banners/store-banner-electronics.jpg",
+          "depth": 2,
+          "size": 114230,
+          "created": "2025-11-16T01:30:03.058Z",
+          "updated": "2025-11-16T01:30:03.058Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "store-banner-fashion.jpg",
+          "path": "vendors/banners/store-banner-fashion.jpg",
+          "depth": 2,
+          "size": 143142,
+          "created": "2025-11-16T01:30:03.155Z",
+          "updated": "2025-11-16T01:30:03.155Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "store-banner-general.jpg",
+          "path": "vendors/banners/store-banner-general.jpg",
+          "depth": 2,
+          "size": 64406,
+          "created": "2025-11-16T01:29:56.372Z",
+          "updated": "2025-11-16T01:29:56.372Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "store-banner-produce.jpg",
+          "path": "vendors/banners/store-banner-produce.jpg",
+          "depth": 2,
+          "size": 102278,
+          "created": "2025-11-16T01:30:03.960Z",
+          "updated": "2025-11-16T01:30:03.960Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "store-banner-smoothies.jpg",
+          "path": "vendors/banners/store-banner-smoothies.jpg",
+          "depth": 2,
+          "size": 56815,
+          "created": "2025-11-16T01:29:56.306Z",
+          "updated": "2025-11-16T01:29:56.306Z",
+          "mimetype": "image/jpeg"
+        }
+      ]
+    },
+    {
+      "name": "avatar",
+      "id": "avatar",
+      "public": true,
+      "stats": {
+        "totalFolders": 0,
+        "totalFiles": 3,
+        "totalSize": 243772,
+        "byType": {
+          "jpg": 2,
+          "webp": 1
+        },
+        "byFolder": {
+          "root": 3
+        }
+      },
+      "items": [
+        {
+          "type": "file",
+          "name": "0d5c7bcc-10b2-4e45-8ab9-37ed6f00136a-1763185240731.jpg",
+          "path": "0d5c7bcc-10b2-4e45-8ab9-37ed6f00136a-1763185240731.jpg",
+          "depth": 0,
+          "size": 133602,
+          "created": "2025-11-15T05:40:41.389Z",
+          "updated": "2025-11-15T05:40:41.389Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "0d5c7bcc-10b2-4e45-8ab9-37ed6f00136a-1763191480571.jpg",
+          "path": "0d5c7bcc-10b2-4e45-8ab9-37ed6f00136a-1763191480571.jpg",
+          "depth": 0,
+          "size": 85008,
+          "created": "2025-11-15T07:24:41.684Z",
+          "updated": "2025-11-15T07:24:41.684Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "0d5c7bcc-10b2-4e45-8ab9-37ed6f00136a-1763191940610.webp",
+          "path": "0d5c7bcc-10b2-4e45-8ab9-37ed6f00136a-1763191940610.webp",
+          "depth": 0,
+          "size": 25162,
+          "created": "2025-11-15T07:32:21.594Z",
+          "updated": "2025-11-15T07:32:21.594Z",
+          "mimetype": "image/jpeg"
+        }
+      ]
+    },
+    {
+      "name": "listings-images",
+      "id": "listings-images",
+      "public": true,
+      "stats": {
+        "totalFolders": 57,
+        "totalFiles": 40,
+        "totalSize": 2892884,
+        "byType": {
+          "emptyFolderPlaceholder": 1,
+          "jpg": 38,
+          "webp": 1
+        },
+        "byFolder": {
+          "products": 3,
+          "vendors": 36,
+          "root": 1
+        }
+      },
+      "items": [
+        {
+          "type": "folder",
+          "name": "products",
+          "path": "products",
+          "depth": 0
+        },
+        {
+          "type": "folder",
+          "name": "Untitled folder",
+          "path": "products/Untitled folder",
+          "depth": 1
+        },
+        {
+          "type": "file",
+          "name": ".emptyFolderPlaceholder",
+          "path": "products/Untitled folder/.emptyFolderPlaceholder",
+          "depth": 2,
+          "size": 0,
+          "created": "2025-12-15T01:06:06.836Z",
+          "updated": "2025-12-15T01:06:06.836Z",
+          "mimetype": "application/octet-stream"
+        },
+        {
+          "type": "folder",
+          "name": "island-curry-powder-blend",
+          "path": "products/island-curry-powder-blend",
+          "depth": 1
+        },
+        {
+          "type": "folder",
+          "name": "thumbnails",
+          "path": "products/island-curry-powder-blend/thumbnails",
+          "depth": 2
+        },
+        {
+          "type": "file",
+          "name": "thumb.jpg",
+          "path": "products/island-curry-powder-blend/thumbnails/thumb.jpg",
+          "depth": 3,
+          "size": 11856,
+          "created": "2025-12-09T00:12:21.020Z",
+          "updated": "2025-12-09T00:12:21.020Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "products/island-curry-powder-blend/main.jpg",
+          "depth": 2,
+          "size": 117532,
+          "created": "2025-12-09T00:12:13.692Z",
+          "updated": "2025-12-09T00:12:13.692Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "folder",
+          "name": "vendors",
+          "path": "vendors",
+          "depth": 0
+        },
+        {
+          "type": "folder",
+          "name": "0f134cb6-9ee5-4e4d-ba50-528cb55d3ca3",
+          "path": "vendors/0f134cb6-9ee5-4e4d-ba50-528cb55d3ca3",
+          "depth": 1
+        },
+        {
+          "type": "folder",
+          "name": "products",
+          "path": "vendors/0f134cb6-9ee5-4e4d-ba50-528cb55d3ca3/products",
+          "depth": 2
+        },
+        {
+          "type": "folder",
+          "name": "bluetooth-speaker",
+          "path": "vendors/0f134cb6-9ee5-4e4d-ba50-528cb55d3ca3/products/bluetooth-speaker",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/0f134cb6-9ee5-4e4d-ba50-528cb55d3ca3/products/bluetooth-speaker/main.jpg",
+          "depth": 4,
+          "size": 73124,
+          "created": "2025-12-15T01:38:25.938Z",
+          "updated": "2025-12-15T03:38:26.889Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "folder",
+          "name": "485aacb6-4418-4467-bbbe-064311b847e6",
+          "path": "vendors/485aacb6-4418-4467-bbbe-064311b847e6",
+          "depth": 1
+        },
+        {
+          "type": "folder",
+          "name": "products",
+          "path": "vendors/485aacb6-4418-4467-bbbe-064311b847e6/products",
+          "depth": 2
+        },
+        {
+          "type": "folder",
+          "name": "coconut-banana-bliss",
+          "path": "vendors/485aacb6-4418-4467-bbbe-064311b847e6/products/coconut-banana-bliss",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/485aacb6-4418-4467-bbbe-064311b847e6/products/coconut-banana-bliss/main.jpg",
+          "depth": 4,
+          "size": 712,
+          "created": "2025-12-15T03:05:05.122Z",
+          "updated": "2025-12-15T03:05:05.122Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "folder",
+          "name": "guava-paradise-bowl",
+          "path": "vendors/485aacb6-4418-4467-bbbe-064311b847e6/products/guava-paradise-bowl",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/485aacb6-4418-4467-bbbe-064311b847e6/products/guava-paradise-bowl/main.jpg",
+          "depth": 4,
+          "size": 711,
+          "created": "2025-12-15T03:04:04.724Z",
+          "updated": "2025-12-15T03:04:51.154Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "folder",
+          "name": "mango-passion-smoothie",
+          "path": "vendors/485aacb6-4418-4467-bbbe-064311b847e6/products/mango-passion-smoothie",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/485aacb6-4418-4467-bbbe-064311b847e6/products/mango-passion-smoothie/main.jpg",
+          "depth": 4,
+          "size": 714,
+          "created": "2025-12-15T03:05:14.205Z",
+          "updated": "2025-12-15T03:05:14.205Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "folder",
+          "name": "pineapple-ginger-cooler",
+          "path": "vendors/485aacb6-4418-4467-bbbe-064311b847e6/products/pineapple-ginger-cooler",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/485aacb6-4418-4467-bbbe-064311b847e6/products/pineapple-ginger-cooler/main.jpg",
+          "depth": 4,
+          "size": 715,
+          "created": "2025-12-15T03:04:59.243Z",
+          "updated": "2025-12-15T03:04:59.243Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "folder",
+          "name": "soursop-passion-fruit-blend",
+          "path": "vendors/485aacb6-4418-4467-bbbe-064311b847e6/products/soursop-passion-fruit-blend",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/485aacb6-4418-4467-bbbe-064311b847e6/products/soursop-passion-fruit-blend/main.jpg",
+          "depth": 4,
+          "size": 719,
+          "created": "2025-12-15T03:05:15.479Z",
+          "updated": "2025-12-15T03:05:15.479Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "folder",
+          "name": "tamarind-ginger-tea",
+          "path": "vendors/485aacb6-4418-4467-bbbe-064311b847e6/products/tamarind-ginger-tea",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/485aacb6-4418-4467-bbbe-064311b847e6/products/tamarind-ginger-tea/main.jpg",
+          "depth": 4,
+          "size": 711,
+          "created": "2025-12-15T03:04:05.998Z",
+          "updated": "2025-12-15T03:04:52.111Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "folder",
+          "name": "72db3dcb-8384-49df-ae3a-ad4106371917",
+          "path": "vendors/72db3dcb-8384-49df-ae3a-ad4106371917",
+          "depth": 1
+        },
+        {
+          "type": "folder",
+          "name": "products",
+          "path": "vendors/72db3dcb-8384-49df-ae3a-ad4106371917/products",
+          "depth": 2
+        },
+        {
+          "type": "folder",
+          "name": "authentic-jerk-seasoning",
+          "path": "vendors/72db3dcb-8384-49df-ae3a-ad4106371917/products/authentic-jerk-seasoning",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/72db3dcb-8384-49df-ae3a-ad4106371917/products/authentic-jerk-seasoning/main.jpg",
+          "depth": 4,
+          "size": 311068,
+          "created": "2025-12-15T03:05:06.228Z",
+          "updated": "2025-12-15T03:38:25.571Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "folder",
+          "name": "dried-mango-slices",
+          "path": "vendors/72db3dcb-8384-49df-ae3a-ad4106371917/products/dried-mango-slices",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/72db3dcb-8384-49df-ae3a-ad4106371917/products/dried-mango-slices/main.jpg",
+          "depth": 4,
+          "size": 708,
+          "created": "2025-12-15T03:04:54.461Z",
+          "updated": "2025-12-15T03:04:54.461Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "folder",
+          "name": "fresh-caribbean-mangoes",
+          "path": "vendors/72db3dcb-8384-49df-ae3a-ad4106371917/products/fresh-caribbean-mangoes",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/72db3dcb-8384-49df-ae3a-ad4106371917/products/fresh-caribbean-mangoes/main.jpg",
+          "depth": 4,
+          "size": 713,
+          "created": "2025-12-15T03:05:01.994Z",
+          "updated": "2025-12-15T03:05:01.994Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "folder",
+          "name": "fresh-plantains",
+          "path": "vendors/72db3dcb-8384-49df-ae3a-ad4106371917/products/fresh-plantains",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/72db3dcb-8384-49df-ae3a-ad4106371917/products/fresh-plantains/main.jpg",
+          "depth": 4,
+          "size": 705,
+          "created": "2025-12-15T03:05:03.620Z",
+          "updated": "2025-12-15T03:05:03.620Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "folder",
+          "name": "fresh-scotch-bonnet-peppers",
+          "path": "vendors/72db3dcb-8384-49df-ae3a-ad4106371917/products/fresh-scotch-bonnet-peppers",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/72db3dcb-8384-49df-ae3a-ad4106371917/products/fresh-scotch-bonnet-peppers/main.jpg",
+          "depth": 4,
+          "size": 717,
+          "created": "2025-12-15T03:03:54.868Z",
+          "updated": "2025-12-15T03:04:44.000Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "folder",
+          "name": "fresh-starfruit-carambola",
+          "path": "vendors/72db3dcb-8384-49df-ae3a-ad4106371917/products/fresh-starfruit-carambola",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/72db3dcb-8384-49df-ae3a-ad4106371917/products/fresh-starfruit-carambola/main.jpg",
+          "depth": 4,
+          "size": 715,
+          "created": "2025-12-15T03:04:03.475Z",
+          "updated": "2025-12-15T03:04:50.222Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "folder",
+          "name": "island-curry-powder-blend",
+          "path": "vendors/72db3dcb-8384-49df-ae3a-ad4106371917/products/island-curry-powder-blend",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/72db3dcb-8384-49df-ae3a-ad4106371917/products/island-curry-powder-blend/main.jpg",
+          "depth": 4,
+          "size": 117532,
+          "created": "2025-12-15T02:07:32.048Z",
+          "updated": "2025-12-15T03:05:09.183Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "folder",
+          "name": "73edbd84-62ff-4fcc-be15-8e45f8a6d966",
+          "path": "vendors/73edbd84-62ff-4fcc-be15-8e45f8a6d966",
+          "depth": 1
+        },
+        {
+          "type": "folder",
+          "name": "products",
+          "path": "vendors/73edbd84-62ff-4fcc-be15-8e45f8a6d966/products",
+          "depth": 2
+        },
+        {
+          "type": "folder",
+          "name": "caribbean-bead-necklace",
+          "path": "vendors/73edbd84-62ff-4fcc-be15-8e45f8a6d966/products/caribbean-bead-necklace",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/73edbd84-62ff-4fcc-be15-8e45f8a6d966/products/caribbean-bead-necklace/main.jpg",
+          "depth": 4,
+          "size": 712,
+          "created": "2025-12-15T03:05:10.335Z",
+          "updated": "2025-12-15T03:05:10.335Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "folder",
+          "name": "caribbean-dreamcatcher",
+          "path": "vendors/73edbd84-62ff-4fcc-be15-8e45f8a6d966/products/caribbean-dreamcatcher",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/73edbd84-62ff-4fcc-be15-8e45f8a6d966/products/caribbean-dreamcatcher/main.jpg",
+          "depth": 4,
+          "size": 711,
+          "created": "2025-12-15T03:04:53.289Z",
+          "updated": "2025-12-15T03:04:53.289Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "folder",
+          "name": "handwoven-palm-basket",
+          "path": "vendors/73edbd84-62ff-4fcc-be15-8e45f8a6d966/products/handwoven-palm-basket",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/73edbd84-62ff-4fcc-be15-8e45f8a6d966/products/handwoven-palm-basket/main.jpg",
+          "depth": 4,
+          "size": 710,
+          "created": "2025-12-15T03:05:12.852Z",
+          "updated": "2025-12-15T03:05:12.852Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "folder",
+          "name": "recycled-glass-wind-chimes",
+          "path": "vendors/73edbd84-62ff-4fcc-be15-8e45f8a6d966/products/recycled-glass-wind-chimes",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/73edbd84-62ff-4fcc-be15-8e45f8a6d966/products/recycled-glass-wind-chimes/main.jpg",
+          "depth": 4,
+          "size": 715,
+          "created": "2025-12-15T03:03:56.060Z",
+          "updated": "2025-12-15T03:04:44.988Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "folder",
+          "name": "traditional-calabash-bowl",
+          "path": "vendors/73edbd84-62ff-4fcc-be15-8e45f8a6d966/products/traditional-calabash-bowl",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/73edbd84-62ff-4fcc-be15-8e45f8a6d966/products/traditional-calabash-bowl/main.jpg",
+          "depth": 4,
+          "size": 714,
+          "created": "2025-12-15T03:05:07.530Z",
+          "updated": "2025-12-15T03:05:07.530Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "folder",
+          "name": "woven-seagrass-placemats",
+          "path": "vendors/73edbd84-62ff-4fcc-be15-8e45f8a6d966/products/woven-seagrass-placemats",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/73edbd84-62ff-4fcc-be15-8e45f8a6d966/products/woven-seagrass-placemats/main.jpg",
+          "depth": 4,
+          "size": 713,
+          "created": "2025-12-15T03:03:53.266Z",
+          "updated": "2025-12-15T03:04:42.959Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "folder",
+          "name": "834883fd-b714-42b6-8480-a52956faf3de",
+          "path": "vendors/834883fd-b714-42b6-8480-a52956faf3de",
+          "depth": 1
+        },
+        {
+          "type": "folder",
+          "name": "products",
+          "path": "vendors/834883fd-b714-42b6-8480-a52956faf3de/products",
+          "depth": 2
+        },
+        {
+          "type": "folder",
+          "name": "smart-fitness-tracker",
+          "path": "vendors/834883fd-b714-42b6-8480-a52956faf3de/products/smart-fitness-tracker",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/834883fd-b714-42b6-8480-a52956faf3de/products/smart-fitness-tracker/main.jpg",
+          "depth": 4,
+          "size": 26074,
+          "created": "2025-12-15T03:04:00.513Z",
+          "updated": "2025-12-15T03:04:48.275Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "folder",
+          "name": "a1bc8ec0-7de9-420b-82a5-e03766550def",
+          "path": "vendors/a1bc8ec0-7de9-420b-82a5-e03766550def",
+          "depth": 1
+        },
+        {
+          "type": "folder",
+          "name": "products",
+          "path": "vendors/a1bc8ec0-7de9-420b-82a5-e03766550def/products",
+          "depth": 2
+        },
+        {
+          "type": "folder",
+          "name": "artisan-bread-loaf",
+          "path": "vendors/a1bc8ec0-7de9-420b-82a5-e03766550def/products/artisan-bread-loaf",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/a1bc8ec0-7de9-420b-82a5-e03766550def/products/artisan-bread-loaf/main.jpg",
+          "depth": 4,
+          "size": 132700,
+          "created": "2025-12-15T03:18:12.489Z",
+          "updated": "2025-12-15T03:38:23.717Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "folder",
+          "name": "portable-power-bank",
+          "path": "vendors/a1bc8ec0-7de9-420b-82a5-e03766550def/products/portable-power-bank",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/a1bc8ec0-7de9-420b-82a5-e03766550def/products/portable-power-bank/main.jpg",
+          "depth": 4,
+          "size": 314828,
+          "created": "2025-12-15T03:03:58.928Z",
+          "updated": "2025-12-15T03:04:47.325Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "folder",
+          "name": "premium-wireless-headphones",
+          "path": "vendors/a1bc8ec0-7de9-420b-82a5-e03766550def/products/premium-wireless-headphones",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/a1bc8ec0-7de9-420b-82a5-e03766550def/products/premium-wireless-headphones/main.jpg",
+          "depth": 4,
+          "size": 138134,
+          "created": "2025-12-15T03:04:02.328Z",
+          "updated": "2025-12-15T03:04:49.256Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "folder",
+          "name": "bb36fe4c-6489-46df-98e7-e0917367d6d1",
+          "path": "vendors/bb36fe4c-6489-46df-98e7-e0917367d6d1",
+          "depth": 1
+        },
+        {
+          "type": "folder",
+          "name": "products",
+          "path": "vendors/bb36fe4c-6489-46df-98e7-e0917367d6d1/products",
+          "depth": 2
+        },
+        {
+          "type": "folder",
+          "name": "caribbean-print-maxi-dress",
+          "path": "vendors/bb36fe4c-6489-46df-98e7-e0917367d6d1/products/caribbean-print-maxi-dress",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/bb36fe4c-6489-46df-98e7-e0917367d6d1/products/caribbean-print-maxi-dress/main.jpg",
+          "depth": 4,
+          "size": 716,
+          "created": "2025-12-15T03:05:11.591Z",
+          "updated": "2025-12-15T03:05:11.591Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "folder",
+          "name": "embroidered-beach-cover-up",
+          "path": "vendors/bb36fe4c-6489-46df-98e7-e0917367d6d1/products/embroidered-beach-cover-up",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/bb36fe4c-6489-46df-98e7-e0917367d6d1/products/embroidered-beach-cover-up/main.jpg",
+          "depth": 4,
+          "size": 716,
+          "created": "2025-12-15T03:04:55.625Z",
+          "updated": "2025-12-15T03:04:55.625Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "folder",
+          "name": "island-linen-shirt",
+          "path": "vendors/bb36fe4c-6489-46df-98e7-e0917367d6d1/products/island-linen-shirt",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/bb36fe4c-6489-46df-98e7-e0917367d6d1/products/island-linen-shirt/main.jpg",
+          "depth": 4,
+          "size": 708,
+          "created": "2025-12-15T03:05:00.351Z",
+          "updated": "2025-12-15T03:05:00.351Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "folder",
+          "name": "palm-leaf-print-hat",
+          "path": "vendors/bb36fe4c-6489-46df-98e7-e0917367d6d1/products/palm-leaf-print-hat",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/bb36fe4c-6489-46df-98e7-e0917367d6d1/products/palm-leaf-print-hat/main.jpg",
+          "depth": 4,
+          "size": 709,
+          "created": "2025-12-15T03:04:58.070Z",
+          "updated": "2025-12-15T03:04:58.070Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "folder",
+          "name": "traditional-madras-headwrap",
+          "path": "vendors/bb36fe4c-6489-46df-98e7-e0917367d6d1/products/traditional-madras-headwrap",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/bb36fe4c-6489-46df-98e7-e0917367d6d1/products/traditional-madras-headwrap/main.jpg",
+          "depth": 4,
+          "size": 717,
+          "created": "2025-12-15T03:05:16.687Z",
+          "updated": "2025-12-15T03:05:16.687Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "folder",
+          "name": "vibrant-caribbean-sundress",
+          "path": "vendors/bb36fe4c-6489-46df-98e7-e0917367d6d1/products/vibrant-caribbean-sundress",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/bb36fe4c-6489-46df-98e7-e0917367d6d1/products/vibrant-caribbean-sundress/main.jpg",
+          "depth": 4,
+          "size": 716,
+          "created": "2025-12-15T03:04:56.893Z",
+          "updated": "2025-12-15T03:04:56.893Z",
+          "mimetype": "image/svg+xml"
+        },
+        {
+          "type": "folder",
+          "name": "undefined",
+          "path": "vendors/undefined",
+          "depth": 1
+        },
+        {
+          "type": "folder",
+          "name": "products",
+          "path": "vendors/undefined/products",
+          "depth": 2
+        },
+        {
+          "type": "folder",
+          "name": "gourmet-pasta-sauce",
+          "path": "vendors/undefined/products/gourmet-pasta-sauce",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/undefined/products/gourmet-pasta-sauce/main.jpg",
+          "depth": 4,
+          "size": 953033,
+          "created": "2025-12-15T01:41:27.125Z",
+          "updated": "2025-12-15T01:41:27.125Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "folder",
+          "name": "organic-coffee-beans",
+          "path": "vendors/undefined/products/organic-coffee-beans",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/undefined/products/organic-coffee-beans/main.jpg",
+          "depth": 4,
+          "size": 35764,
+          "created": "2025-12-15T01:41:21.407Z",
+          "updated": "2025-12-15T01:41:21.407Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "folder",
+          "name": "organic-honey",
+          "path": "vendors/undefined/products/organic-honey",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/undefined/products/organic-honey/main.jpg",
+          "depth": 4,
+          "size": 133602,
+          "created": "2025-12-15T01:41:25.059Z",
+          "updated": "2025-12-15T01:41:25.059Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "folder",
+          "name": "portable-power-bank",
+          "path": "vendors/undefined/products/portable-power-bank",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/undefined/products/portable-power-bank/main.jpg",
+          "depth": 4,
+          "size": 314828,
+          "created": "2025-12-15T01:41:28.657Z",
+          "updated": "2025-12-15T01:41:28.657Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "folder",
+          "name": "premium-wireless-headphones",
+          "path": "vendors/undefined/products/premium-wireless-headphones",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/undefined/products/premium-wireless-headphones/main.jpg",
+          "depth": 4,
+          "size": 138134,
+          "created": "2025-12-15T01:41:23.883Z",
+          "updated": "2025-12-15T01:41:23.883Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "folder",
+          "name": "smart-fitness-tracker",
+          "path": "vendors/undefined/products/smart-fitness-tracker",
+          "depth": 3
+        },
+        {
+          "type": "file",
+          "name": "main.jpg",
+          "path": "vendors/undefined/products/smart-fitness-tracker/main.jpg",
+          "depth": 4,
+          "size": 26074,
+          "created": "2025-12-15T01:41:22.507Z",
+          "updated": "2025-12-15T01:41:22.507Z",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "type": "file",
+          "name": "bread.webp",
+          "path": "bread.webp",
+          "depth": 0,
+          "size": 32204,
+          "created": "2025-11-15T04:06:35.707Z",
+          "updated": "2025-11-15T04:06:35.707Z",
+          "mimetype": "image/webp"
+        }
+      ]
+    }
+  ]
+}

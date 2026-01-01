@@ -2,43 +2,22 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Heart } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/components/ui/use-toast';
-import { resolveProductImageUrl, hasRealImage } from '@/lib/productImageResolver';
-import { supabase } from '@/lib/customSupabaseClient';
-
+import LazyImage from '@/components/ui/lazy-image';
+import { getProductImageUrl, PLACEHOLDER_IMAGE } from '@/lib/imageUtils';
 import StarRating from './reviews/StarRating';
-
-const placeholderImage = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300'><rect width='100%' height='100%' fill='%23eef2ff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23728bd6' font-family='Arial,Helvetica,sans-serif' font-size='20'>No Image</text></svg>";
-
-const getImageUrl = (product) => {
-  if (!product) return placeholderImage;
-  
-  // Try new vendor-organized storage resolver first
-  try {
-    const resolvedUrl = resolveProductImageUrl(product, supabase, {
-      fallbackPlaceholder: true,
-      placeholderService: 'dicebear',
-      size: 400
-    });
-    if (resolvedUrl) return resolvedUrl;
-  } catch (err) {
-    console.warn('Error resolving image from storage:', err.message);
-  }
-
-  // Fallback to legacy logic
-  const variantImage = product?.product_variants?.[0]?.images?.[0];
-  const imageUrl = variantImage || product.image_url || (product.images && product.images[0]) || (product.gallery_images && product.gallery_images[0]) || placeholderImage;
-  return imageUrl;
-};
 
 const formatPrice = (cents, currency = 'USD') => {
   if (cents == null) return null;
+  // If cents is already a dollar amount (not cents), don't divide by 100
+  const isCents = cents > 1000; // Assume values > 1000 are cents
+  const dollarAmount = isCents ? cents / 100 : cents;
   try {
-    return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(cents / 100);
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(dollarAmount);
   } catch (e) {
-    return `$${(cents / 100).toFixed(2)}`;
+    return `$${dollarAmount.toFixed(2)}`;
   }
 };
 
@@ -46,64 +25,54 @@ const ProductCard = ({ product, index }) => {
   const { addToCart } = useCart();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [imgLoaded, setImgLoaded] = useState(false);
+  const [isWishlisted, setIsWishlisted] = useState(false);
 
   const currency = product?.currency || 'USD';
-  // If __effective_price was computed by ProductsList for filtering/sorting, use it; otherwise compute from variants/base_price
-  const displayPrice = (() => {
-    // Prefer __effective_price (from ProductsList client-side filtering/sorting) which is in cents
-    if (product?.__effective_price != null && !Number.isNaN(Number(product.__effective_price))) {
-      const cents = Number(product.__effective_price);
-      return formatPrice(cents, product?.currency || currency);
-    }
-
-    const firstVariant = Array.isArray(product.product_variants) && product.product_variants.length > 0
+  
+  // Get the resolved image URL using the utility
+  const imageUrl = useMemo(() => getProductImageUrl(product), [product]);
+  
+  // Prefer variant price (first variant) if present, then product.base_price.
+  const displayPrice = useMemo(() => {
+    const firstVariant = Array.isArray(product?.product_variants) && product.product_variants.length > 0
       ? product.product_variants[0]
       : null;
 
     const variantPrice = firstVariant && (firstVariant.price_in_cents ?? firstVariant.price ?? firstVariant.price_cents);
     if (variantPrice != null && !Number.isNaN(Number(variantPrice))) {
       const num = Number(variantPrice);
-      // Normalize heuristic: treat integer values as cents, and values with decimals as dollars
-      const cents = Number.isInteger(num) ? Math.round(num) : Math.round(num * 100);
+      const cents = num > 1000 ? Math.round(num) : Math.round(num * 100);
       return formatPrice(cents, product.currency || currency);
     }
 
-    if (product.base_price != null && !Number.isNaN(Number(product.base_price))) {
+    if (product?.base_price != null && !Number.isNaN(Number(product.base_price))) {
       const bp = Number(product.base_price);
-      const cents = Number.isInteger(bp) ? Math.round(bp) : Math.round(bp * 100);
-      return formatPrice(cents, product.currency || currency);
+      // base_price is already in dollars from vendor_products view
+      return formatPrice(bp, product.currency || currency);
     }
 
     return null;
-  })();
-  const resolvedImage = getImageUrl(product);
-
-  React.useEffect(() => {
-    try {
-      // eslint-disable-next-line no-console
-      console.log(`Resolved image for product ${product?.id}:`, resolvedImage);
-      if (!resolvedImage || resolvedImage === placeholderImage) {
-        // log full product object when resolution falls back to placeholder
-        // eslint-disable-next-line no-console
-        console.log('Product object causing placeholder:', product);
-      }
-      console.log(`Product ${product?.id} featured status:`, product?.featured); // Added log
-    } catch (e) {}
-  }, [product, resolvedImage]);
+  }, [product, currency]);
+  
+  const rating = product?.product_ratings?.[0];
+  const stockCount = product?.product_variants?.[0]?.stock_count ?? product?.stock_count;
+  const isOutOfStock = stockCount !== undefined && stockCount <= 0;
 
   const handleAddToCart = useCallback(async (e) => {
     e.preventDefault();
     e.stopPropagation();
 
+    if (isOutOfStock) {
+      toast({
+        variant: "destructive",
+        title: "Out of Stock",
+        description: "This item is currently unavailable.",
+      });
+      return;
+    }
+
     try {
-      const variant = product.product_variants?.[0] || {
-        id: product.id,
-        title: product.title,
-        price_in_cents: product.base_price,
-        currency: product.currency
-      };
-      await addToCart(product, variant, 1);
+      await addToCart(product, 1);
       toast({
         title: "Added to Cart! 🛒",
         description: `${product.title} has been added to your cart.`,
@@ -115,7 +84,19 @@ const ProductCard = ({ product, index }) => {
         description: error.message,
       });
     }
-  }, [product, addToCart, toast]);
+  }, [product, addToCart, toast, isOutOfStock]);
+
+  const handleWishlistToggle = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsWishlisted(!isWishlisted);
+    toast({
+      title: isWishlisted ? "Removed from Wishlist" : "Added to Wishlist! ❤️",
+      description: isWishlisted 
+        ? `${product.title} has been removed from your wishlist.`
+        : `${product.title} has been added to your wishlist.`,
+    });
+  }, [product, isWishlisted, toast]);
 
   return (
     <motion.div
@@ -123,76 +104,92 @@ const ProductCard = ({ product, index }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.05 }}
     >
-      <div className="bg-white border border-gray-200 p-4 rounded hover:shadow-md transition-shadow">
+      <div className="bg-card border border-border p-4 rounded-lg hover:shadow-lg transition-all duration-300 relative group">
+        {/* Wishlist Button */}
+        <button
+          onClick={handleWishlistToggle}
+          className="absolute top-6 right-6 z-10 p-2 rounded-full bg-white/80 hover:bg-white shadow-sm transition-all duration-200"
+          aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+        >
+          <Heart 
+            className={`w-5 h-5 transition-colors ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-400 hover:text-red-400'}`} 
+          />
+        </button>
+
         <Link to={`/product/${product.id}`} className="block">
-          <div className="aspect-w-1 aspect-h-1 mb-4">
-          <div className="aspect-w-1 aspect-h-1 mb-4 relative">
-            {!imgLoaded && (
-              <div className="w-full h-48 bg-gradient-to-r from-slate-100 to-slate-50 animate-pulse rounded-md flex items-center justify-center">
-                <div className="text-slate-400">Loading image…</div>
-              </div>
-            )}
-            <img
-              src={getImageUrl(product)}
-              alt={product.title}
-              onLoad={() => setImgLoaded(true)}
-              onError={(e) => { e.currentTarget.src = placeholderImage; setImgLoaded(true); }}
-              className={`w-full h-48 object-cover rounded-md ${imgLoaded ? 'block' : 'hidden'}`}
+          <div className="aspect-w-1 aspect-h-1 mb-4 relative overflow-hidden rounded-md">
+            <LazyImage
+              src={imageUrl}
+              alt={product.title || 'Product image'}
+              className="w-full h-48 object-cover rounded-md group-hover:scale-105 transition-transform duration-300"
+              placeholder={product.title}
             />
             {product.featured && (
-              <div className="absolute top-3 left-3 bg-yellow-300 text-black px-3 py-1 rounded-full text-sm font-bold">Featured</div>
+              <div className="absolute top-3 left-3 bg-yellow-400 text-black px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                Featured
+              </div>
+            )}
+            {isOutOfStock && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                  Out of Stock
+                </span>
+              </div>
+            )}
+            {stockCount > 0 && stockCount <= 5 && (
+              <div className="absolute bottom-3 left-3 bg-orange-500 text-white px-2 py-1 rounded text-xs font-medium">
+                Only {stockCount} left!
+              </div>
             )}
           </div>
-          </div>
-          <h3 className="text-base font-medium text-gray-900 hover:text-blue-600 line-clamp-2 mb-1">
-            {product.title || product.name || product.slug || 'Untitled product'}
+          
+          <h3 className="text-base font-medium text-foreground hover:text-primary line-clamp-2 mb-1 min-h-[2.5rem]">
+            {product.title || product.name || 'Untitled product'}
           </h3>
           
           <div className="flex items-baseline gap-2 mb-1">
             {displayPrice ? (
-              <>
-                <span className="text-lg font-bold text-gray-900">{displayPrice}</span>
-              </>
+              <span className="text-lg font-bold text-foreground">{displayPrice}</span>
             ) : (
-              <span className="text-lg font-bold text-gray-500">Price not available</span>
+              <span className="text-lg font-bold text-muted-foreground">Price not available</span>
             )}
           </div>
 
           <div className="flex items-center mb-2">
-            {product.product_ratings && product.product_ratings.length > 0 ? (
+            {rating ? (
               <>
-                <StarRating rating={Math.round(product.product_ratings[0].rating)} />
-                <span className="text-sm text-gray-500 ml-1">({product.product_ratings.length})</span>
+                <StarRating rating={rating.avg_rating} />
+                <span className="text-sm text-muted-foreground ml-1">({rating.review_count})</span>
               </>
             ) : (
-              <div className="flex text-yellow-400">
-                <span className="text-sm text-gray-500">No reviews yet</span>
-              </div>
+              <span className="text-sm text-muted-foreground">No reviews yet</span>
             )}
           </div>
 
           {product.ribbon_text && (
-            <div className="text-sm text-blue-600 mb-2">
+            <div className="text-sm text-primary mb-2 font-medium">
               {product.ribbon_text}
             </div>
           )}
 
-          <div className="text-sm text-gray-500 mb-3">
-            Free delivery
+          <div className="text-sm text-muted-foreground mb-3">
+            🚚 Free delivery
           </div>
         </Link>
 
         <div className="space-y-2">
           <Button 
             onClick={handleAddToCart} 
-            className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-semibold rounded py-2"
+            disabled={isOutOfStock}
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded py-2 transition-colors"
           >
-            Add to Cart
+            <ShoppingCart className="w-4 h-4 mr-2" />
+            {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
           </Button>
           <Button 
             variant="outline"
             onClick={() => navigate(`/product/${product.id}`)}
-            className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold rounded py-2"
+            className="w-full border-border text-foreground hover:bg-accent font-semibold rounded py-2"
           >
             View Details
           </Button>

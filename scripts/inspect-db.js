@@ -68,18 +68,33 @@ async function main() {
     });
   }
 
-  // Check products
-  console.log('\n=== Products ===');
+  // Check products - try both tables
+  console.log('\n=== Products (products table) ===');
   const { data: products, error: productsError } = await supabase
     .from('products')
     .select('*');
-  
+
   if (productsError) {
     console.log('Error reading products:', productsError.message);
   } else {
     console.log('Total products:', products.length);
     products.forEach(p => {
-      console.log(`- ${p.title} (id: ${p.id}, vendor: ${p.vendor_id}, images: ${JSON.stringify(p.images)}, gallery_images: ${JSON.stringify(p.gallery_images)})`);
+      console.log(`- ${p.title} (id: ${p.id}, vendor: ${p.vendor_id})`);
+    });
+  }
+
+  // Check vendor_products
+  console.log('\n=== Products (vendor_products table) ===');
+  const { data: vendorProducts, error: vendorProductsError } = await supabase
+    .from('vendor_products')
+    .select('*');
+
+  if (vendorProductsError) {
+    console.log('Error reading vendor_products:', vendorProductsError.message);
+  } else {
+    console.log('Total vendor_products:', vendorProducts.length);
+    vendorProducts.forEach(p => {
+      console.log(`- ${p.title} (id: ${p.id}, vendor: ${p.vendor_id})`);
     });
   }
 

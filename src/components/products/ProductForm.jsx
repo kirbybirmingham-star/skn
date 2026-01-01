@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import ProductImageManager from '@/components/products/ProductImageManager';
-import CategorySelect from '@/components/products/CategorySelect';
 import { Card } from '@/components/ui/card';
 
 const ProductForm = ({ 
@@ -17,7 +16,7 @@ const ProductForm = ({
     description: product?.description || '',
     price_in_cents: product?.price_in_cents || 0,
     inventory_quantity: product?.inventory_quantity || 0,
-    category: product?.category || ''
+    category: product?.category || 'Uncategorized'
   });
 
   const handleSubmit = (e) => {
@@ -58,24 +57,27 @@ const ProductForm = ({
           required
         />
         
-        <CategorySelect
-          value={form.category}
-          onChange={(category) => setForm({ ...form, category })}
+        <Input
           label="Category"
+          value={form.category}
+          onChange={(e) => setForm({ ...form, category: e.target.value })}
+          required
         />
       </div>
 
-      {product?.id && (
-        <Card className="p-4">
-          <h3 className="text-lg font-medium mb-4">Product Images</h3>
-          <ProductImageManager
-            productId={product.id}
-            productSlug={product.slug}
-            images={[product.image_url, ...(product.images || []), ...(product.gallery_images || [])].filter(Boolean)}
-            onImagesUpdate={(newImages) => onImagesUpdate(product.id, product.slug, newImages)}
-          />
-        </Card>
-      )}
+      {/* Product Images - Show for both new and existing products */}
+      <Card className="p-4">
+        <h3 className="text-lg font-medium mb-4">Product Images</h3>
+        <div className="mb-4 text-sm text-gray-600">
+          Upload up to 10 high-quality images to showcase your product. The first image will be the main product image displayed in listings.
+        </div>
+        <ProductImageManager
+          productId={product?.id}
+          productSlug={product?.slug || form.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}
+          images={[product?.image_url, ...(product?.images || []), ...(product?.gallery_images || [])].filter(Boolean)}
+          onImagesUpdate={(newImages) => onImagesUpdate(product?.id, product?.slug || form.title, newImages)}
+        />
+      </Card>
 
       <div className="flex justify-end space-x-2">
         <Button type="button" variant="outline" onClick={onCancel}>

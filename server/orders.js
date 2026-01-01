@@ -286,4 +286,73 @@ router.post('/:orderId/cancel', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/orders/vendor/recent
+ * Get recent orders for vendor dashboard
+ * Returns last 5 orders for this vendor
+ */
+router.get('/vendor/recent', async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Get vendor for this user
+    const { data: vendor, error: vendorError } = await supabase
+      .from('vendors')
+      .select('id')
+      .eq('owner_id', userId)
+      .limit(1);
+
+    if (vendorError || !vendor || vendor.length === 0) {
+      return res.status(403).json({ error: 'No vendor found for this user' });
+    }
+
+    const vendorId = vendor[0].id;
+
+    // Get recent orders for this vendor
+    const { data: orderItems, error: ordersError } = await supabase
+      .from('order_items')
+      .select(`
+        id,
+        order_id,
+        quantity,
+        unit_price,
+        total_price,
+        orders (
+          id,
+          status,
+          created_at,
+          total_amount,
+          user_id,
+          metadata
+        )
+      `)
+      .eq('vendor_id', vendorId)
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    if (ordersError) throw ordersError;
+
+    // Format response
+    const orders = (orderItems || []).map(item => ({
+      id: item.id,
+      orderId: item.order_id,
+      quantity: item.quantity,
+      unitPrice: item.unit_price,
+      totalPrice: item.total_price,
+      status: item.orders?.status,
+      createdAt: item.orders?.created_at,
+      userEmail: item.orders?.metadata?.payer_email || item.orders?.metadata?.email,
+      totalAmount: item.orders?.total_amount
+    }));
+
+    res.json({ orders });
+  } catch (error) {
+    console.error('[Orders] Error fetching vendor recent orders:', error);
+    res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+});
+
 export default router;

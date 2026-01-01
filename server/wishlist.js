@@ -1,167 +1,126 @@
-/**
- * Wishlist API Endpoints
- * Handles wishlist operations
- */
-
 import express from 'express';
 import { supabase } from './supabaseClient.js';
-import { authenticateUser } from './middleware.js';
+import { verifyJWT } from './middleware.js';
 
 const router = express.Router();
 
-// Middleware - Apply authentication to all routes
-router.use(authenticateUser);
-
-/**
- * GET /api/wishlist
- * Get user's wishlist
- */
-router.get('/', async (req, res) => {
+// Get user's wishlist
+router.get('/me', verifyJWT, async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
 
-    const { data: wishlist, error } = await supabase
-      .from('wishlist')
+    const { data: wishlistItems, error } = await supabase
+      .from('wishlists')
       .select(`
         id,
-        variant_id,
         product_id,
         created_at,
-        product: product_id (
-          id,
-          title,
-          image_url,
-          slug
-        ),
-        variant: variant_id (
-          id,
-          title,
-          price_in_cents,
-          sale_price_in_cents,
-          image
-        )
+        products (id, name, price, image_url, vendor_id)
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
-    if (error) {
-      throw error;
-    }
+    if (error) throw error;
 
-    res.json(wishlist);
-  } catch (error) {
-    console.error('Error fetching wishlist:', error);
-    res.status(500).json({ message: error.message });
+    res.json({ wishlist: wishlistItems || [] });
+  } catch (err) {
+    console.error('[Wishlist] Error fetching wishlist:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 
-/**
- * POST /api/wishlist
- * Add item to wishlist
- */
-router.post('/', async (req, res) => {
+// Add product to wishlist
+router.post('/add', verifyJWT, async (req, res) => {
   try {
-    const userId = req.user.id;
-    const { variantId } = req.body;
+    const userId = req.user?.id;
+    const { productId } = req.body;
 
-    if (!variantId) {
-      return res.status(400).json({ message: 'Variant ID is required' });
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Get product ID from variant
-    const { data: variant } = await supabase
-      .from('product_variants')
-      .select('product_id')
-      .eq('id', variantId)
-      .single();
-
-    if (!variant) {
-      return res.status(404).json({ message: 'Variant not found' });
+    if (!productId) {
+      return res.status(400).json({ error: 'Product ID is required' });
     }
 
     // Check if already in wishlist
     const { data: existing } = await supabase
-      .from('wishlist')
+      .from('wishlists')
       .select('id')
       .eq('user_id', userId)
-      .eq('variant_id', variantId)
+      .eq('product_id', productId)
       .single();
 
     if (existing) {
-      return res.status(400).json({ message: 'Item already in wishlist' });
+      return res.status(400).json({ error: 'Product already in wishlist' });
     }
 
     // Add to wishlist
-    const { data: item, error } = await supabase
-      .from('wishlist')
-      .insert({
-        user_id: userId,
-        variant_id: variantId,
-        product_id: variant.product_id
-      })
-      .select()
-      .single();
+    const { data, error } = await supabase
+      .from('wishlists')
+      .insert([{ user_id: userId, product_id: productId }])
+      .select();
 
-    if (error) {
-      if (error.code === '23505') {
-        return res.status(400).json({ message: 'Item already in wishlist' });
-      }
-      throw error;
-    }
+    if (error) throw error;
 
-    res.json(item);
-  } catch (error) {
-    console.error('Error adding to wishlist:', error);
-    res.status(500).json({ message: error.message });
+    res.json({ success: true, wishlistItem: data?.[0] });
+  } catch (err) {
+    console.error('[Wishlist] Error adding to wishlist:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 
-/**
- * DELETE /api/wishlist/:variantId
- * Remove item from wishlist
- */
-router.delete('/:variantId', async (req, res) => {
+// Remove product from wishlist
+router.delete('/:productId', verifyJWT, async (req, res) => {
   try {
-    const userId = req.user.id;
-    const { variantId } = req.params;
+    const userId = req.user?.id;
+    const { productId } = req.params;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
 
     const { error } = await supabase
-      .from('wishlist')
+      .from('wishlists')
       .delete()
       .eq('user_id', userId)
-      .eq('variant_id', variantId);
+      .eq('product_id', productId);
 
-    if (error) {
-      throw error;
-    }
+    if (error) throw error;
 
-    res.json({ message: 'Removed from wishlist' });
-  } catch (error) {
-    console.error('Error removing from wishlist:', error);
-    res.status(500).json({ message: error.message });
+    res.json({ success: true, message: 'Removed from wishlist' });
+  } catch (err) {
+    console.error('[Wishlist] Error removing from wishlist:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 
-/**
- * GET /api/wishlist/:variantId/check
- * Check if item is in wishlist
- */
-router.get('/:variantId/check', async (req, res) => {
+// Check if product is in wishlist
+router.get('/:productId', verifyJWT, async (req, res) => {
   try {
-    const userId = req.user.id;
-    const { variantId } = req.params;
+    const userId = req.user?.id;
+    const { productId } = req.params;
 
-    const { data: item } = await supabase
-      .from('wishlist')
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const { data, error } = await supabase
+      .from('wishlists')
       .select('id')
       .eq('user_id', userId)
-      .eq('variant_id', variantId)
+      .eq('product_id', productId)
       .single();
 
-    res.json({ inWishlist: !!item });
-  } catch (error) {
-    // Item not found - this is expected behavior
-    res.json({ inWishlist: false });
+    if (error && error.code !== 'PGRST116') throw error;
+
+    res.json({ inWishlist: !!data });
+  } catch (err) {
+    console.error('[Wishlist] Error checking wishlist:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 

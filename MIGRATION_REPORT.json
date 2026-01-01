@@ -1,0 +1,79 @@
+{
+  "startTime": "2025-12-31T19:24:36.280Z",
+  "bucket_migrations": {
+    "product-images": {
+      "filesProcessed": 8,
+      "errors": 0,
+      "migrations": [
+        {
+          "bucket": "product-images",
+          "oldFilename": "bluetooth-speaker.jpg",
+          "newFilename": "img_0ab2cce78f3a411c.jpg",
+          "newUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/product-images/img_0ab2cce78f3a411c.jpg",
+          "timestamp": "2025-12-31T19:24:39.395Z"
+        },
+        {
+          "bucket": "product-images",
+          "oldFilename": "bread.webp",
+          "newFilename": "img_a9955506e5d84312.webp",
+          "newUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/product-images/img_a9955506e5d84312.webp",
+          "timestamp": "2025-12-31T19:24:41.324Z"
+        },
+        {
+          "bucket": "product-images",
+          "oldFilename": "coffee.jpg",
+          "newFilename": "img_496b174385a447de.jpg",
+          "newUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/product-images/img_496b174385a447de.jpg",
+          "timestamp": "2025-12-31T19:24:42.655Z"
+        },
+        {
+          "bucket": "product-images",
+          "oldFilename": "fitness-tracker.jpg",
+          "newFilename": "img_135f9a30a7674bab.jpg",
+          "newUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/product-images/img_135f9a30a7674bab.jpg",
+          "timestamp": "2025-12-31T19:24:43.988Z"
+        },
+        {
+          "bucket": "product-images",
+          "oldFilename": "headphones.jpg",
+          "newFilename": "img_4a15a465fead4136.jpg",
+          "newUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/product-images/img_4a15a465fead4136.jpg",
+          "timestamp": "2025-12-31T19:24:45.656Z"
+        },
+        {
+          "bucket": "product-images",
+          "oldFilename": "honey.jpg",
+          "newFilename": "img_b37fc69de1cc4da6.jpg",
+          "newUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/product-images/img_b37fc69de1cc4da6.jpg",
+          "timestamp": "2025-12-31T19:24:46.990Z"
+        },
+        {
+          "bucket": "product-images",
+          "oldFilename": "pasta-sauce.jpg",
+          "newFilename": "img_81a7f3ba03da408d.jpg",
+          "newUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/product-images/img_81a7f3ba03da408d.jpg",
+          "timestamp": "2025-12-31T19:24:48.667Z"
+        },
+        {
+          "bucket": "product-images",
+          "oldFilename": "power-bank.jpg",
+          "newFilename": "img_acb2fab1afc04c0c.jpg",
+          "newUrl": "https://tmyxjsqhtxnuchmekbpt.supabase.co/storage/v1/object/public/product-images/img_acb2fab1afc04c0c.jpg",
+          "timestamp": "2025-12-31T19:24:50.537Z"
+        }
+      ]
+    }
+  },
+  "database_updates": {
+    "products": 8,
+    "product_variants": 0,
+    "vendors": 0,
+    "users": 0
+  },
+  "errors": [
+    "Failed to fetch variants: column product_variants.image_url does not exist"
+  ],
+  "warnings": [],
+  "endTime": "2025-12-31T19:24:53.775Z",
+  "duration": 17
+}

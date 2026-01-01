@@ -2,6 +2,8 @@
 
 This repository contains a Vite + React frontend and an Express server.
 
+node_modules
+
 Quick local run
 
 ```powershell
@@ -75,9 +77,3 @@ supabase_migrations/
 
 # dataconnect generated files
 .dataconnect
-
-# Image migration scripts and logs
-migrate-images.js
-migrate-images-*.log
-image-migration-*.json
-

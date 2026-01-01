@@ -77,6 +77,20 @@ async function main() {
       console.log('✓ Can access profiles table');
       if (VERBOSE) console.log('Profiles response sample:', profilesData);
     }
+
+    // Test frontend auth user's profile access
+    console.log('\n4. Testing frontend profile access...');
+    const { data: frontendProfiles, error: frontendError } = await supabase
+      .from('profiles')
+      .select('email, role, created_at')
+      .limit(5);
+
+    if (frontendError) {
+      console.error('❌ Frontend cannot access profiles:', frontendError.message);
+    } else {
+      console.log('✓ Frontend can access profiles table');
+      if (VERBOSE) console.log('Frontend profiles sample:', frontendProfiles);
+    }
     
   } catch (err) {
     console.error('\n❌ Unexpected error:', err.message);

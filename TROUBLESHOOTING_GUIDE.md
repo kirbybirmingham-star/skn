@@ -1,516 +1,624 @@
-# SKN Bridge Trade - Troubleshooting & Fix Guide
+# Troubleshooting Guide - Filter & Update Issues
 
-## Overview
-This guide documents common issues encountered during development and deployment, along with their solutions.
+## Common Filter Problems
 
----
+### Problem: Products not filtering by category
 
-## Issue 1: Product Details Page Shows "Product Not Found"
+**Symptoms:**
+- All products shown regardless of category selection
+- Category dropdown changes but no effect on results
+- Console shows `categoryId = null`
 
-### Symptoms
-- Navigate to `/product/[product-id]` 
-- Page displays "Product Not Found" error
-- Database has products but they aren't loading
+**Debug Steps:**
+1. Check if `selectedCategoryId` is being set:
+   ```javascript
+   console.log('Category selected:', { selectedCategory, selectedCategoryId });
+   ```
 
-### Root Cause
-**RLS (Row Level Security) Policy Blocking Anonymous Access**
+2. Verify category object has `id` field:
+   ```javascript
+   const categories = await getCategories();
+   console.log('Categories:', categories);
+   // Should show: [{ id: 1, name: "Electronics", slug: "electronics" }, ...]
+   ```
 
-The `products` table has RLS enabled with policies that prevent anonymous/unauthenticated users from reading product data. Service role keys can bypass RLS, but frontend users (anonymous) cannot.
+3. Check ProductsList receives the prop:
+   ```javascript
+   // In ProductsList at top:
+   console.log('ProductsList props:', { categoryId, searchQuery, priceRange, sortBy });
+   ```
 
-### Diagnosis
-Run this test to verify:
+4. Verify API call includes categoryId:
+   ```javascript
+   // In getProducts():
+   console.log('API filters:', { categoryId, searchQuery, priceRange });
+   ```
 
-```bash
-node scripts/test-product-access.js
-```
-
-If you see:
-- Anonymous: 0 products
-- Service Role: N products
-
-Then RLS is blocking access.
-
-### Solution
-
-Go to **Supabase SQL Editor** and run:
-
-```sql
--- Allow public to read products
-ALTER TABLE products ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Allow public read" ON products;
-CREATE POLICY "Allow public read" ON products
-  FOR SELECT
-  USING (true);
-
--- Allow public to read product variants
-ALTER TABLE product_variants ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Allow public read variants" ON product_variants;
-CREATE POLICY "Allow public read variants" ON product_variants
-  FOR SELECT
-  USING (true);
-
--- Allow public to read product ratings
-ALTER TABLE product_ratings ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Allow public read ratings" ON product_ratings;
-CREATE POLICY "Allow public read ratings" ON product_ratings
-  FOR SELECT
-  USING (true);
-```
-
-**Verification:** Navigate to a product and it should load successfully.
+**Solutions:**
+- Ensure `getCategories()` returns objects with `id` property
+- Verify category ID is numeric (not string):
+  ```javascript
+  const cid = Number.isInteger(Number(categoryId)) ? Number(categoryId) : categoryId;
+  ```
+- Check database: `SELECT id, name, slug FROM categories;`
+- Verify Supabase RLS doesn't block category queries
 
 ---
 
-## Issue 2: Vendor Cards Not Showing on Store Page (RESOLVED)
+### Problem: Price filtering returns wrong products
 
-### Symptoms
-- Visit `/store` page (vendor listing)
-- Shows "No stores found" message
-- Database has vendors but they don't appear
+**Symptoms:**
+- Prices outside range shown
+- "Under $50" shows $100 items
+- No results when should have matches
+- Variant products not appearing in price filter
 
-### Root Cause
-**Two Problems:**
+**Debug Steps:**
+1. Check price normalization:
+   ```javascript
+   // Add to ProductsList
+   const normalizePriceRange = (pr) => {
+     // ... normalization logic
+     console.log('Price range normalized:', { input: pr, output: prToken });
+     return prToken;
+   };
+   ```
 
-1. **RLS Policy Missing** - `vendors` and `profiles` tables block anonymous read access
-2. **Column Name Mismatch** - API queries `business_name` but table column is `name`
+2. Verify cents conversion:
+   ```javascript
+   // Check if prices are cents (not dollars)
+   const products = await getProducts({ priceRange: '50-200' });
+   products.forEach(p => {
+     const price = p.base_price || p.variants?.[0]?.price_in_cents;
+     console.log(`${p.title}: ${price} cents = $${price/100}`);
+   });
+   ```
 
-### Diagnosis
+3. Check variant matching:
+   ```javascript
+   // In getProducts() debug:
+   const variantRes = await supabase
+     .from('product_variants')
+     .select('product_id, price_in_cents, price');
+   console.log('Variant prices found:', variantRes.data);
+   ```
 
-Check database schema:
-```bash
-node -e "
-import('dotenv/config').then(() => {
-  import('@supabase/supabase-js').then(({ createClient }) => {
-    const serviceClient = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-    (async () => {
-      const { data } = await serviceClient.from('vendors').select('*').limit(1);
-      if (data?.length) console.log('Vendor columns:', Object.keys(data[0]));
-    })();
-  });
+4. Verify union is working:
+   ```javascript
+   // Check both base and variant results
+   console.log('Base price matches:', baseData.length);
+   console.log('Variant matches:', variantData.length);
+   console.log('Combined unique:', combined.length);
+   ```
+
+**Solutions:**
+- Ensure all prices in database are in cents (not dollars)
+- Check `price_in_cents` field exists in product_variants
+- Verify price range token format: "50-200" not "50-200" (with spaces)
+- Confirm variant query returns product_id correctly
+- Test hardcoded ranges to isolate normalization issues
+
+**Price Range Token Format:**
+```
+Input           → Token           → API Query
+"Under $50"     → "under-50"      → max: 5000
+"$50-$200"      → "50-200"        → min: 5000, max: 20000
+"Over $500"     → "over-500"      → min: 50000
+"All" / null    → "all"           → No price filter
+```
+
+---
+
+### Problem: Search not returning results
+
+**Symptoms:**
+- Search box appears but no results shown
+- Results disappear when typing
+- Special characters break search
+- Case-sensitive matching (won't find "iPhone" with "iphone")
+
+**Debug Steps:**
+1. Check search query is passed:
+   ```javascript
+   console.log('Search query:', searchQuery);
+   console.log('Search trimmed:', searchQuery.trim());
+   console.log('Has length:', searchQuery.trim().length > 0);
+   ```
+
+2. Verify database contains search terms:
+   ```sql
+   SELECT title, description FROM vendor_products 
+   WHERE title ILIKE '%laptop%' OR description ILIKE '%laptop%';
+   ```
+
+3. Check API query construction:
+   ```javascript
+   // In getProducts():
+   if (searchQuery && String(searchQuery).trim().length > 0) {
+     const searchQueryStr = String(searchQuery).trim();
+     console.log('Applying search filter:', searchQueryStr);
+     query = query.or(`title.ilike.%${searchQueryStr}%,description.ilike.%${searchQueryStr}%`);
+   }
+   ```
+
+4. Test with simple term:
+   ```javascript
+   // Try single word
+   await getProducts({ searchQuery: 'laptop' });
+   // Then try phrase
+   await getProducts({ searchQuery: 'gaming laptop' });
+   ```
+
+**Solutions:**
+- Use `ilike` (not `like`) for case-insensitive matching
+- Escape special characters: `searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')`
+- Test search with actual data from database
+- Trim whitespace: `searchQuery.trim().length > 0`
+- Check database has non-empty title/description fields
+
+---
+
+### Problem: Sort not working correctly
+
+**Symptoms:**
+- Newest sort shows random order
+- Price sort doesn't order by price
+- Rating/popular sorts not implemented
+- Mobile vs desktop sort differs
+
+**Debug Steps:**
+1. Check sort value received:
+   ```javascript
+   console.log('Sort by:', sortBy);
+   console.log('Sort options:', sortOptions);
+   ```
+
+2. Verify it's passed to API:
+   ```javascript
+   // In ProductsList:
+   const resp = await getProducts({ sortBy, ... });
+   console.log('Requested sort:', sortBy);
+   ```
+
+3. Check if server-side or client-side:
+   ```javascript
+   // In getProducts():
+   const isClientSideSort = sb === 'price_asc' || sb === 'price_desc' || 
+                            sb === 'rating_asc' || sb === 'rating_desc';
+   console.log('Client-side sort?', isClientSideSort);
+   console.log('Sort option:', sb);
+   ```
+
+4. Test server-side sorts:
+   ```sql
+   -- Check ordering works
+   SELECT * FROM vendor_products 
+   ORDER BY created_at DESC LIMIT 10;  -- newest
+   
+   SELECT * FROM vendor_products 
+   ORDER BY title ASC LIMIT 10;  -- title_asc
+   ```
+
+**Solutions:**
+- Map sort options to database columns correctly
+- For "price-low": implement client-side sort
+- For "rating": requires reviews join (may not be implemented)
+- Test each sort option independently
+- Check data actually differs (e.g., created_at times)
+
+---
+
+### Problem: Autocomplete suggestions not showing
+
+**Symptoms:**
+- Search box appears but no dropdown
+- Categories not in suggestions
+- Popular searches missing
+- Typed text doesn't filter suggestions
+
+**Debug Steps:**
+1. Check suggestions load:
+   ```javascript
+   console.log('Suggested searches:', suggestedSearches);
+   console.log('Suggestions loaded?', suggestedSearches.length > 0);
+   ```
+
+2. Verify categories fetch:
+   ```javascript
+   const cats = await getCategories();
+   console.log('Categories:', cats);
+   // Should have: id, name, slug
+   ```
+
+3. Check Autocomplete receives options:
+   ```javascript
+   <Autocomplete
+     options={suggestedSearches}
+     // ... other props
+   />
+   console.log('Options passed to Autocomplete:', suggestedSearches);
+   ```
+
+4. Test autocomplete filtering:
+   ```javascript
+   // In Autocomplete component:
+   console.log('Input value:', value);
+   console.log('Filtered options:', filteredOptions);
+   console.log('Open state:', isOpen);
+   ```
+
+**Solutions:**
+- Wrap getCategories() call in try-catch with fallback
+- Verify suggestion objects have `label`, `value`, `type` properties
+- Ensure categories have name field
+- Check Autocomplete CSS doesn't hide dropdown
+- Test with hardcoded suggestions first
+
+**Expected Suggestion Structure:**
+```javascript
+{
+  label: "Electronics",        // Display text
+  value: "electronics",        // Internal value
+  type: "category"             // 'category', 'popular', 'price', 'feature'
+}
+```
+
+---
+
+## Common Update Problems
+
+### Problem: Product update fails silently
+
+**Symptoms:**
+- Form submits but nothing happens
+- No error message shown
+- Product list doesn't update
+- Console shows no logs
+
+**Debug Steps:**
+1. Check loading state:
+   ```javascript
+   console.log('Loading state:', loading);
+   // Should be: false → true → false
+   ```
+
+2. Verify form validation:
+   ```javascript
+   if (!form.title || form.title.length < 3) {
+     console.log('Validation failed:', form);
+     return;
+   }
+   ```
+
+3. Check API call:
+   ```javascript
+   console.log('Calling updateProduct:', { productId, updates: form });
+   ```
+
+4. Monitor API response:
+   ```javascript
+   // Add in updateProduct()
+   console.log('Response status:', response.status);
+   console.log('Response data:', data);
+   ```
+
+**Solutions:**
+- Add try/catch with detailed logging
+- Verify form data structure matches API expectations
+- Check network tab in DevTools for failed requests
+- Ensure setLoading(false) in finally block
+- Verify toast notifications configured
+
+---
+
+### Problem: Auth token not sent with update request
+
+**Symptoms:**
+- 401 Unauthorized error
+- "You must be logged in" message
+- Update works for some users, not others
+- Console shows empty Authorization header
+
+**Debug Steps:**
+1. Check session exists:
+   ```javascript
+   const { data: { session }, error } = await supabase.auth.getSession();
+   console.log('Session:', session);
+   console.log('Token:', session?.access_token);
+   ```
+
+2. Verify token in request:
+   ```javascript
+   // In updateProduct():
+   console.log('Auth token:', token.substring(0, 20) + '...');
+   console.log('Headers sent:', {
+     'Authorization': `Bearer ${token}`,
+     'Content-Type': 'application/json'
+   });
+   ```
+
+3. Check token expiration:
+   ```javascript
+   // Decode JWT to check exp claim
+   const parts = token.split('.');
+   const payload = JSON.parse(atob(parts[1]));
+   console.log('Token expires at:', new Date(payload.exp * 1000));
+   ```
+
+**Solutions:**
+- Ensure user is logged in before allowing updates
+- Call getSession() fresh before API call
+- Refresh token if expired
+- Check backend API endpoint requires Bearer token
+- Verify Authorization header format exactly
+
+---
+
+### Problem: Optimistic update causes stale UI
+
+**Symptoms:**
+- UI updates immediately but with old data
+- Refresh shows different (correct) data
+- Multiple rapid clicks cause confusion
+- Variant changes don't reflect
+
+**Debug Steps:**
+1. Check optimistic update logic:
+   ```javascript
+   setProducts(prev => prev.map(p => 
+     p.id === productId ? { ...p, ...updated } : p
+   ));
+   console.log('Optimistic update applied:', { productId, updated });
+   ```
+
+2. Verify API response matches update:
+   ```javascript
+   const updated = await updateProduct(productId, form);
+   console.log('API returned:', updated);
+   console.log('Form submitted:', form);
+   // Should match
+   ```
+
+3. Check state update order:
+   ```javascript
+   // Order should be: API call → get response → optimistic update → feedback
+   const response = await updateProduct(...);
+   setProducts(prev => ...);  // ← After API succeeds
+   toast({ title: 'Updated' });
+   ```
+
+**Solutions:**
+- Only apply optimistic update after successful API response
+- Return full updated object from API
+- Don't update state before API call
+- Verify form data format matches database schema
+- Test with network throttling
+
+---
+
+### Problem: Form validation not preventing submission
+
+**Symptoms:**
+- Invalid data sent to API
+- Empty titles accepted
+- Negative prices stored
+- API errors after form bypass
+
+**Debug Steps:**
+1. Check validation runs:
+   ```javascript
+   if (!form.title || form.title.length < 3) {
+     console.log('Validation failed - returning');
+     toast({ title: 'Validation Error', ... });
+     return;  // ← Check this executes
+   }
+   ```
+
+2. Verify validation rules match requirements:
+   ```javascript
+   const validationRules = {
+     title: form.title?.length >= 3,
+     price: form.price_in_cents >= 0,
+     inventory: Number.isInteger(form.inventory_quantity)
+   };
+   console.log('Validation results:', validationRules);
+   ```
+
+3. Check form data type conversions:
+   ```javascript
+   console.log({
+     title: typeof form.title,           // 'string'
+     price: typeof form.price_in_cents,  // 'number'
+     inventory: typeof form.inventory_quantity  // 'number'
+   });
+   ```
+
+**Solutions:**
+- Add explicit validation function
+- Type-convert inputs: `Number()`, `String()`, `Boolean()`
+- Test each validation rule independently
+- Return early if validation fails
+- Show user-friendly error message for each field
+
+---
+
+## Performance Issues
+
+### Problem: Filters slow to respond
+
+**Symptoms:**
+- UI lags when selecting filter
+- Search results delayed
+- Autocomplete suggests slowly
+- Many requests in network tab
+
+**Solutions:**
+- **Debounce search** - Wait 300ms after user stops typing
+  ```javascript
+  const [searchTimeout, setSearchTimeout] = useState(null);
+  const handleSearchChange = (value) => {
+    clearTimeout(searchTimeout);
+    setSearchTimeout(setTimeout(() => {
+      setSearchQuery(value);
+    }, 300));
+  };
+  ```
+
+- **Memoize filtered options** - Already done in Autocomplete
+- **Limit suggestions** - Use `maxSuggestions={8}`
+- **Lazy load images** - Use IntersectionObserver or `loading="lazy"`
+- **Pagination** - Keep at 24 items/page
+
+### Problem: Too many API requests
+
+**Symptoms:**
+- Network tab shows many getProducts calls
+- API rate limits hit
+- Database under heavy load
+- Lag with multiple users
+
+**Debug:**
+```javascript
+console.log('ProductsList effect triggered for:', {
+  sellerId, categoryId, searchQuery, priceRange, sortBy, page
 });
-"
 ```
 
-Expected output should show `name` (not `business_name`) in the columns.
-
-### Solution
-
-**Part A: Fix API Queries**
-
-The API code has been updated to use correct column names:
-- Changed `business_name` → `name` and `store_name`
-- Updated order clause to use `name` instead of `business_name`
-
-Location: `src/api/EcommerceApi.jsx` (lines 305-380)
-
-**Part B: Add RLS Policies**
-
-Go to **Supabase SQL Editor** and run:
-
-```sql
--- Allow public to read vendors
-ALTER TABLE vendors ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Allow public read" ON vendors;
-CREATE POLICY "Allow public read" ON vendors
-  FOR SELECT
-  USING (true);
-
--- Allow public to read profiles
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Allow public read profiles" ON profiles;
-CREATE POLICY "Allow public read profiles" ON profiles
-  FOR SELECT
-  USING (true);
-```
-
-**Status:** ✅ RESOLVED
-
-**Fix Summary:**
-- Updated API: `src/api/EcommerceApi.jsx` — replaced `business_name` → `name`, and removed nested `profile:profiles` select. `getVendors()` now fetches vendors, then separately fetches `profiles` by `owner_id` for avatars and products per vendor in a second step.
-- UI: `src/components/VendorCard.jsx` — added avatar fallback (initial-letter) and logging to avoid broken images.
-- DB: RLS policies applied for `vendors` and `profiles` tables.
-
-**Verification (how to verify the fix):**
-1. Run tests locally:
-  - `node scripts/test-get-vendors.js` — ensures `getVendors()` returns expected vendor objects and avatars
-  - `node scripts/test-vendor-display.js` — verifies vendor cards are ready to display and have featured products
-2. Start or restart the dev server and confirm UI:
-  - If dev server cannot start due to port conflict, either kill the running process or change port:
-    - Windows PowerShell: `tasklist | findstr node` and `taskkill /PID <PID> /F`, or `npm run dev -- --port 5173`
-  - Visit: `http://localhost:5173/store` (default is 5173 for Vite, or your configured port)
-3. Check browser console logs for:
-  - `[getVendors] Starting...`, `[getVendors] Got 7 vendors`, and `VendorCard` logs (indicates render)
-  - No 400 Bad Request referencing `business_name` or `profile:profiles` relationship errors
-4. Confirm vendor cards display and avatars show (or fallback initials appear when avatar is missing)
-5. If vendor cards still don't appear after these checks, run `node scripts/inspect-db.js` to confirm `vendors` and `profiles` columns exist and RLS is set, and verify `getVendors()` function is the version in `src/api/EcommerceApi.jsx` and not stale in a pre-built bundle
+**Solutions:**
+- Check all dependencies in useEffect are needed
+- Don't include functions in dependencies (memoize them)
+- Debounce rapid filter changes
+- Only re-fetch on actual changes
+- Consider caching popular searches
 
 ---
 
-## Issue 3: 404 Error on `product_ratings` REST API Endpoint
+## Database/Schema Issues
 
-### Symptoms
-Browser console shows:
-```
-GET https://[project].supabase.co/rest/v1/product_ratings?select=id&limit=1 404 (Not Found)
-```
+### Problem: Wrong column names cause "column not found"
 
-### Root Cause
-**RLS Policy Missing** on `product_ratings` table, and/or the ratings existence checker is making queries before RLS is configured.
+**Symptoms:**
+- 500 errors in API
+- "column does not exist" errors
+- Null results despite data existing
+- Different results than expected
 
-### Solution
+**Debug Steps:**
+1. Verify actual schema:
+   ```sql
+   SELECT column_name, data_type FROM information_schema.columns
+   WHERE table_name = 'vendor_products';
+   ```
 
-Already covered in **Issue 1** above. Run the RLS policy SQL for `product_ratings` table.
+2. Check expected columns:
+   - `id` (uuid or int)
+   - `title` (text)
+   - `description` (text)
+   - `base_price` (numeric)
+   - `category_id` (int)
+   - `vendor_id` (uuid)
+   - `created_at` (timestamp)
+   - `image_url` (text, optional)
 
-**Additional:** The code has been updated with resilient error handling:
+3. For variants:
+   - `product_id` (references products)
+   - `price_in_cents` (integer)
+   - `price` (numeric, optional)
+   - `inventory_quantity` (integer)
 
-- `src/lib/ratingsChecker.js` - Now treats all errors (404, permission denied, etc.) as "table not accessible"
-- `src/lib/variantSelectHelper.js` - Added extensive logging and multiple fallback attempts
-- Queries gracefully skip `product_ratings` if the table isn't accessible
-
-**Verification:** Check browser console - no 404 errors should appear.
-
----
-
-## Issue 4: Variant Projection Failures
-
-### Symptoms
-Browser/server logs show errors like:
-```
-column product_variants_1.name does not exist (Code: 42703)
-```
-
-### Root Cause
-API tries to query specific columns on `product_variants` that don't exist in your schema, or the relation structure differs from expected.
-
-### Solution
-
-The code has been updated with **resilient variant selection**:
-
-1. **Helper Function:** `src/lib/variantSelectHelper.js`
-   - Tries multiple variant projection shapes
-   - Falls back gracefully when columns don't exist
-   - Logs which projection succeeded for debugging
-
-2. **Fallback Chain:**
-   - Try: `product_variants(id, name, images)` with ratings
-   - Try: `product_variants(id, title, images)` with ratings
-   - Try: `product_variants(*)` with ratings
-   - Try: Same three without ratings
-   - Final: Basic product select without variants
-
-3. **Usage in API:**
-   - `EcommerceApi.jsx` and `EcommerceApi.js` use `selectProductWithVariants()` helper
-   - Automatically handles schema differences
-
-**Verification:** Run test script:
-
-```bash
-node scripts/fetch-product-by-id.js [product-id]
-```
-
-Should return product with variants array (even if empty).
+**Solutions:**
+- Update column names in getProducts() to match schema
+- Add missing columns if needed
+- Migrate data if columns renamed
+- Use `SELECT *` to inspect actual data structure
 
 ---
 
-## Issue 5: Product Ratings Table Missing or Inaccessible
+## Browser/Environment Issues
 
-### Symptoms
-- Frontend queries work without ratings
-- Rating count/display missing on product cards
-- No errors thrown (gracefully handled)
+### Problem: Filters work in dev but not in production
 
-### Root Cause
-- `product_ratings` table doesn't exist, OR
-- RLS policies prevent access, OR
-- The relation is not set up correctly
+**Symptoms:**
+- Localhost works fine
+- Deployed version broken
+- Different API URLs
+- CORS errors
 
-### Solution
+**Debug Steps:**
+1. Check API_BASE_URL:
+   ```javascript
+   // In environment.js or config:
+   console.log('API_BASE_URL:', API_BASE_URL);
+   ```
 
-**Option A: Create the Table**
+2. Verify in network tab:
+   - Actual request URL shown
+   - Should match deployment API endpoint
+   - Should have `/api` in path
 
-If you want ratings functionality, run this SQL:
+3. Check CORS headers:
+   - Look for "Access-Control-Allow-Origin" in response headers
+   - Should include your deployed domain
 
-```sql
-CREATE TABLE IF NOT EXISTS product_ratings (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  product_id uuid NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  rating integer NOT NULL CHECK (rating >= 1 AND rating <= 5),
-  title text,
-  body text,
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now()
-);
-
--- Add RLS
-ALTER TABLE product_ratings ENABLE ROW LEVEL SECURITY;
-
--- Allow public read
-CREATE POLICY "Allow public read ratings"
-  ON product_ratings
-  FOR SELECT
-  USING (true);
-
--- Allow authenticated users to insert
-CREATE POLICY "Allow users to insert ratings"
-  ON product_ratings
-  FOR INSERT
-  TO authenticated
-  WITH CHECK (user_id = auth.uid());
-
--- Allow users to read own ratings
-CREATE POLICY "Allow users to read own ratings"
-  ON product_ratings
-  FOR SELECT
-  TO authenticated
-  USING (user_id = auth.uid() OR product_id IN (
-    SELECT id FROM products WHERE is_published = true
-  ));
-
--- Create index for performance
-CREATE INDEX idx_product_ratings_product_id ON product_ratings(product_id);
-CREATE INDEX idx_product_ratings_user_id ON product_ratings(user_id);
-```
-
-**Option B: Ignore Ratings (Current Behavior)**
-
-The app is designed to work without ratings. The code:
-- Checks if table exists before querying
-- Gracefully skips ratings if not available
-- No errors thrown to users
-
-**Verification:** Run:
-
-```bash
-node scripts/check-ratings-relation.js
-```
+**Solutions:**
+- Verify environment variables set correctly in deployment
+- Check API_BASE_URL includes protocol (http/https)
+- Ensure backend API is running
+- Add CORS headers to backend if needed
+- Test with production API endpoint locally
 
 ---
 
-## Issue 6: Column Name Mismatches Across Tables
+## Testing Checklist
 
-### Symptoms
-Errors like:
-```
-column "[table].[column]" does not exist
-```
-
-### Common Mismatches Found
-
-| Table | API Expected | Actual Column | Status |
-|-------|--------------|---------------|--------|
-| vendors | business_name | name | ✅ Fixed |
-| vendors | - | store_name | ✅ Added to query |
-| product_variants | name | (varies) | ✅ Handled with fallback |
-| product_variants | title | (varies) | ✅ Handled with fallback |
-
-### Solution
-
-1. **Always inspect schema first:**
-
-```bash
-node -e "
-import('dotenv/config').then(() => {
-  import('@supabase/supabase-js').then(({ createClient }) => {
-    const sc = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-    (async () => {
-      const { data } = await sc.from('[TABLE_NAME]').select('*').limit(1);
-      if (data?.length) console.log(Object.keys(data[0]));
-    })();
-  });
-});
-"
-```
-
-2. **Update API queries** to match actual columns
-
-3. **Use fallback logic** when columns vary (like product_variants)
-
----
-
-## Quick Test Suite
-
-### Test All Fixes
-
-```bash
-# Test product access
-node scripts/test-product-access.js
-
-# Test vendor access
-node -e "
-import('dotenv/config').then(() => {
-  import('@supabase/supabase-js').then(({ createClient }) => {
-    const anonClient = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SUPABASE_ANON_KEY);
-    (async () => {
-      const { data, error } = await anonClient.from('vendors').select('id, name').limit(1);
-      console.log('Vendors accessible:', !error && data?.length > 0);
-      if (error) console.log('Error:', error.message);
-    })();
-  });
-});
-"
-
-# Test specific product fetch
-node scripts/fetch-product-by-id.js [PRODUCT_ID]
-
-# Test ratings table
-node scripts/check-ratings-relation.js
-
-# Test variant mapping
-node scripts/test-variant-mapping.js
-```
-
----
-
-## Preventive Best Practices
-
-### 1. Always Enable RLS with Public Read Policy
-
-When creating new tables:
-
-```sql
-ALTER TABLE [table_name] ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Allow public read"
-  ON [table_name]
-  FOR SELECT
-  USING (true);
-```
-
-### 2. Validate Schema Before Queries
-
-Inspect actual column names before writing queries.
-
-### 3. Use Fallback Logic for Relations
-
-When relations might vary:
-- Try specific column projections first
-- Fall back to wildcard `(*)`
-- Finally fall back to no relation
-
-### 4. Log Queries in Development
-
-The codebase includes debug logging. Enable in browser console:
+Use this to verify all filters work:
 
 ```javascript
-localStorage.debug = '*'
-```
+// Test each filter independently
+const tests = [
+  { name: 'No filters', filters: {} },
+  { name: 'Category only', filters: { categoryId: 1 } },
+  { name: 'Search only', filters: { searchQuery: 'laptop' } },
+  { name: 'Price only', filters: { priceRange: '50-200' } },
+  { name: 'Sort only', filters: { sortBy: 'price-low' } },
+  { name: 'Category + Price', filters: { categoryId: 1, priceRange: '50-200' } },
+  { name: 'Search + Sort', filters: { searchQuery: 'laptop', sortBy: 'newest' } },
+  { name: 'All filters', filters: { 
+    categoryId: 1, 
+    searchQuery: 'laptop', 
+    priceRange: '50-200', 
+    sortBy: 'price-low' 
+  } },
+];
 
-Check logs:
-- `[variantSelectHelper]` - Which projection succeeded
-- `[getProductById]` - Which query method was used
-- `[ratingsChecker]` - Whether ratings table is accessible
-
-### 5. Test RLS Changes Immediately
-
-After adding RLS policies:
-
-```bash
-# Verify with anon key
-node scripts/test-product-access.js
-
-# Reload browser
-```
-
----
-
-## Common Errors & Solutions
-
-| Error | Cause | Solution |
-|-------|-------|----------|
-| `column [x] does not exist` | Schema mismatch | Use `fallback` logic or update query |
-| `404 (Not Found)` on REST API | RLS blocking access | Add public read policy |
-| `Could not find relationship` | Relation missing | Update schema or skip relation in query |
-| `No data returned` | RLS denying access | Check RLS policies |
-| `Column product_variants_1.name does not exist` | Variant schema varies | Already handled by fallback logic |
-
----
-
-## Development Workflow
-
-1. **Create/modify table** → Run inspection script
-2. **Add/update RLS policies** → Test with anon key
-3. **Write API queries** → Use fallback patterns
-4. **Test frontend** → Check browser console logs
-5. **Verify** → Run test scripts
-
----
-
-## Useful Scripts
-
-| Script | Purpose |
-|--------|---------|
-| `scripts/inspect-db.js` | Show all tables and sample data |
-| `scripts/test-product-access.js` | Test RLS on products |
-| `scripts/fetch-product-by-id.js [id]` | Fetch single product |
-| `scripts/check-ratings-relation.js` | Check ratings tables |
-| `scripts/test-variant-mapping.js` | Test variant queries |
-| `scripts/test-products-fallback.js` | Test product listings |
-
----
-
-## Reference: Fixed Files
-
-### Code Changes Made
-
-1. **`src/lib/variantSelectHelper.js`**
-   - Added extensive logging
-   - Multiple fallback attempts
-   - Graceful error handling
-
-2. **`src/lib/ratingsChecker.js`**
-   - Enhanced to treat all errors as "table not accessible"
-   - Caches results to avoid repeated queries
-
-3. **`src/api/EcommerceApi.jsx`**
-   - Fixed column names (business_name → name, store_name)
-   - Uses variantSelectHelper for resilient queries
-   - Checks ratings existence before including in queries
-
-4. **`src/pages/ProductDetailsPage.jsx`**
-   - Uses updated API functions
-   - Proper error logging
-
-5. **`src/pages/StorePage.jsx`**
-   - Uses updated getVendors() function
-   - Displays vendor cards correctly
-
-### SQL Changes Made
-
-All in **Supabase SQL Editor**:
-
-```sql
--- Products table RLS
-ALTER TABLE products ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Allow public read" ON products FOR SELECT USING (true);
-
--- Product variants RLS
-ALTER TABLE product_variants ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Allow public read variants" ON product_variants FOR SELECT USING (true);
-
--- Product ratings RLS
-ALTER TABLE product_ratings ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Allow public read ratings" ON product_ratings FOR SELECT USING (true);
-
--- Vendors RLS
-ALTER TABLE vendors ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Allow public read" ON vendors FOR SELECT USING (true);
-
--- Profiles RLS
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Allow public read profiles" ON profiles FOR SELECT USING (true);
+for (const test of tests) {
+  console.log(`Testing: ${test.name}`);
+  const result = await getProducts(test.filters);
+  console.log(`Results: ${result.products.length} products`);
+  if (result.products.length > 0) {
+    console.log(`First product:`, result.products[0]);
+  }
+}
 ```
 
 ---
 
-## Next Steps
+## Still Having Issues?
 
-- [ ] Verify all pages load correctly
-- [ ] Test on deployed environment
-- [ ] Monitor logs for any remaining issues
-- [ ] Consider adding authenticated write policies if needed
-- [ ] Document any environment-specific configurations
+### Debugging Checklist:
+1. ✓ Check console for errors (Ctrl+Shift+J)
+2. ✓ Open DevTools Network tab
+3. ✓ Check API responses (JSON preview)
+4. ✓ Verify database has data (SQL query)
+5. ✓ Test API endpoint directly (curl or Postman)
+6. ✓ Check environment variables set
+7. ✓ Clear browser cache and reload
+8. ✓ Verify authentication status
+9. ✓ Check RLS policies allow access
+10. ✓ Review recent code changes
 
----
+### Resources:
+- [Supabase Documentation](https://supabase.com/docs)
+- [React Documentation](https://react.dev)
+- [MDN Network Tab Guide](https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor)
 
-**Last Updated:** December 9, 2025  
-**Status:** Active - All major issues resolved

@@ -9,20 +9,20 @@ import TrustSafetyPage from '../pages/TrustSaftetyPage';
 import AboutPage from '../pages/AboutPage';
 import FAQPage from '../pages/FAQPage';
 import ContactPage from '../pages/ContactPage';
-import DashboardPage from '../pages/Dashboardpage';
+import DashboardPage from '../pages/Dashboard';
 import SellerOnboarding from '../pages/SellerOnboarding';
 import ProtectedRoute from '../components/ProtectedRoute';
 import RequireRole from '../components/RequireRole';
 import VendorIndex from '../pages/vendor/Index';
 import VendorProducts from '../pages/vendor/Products';
 import VendorDashboardPage from '../pages/vendor/Dashboard';
-import EditStore from '../pages/vendor/EditStore';
+import VendorStore from '../pages/vendor/Store';
 import VendorOrders from '../pages/vendor/Orders';
 import App from '../App';
 import MarketplacePage from '../pages/MarketplacePage';
 import RouteError from '../components/RouteError';
 import OnboardingDashboard from '../pages/OnboardingDashboard';
-import CheckoutPage from '../pages/CheckoutPage';
+import PaymentPage from '../pages/PaymentPage';
 import OrderHistoryPage from '../pages/OrderHistoryPage';
 import AccountSettings from '../pages/AccountSettings';
 import AdminPanel from '../pages/AdminPanel';
@@ -39,7 +39,7 @@ export const router = createBrowserRouter([
       { path: 'marketplace', element: <MarketplacePage /> },
       { path: 'product/:id', element: <ProductDetailsPage /> },
       { path: 'success', element: <SuccessPage /> },
-      { path: 'checkout', element: <ProtectedRoute><CheckoutPage /></ProtectedRoute> },
+      { path: 'checkout', element: <ProtectedRoute><PaymentPage /></ProtectedRoute> },
       { path: 'orders', element: <ProtectedRoute><OrderHistoryPage /></ProtectedRoute> },
       { path: 'orders/:orderId', element: <ProtectedRoute><OrderHistoryPage /></ProtectedRoute> },
       { path: 'account-settings', element: <ProtectedRoute><AccountSettings /></ProtectedRoute> },
@@ -66,7 +66,7 @@ export const router = createBrowserRouter([
           { index: true, element: <VendorDashboardPage /> },
           { path: 'products', element: <VendorProducts /> },
           { path: 'orders', element: <VendorOrders /> },
-          { path: 'edit', element: <EditStore /> },
+          { path: 'edit', element: <VendorStore /> },
         ]
       },
     ],
